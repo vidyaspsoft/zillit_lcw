@@ -1,0 +1,142 @@
+/* ── Box Schedule Print Styles ── */
+
+@media print {
+
+  /* ── 1. REMOVE ALL OVERFLOW/HEIGHT CONSTRAINTS ── */
+  html,
+  body,
+  #root,
+  #root > *,
+  #root > * > *,
+  #root > * > * > *,
+  #root > * > * > * > * {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* ── 2. HIDE THE NAVBAR ── */
+  .print-hide,
+  nav.print-hide {
+    display: none !important;
+    height: 0 !important;
+  }
+
+  .mt-\[var\(--navbar-height\)\] {
+    margin-top: 0 !important;
+  }
+
+  /* ── 3. HIDE SCREEN-ONLY ELEMENTS ── */
+  /* Header, view switcher, toolbar, buttons */
+  .box-schedule-no-print {
+    display: none !important;
+  }
+
+  /* Schedule Table interactive view (uses PrintableSchedule instead) */
+  .box-schedule-screen-only {
+    display: none !important;
+  }
+
+  /* ── 4. SHOW CURRENT VIEW FOR PRINT ── */
+  /* One-Liner, DOOD, Calendar print directly from screen */
+  .box-schedule-print-view {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .box-schedule-content {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* ── 5. SHOW PRINTABLE SCHEDULE TABLE (only when active) ── */
+  .printable-schedule-wrapper {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  .printable-schedule {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* ── 6. HIDE UI CHROME ── */
+  .print-loading,
+  .ant-spin-nested-loading,
+  .ant-btn,
+  .ant-segmented,
+  .ant-modal-mask,
+  .ant-modal-wrap,
+  .ant-drawer-mask,
+  .ant-drawer-wrap,
+  .ant-drawer,
+  .ant-notification,
+  .Toastify {
+    display: none !important;
+  }
+
+  /* ── 7. PAGE SETUP ── */
+  /* Default margins — orientation (portrait/landscape) is set dynamically via JS */
+  @page {
+    margin: 0.4in 0.4in;
+  }
+
+  /* ── 8. PAGE BREAK CONTROL ── */
+  .print-day-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* ── 9. FORCE PRINT COLORS ── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* ── 10. CLEAN UP ROUNDED CONTAINERS FOR PRINT ── */
+  .box-schedule-print-view > div > div {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* ── 11. DOOD TABLE — compact for print ── */
+  .box-schedule-print-view table {
+    font-size: 10px !important;
+  }
+  .box-schedule-print-view table th,
+  .box-schedule-print-view table td {
+    padding: 4px 5px !important;
+  }
+}
+
+/* ── When NOT printing, hide the printable wrapper ── */
+@media screen {
+  .printable-schedule-wrapper {
+    display: none !important;
+  }
+}
