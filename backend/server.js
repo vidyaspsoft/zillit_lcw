@@ -1,9 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const path = require("path");
 const { Server } = require("socket.io");
-require("dotenv").config();
 
 const connectDB = require("./config/db");
 const locationRoutes = require("./routes/locationRoutes");
