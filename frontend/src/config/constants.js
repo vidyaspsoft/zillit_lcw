@@ -1,9 +1,13 @@
-export const API_BASE_URL = 'http://localhost:5003/api/v2';
-export const BACKEND_URL = 'http://localhost:5003';
-export const LOCATION_API_BASE_URL = 'http://localhost:5003/api/v2/location';
-export const CASTING_API_BASE_URL = 'http://localhost:5004/api/v2/casting';
-export const WARDROBE_API_BASE_URL = 'http://localhost:5005/api/v2/wardrobe';
-export const BOX_SCHEDULE_API_BASE_URL = 'http://localhost:5003/api/v2/box-schedule';
+const LOCATION_BACKEND = import.meta.env.VITE_LOCATION_BACKEND_URL || 'http://localhost:5003';
+const CASTING_BACKEND = import.meta.env.VITE_CASTING_BACKEND_URL || 'http://localhost:5004';
+const WARDROBE_BACKEND = import.meta.env.VITE_WARDROBE_BACKEND_URL || 'http://localhost:5005';
+
+export const API_BASE_URL = `${LOCATION_BACKEND}/api/v2`;
+export const BACKEND_URL = LOCATION_BACKEND;
+export const LOCATION_API_BASE_URL = `${LOCATION_BACKEND}/api/v2/location`;
+export const CASTING_API_BASE_URL = `${CASTING_BACKEND}/api/v2/casting`;
+export const WARDROBE_API_BASE_URL = `${WARDROBE_BACKEND}/api/v2/wardrobe`;
+export const BOX_SCHEDULE_API_BASE_URL = `${LOCATION_BACKEND}/api/v2/box-schedule`;
 
 export const GOOGLE_MAPS_API_KEY = 'AIzaSyCO1UjERiJOaDMv8v4nhzTihT2Kgs4KOdk';
 
