@@ -15,9 +15,9 @@ const logActivity = async (projectId, action, targetType, targetId, targetTitle,
 };
 
 // ── Helper: Create revision after schedule changes ──
-const bumpRevision = async (projectId, description, changedBy) => {
+const bumpRevision = async (projectId, description, changedBy, typeColor) => {
   try {
-    await BoxScheduleRevision.createRevision(projectId, description, changedBy);
+    await BoxScheduleRevision.createRevision(projectId, description, changedBy, typeColor);
   } catch (err) { console.error("bumpRevision error:", err.message); }
 };
 
@@ -169,7 +169,10 @@ const createDay = async (req, res) => {
         }
       } else if (conflictAction === "extend") {
         finalDays = requestedDays.filter((d) => !conflictingDayValues.has(d));
-        if (finalDays.length === 0) return sendError(res, 400, "All selected dates are already occupied. Use 'Replace' to change the existing schedule on these dates.");
+        if (finalDays.length === 0) {
+          // All dates occupied — treat as overlap (create alongside existing)
+          finalDays = requestedDays;
+        }
       }
     }
 
@@ -185,7 +188,7 @@ const createDay = async (req, res) => {
     if (io) io.to(projectId).emit("box_schedule_day_added", { day: newDay });
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "created", "schedule_day", newDay._id, title || type.title, `${finalDays.length} day(s)`, performer);
-    await bumpRevision(projectId, `Added ${type.title} schedule: ${title || type.title}`, performer);
+    await bumpRevision(projectId, `Added ${type.title} schedule: ${title || type.title}`, performer, type.color);
     return sendSuccess(res, newDay, "Schedule created", 201);
   } catch (error) {
     console.error("createDay error:", error);
@@ -249,7 +252,7 @@ const deleteDay = async (req, res) => {
     if (io) io.to(projectId).emit("box_schedule_day_deleted", { dayId: id });
     const performer = { userId: req.moduleData.user_id, name: "" };
     await logActivity(projectId, "deleted", "schedule_day", id, day.title || day.typeName, "", performer);
-    await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${day.title || day.typeName}`, performer);
+    await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${day.title || day.typeName}`, performer, day.color);
     return sendSuccess(res, { id }, "Schedule deleted");
   } catch (error) {
     console.error("deleteDay error:", error);
@@ -654,7 +657,7 @@ const duplicateDay = async (req, res) => {
 
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "duplicated", "schedule_day", newDay._id, newDay.title, `Duplicated from ${source.title || source.typeName}`, performer);
-    await bumpRevision(projectId, `Duplicated ${source.typeName}: ${source.title || source.typeName}`, performer);
+    await bumpRevision(projectId, `Duplicated ${source.typeName}: ${source.title || source.typeName}`, performer, source.color);
 
     return sendSuccess(res, newDay, "Schedule duplicated", 201);
   } catch (error) {

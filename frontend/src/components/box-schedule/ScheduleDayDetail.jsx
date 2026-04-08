@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Spin } from 'antd';
-import { FiPlus, FiTrash2, FiEdit2, FiClock, FiMapPin, FiCopy } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit2, FiClock, FiMapPin } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import CreateEventModal from './CreateEventModal';
-import DuplicateScheduleModal from './DuplicateScheduleModal';
 
 const ScheduleDayDetail = ({
   day, fetchEvents, createEvent, updateEvent, deleteEvent,
@@ -16,7 +15,6 @@ const ScheduleDayDetail = ({
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [createEventTab, setCreateEventTab] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const dateStr = dayjs(day.singleDate).format('dddd, MMMM D, YYYY');
 
@@ -94,11 +92,6 @@ const ScheduleDayDetail = ({
               Edit
             </Button>
           )}
-          <Button size="small" icon={<FiCopy size={12} />}
-            onClick={(e) => { e.stopPropagation(); setShowDuplicateModal(true); }}
-            style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#d0ccc5', color: '#555' }}>
-            Duplicate
-          </Button>
           {!readOnly && (
             <Button size="small" icon={<FiTrash2 size={12} />} danger onClick={onDelete}
               style={{ borderRadius: '6px', fontSize: '12px' }}>
@@ -283,14 +276,6 @@ const ScheduleDayDetail = ({
         />
       )}
 
-      {showDuplicateModal && (
-        <DuplicateScheduleModal
-          open={showDuplicateModal}
-          onClose={() => setShowDuplicateModal(false)}
-          day={day}
-          onSuccess={() => { if (onEdit) onEdit({}); }}
-        />
-      )}
     </div>
   );
 };

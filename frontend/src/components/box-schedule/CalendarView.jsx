@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Drawer, Modal } from 'antd';
+import { Button, Drawer, Modal, Segmented } from 'antd';
 import { FiPlus, FiCalendar } from 'react-icons/fi';
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import dayjs from 'dayjs';
@@ -12,9 +12,15 @@ const CalendarView = ({
   standaloneEvents = [], onEditStandaloneEvent,
   onQuickCreateSchedule, onQuickCreateEvent, onQuickCreateNote,
 }) => {
+  const [calendarMode, setCalendarMode] = useState('week'); // 'week' | 'month'
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf('month'));
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    // Start of current week (Monday)
+    const today = dayjs();
+    return today.day() === 0 ? today.subtract(6, 'day').startOf('day') : today.day(1).startOf('day');
+  });
   const [selectedCell, setSelectedCell] = useState(null);
-  const [quickActionCell, setQuickActionCell] = useState(null); // cell with no data — show popup
+  const [quickActionCell, setQuickActionCell] = useState(null);
 
   // Build standalone event lookup by date
   const standaloneByDate = useMemo(() => {
@@ -65,6 +71,18 @@ const CalendarView = ({
     return weeks;
   }, [currentMonth, dayLookup]);
 
+  // Week grid — single row of 7 days
+  const weekGrid = useMemo(() => {
+    const week = [];
+    let current = currentWeekStart;
+    for (let i = 0; i < 7; i++) {
+      const dayKey = current.startOf('day').valueOf();
+      week.push({ date: current, dayKey, schedulesOnDay: dayLookup[dayKey] || [], isCurrentMonth: true });
+      current = current.add(1, 'day');
+    }
+    return [week]; // Return as array of weeks (1 week) to reuse same table rendering
+  }, [currentWeekStart, dayLookup]);
+
   const isPastDate = (cell) => dayjs(cell.dayKey).isBefore(dayjs().startOf('day'));
 
   const handleCellClick = (cell) => {
@@ -87,16 +105,46 @@ const CalendarView = ({
 
   return (
     <div style={{ padding: '8px 16px 8px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="flex items-center justify-center gap-4" style={{ padding: '4px 0 8px', flexShrink: 0 }}>
-        <Button icon={<FiChevronLeft size={14} />} onClick={() => setCurrentMonth((m) => m.subtract(1, 'month'))} style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} size="small" />
-        <h2 style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', margin: 0, minWidth: '180px', textAlign: 'center', fontFamily: "'Georgia', serif", color: '#1a1a1a' }}>
-          {currentMonth.format('MMMM YYYY')}
-        </h2>
-        <Button icon={<FiChevronRight size={14} />} onClick={() => setCurrentMonth((m) => m.add(1, 'month'))} style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} size="small" />
+      <div className="flex items-center justify-between" style={{ padding: '4px 0 8px', flexShrink: 0 }}>
+        <Segmented options={['Week', 'Month']} value={calendarMode === 'week' ? 'Week' : 'Month'}
+          onChange={(val) => setCalendarMode(val === 'Week' ? 'week' : 'month')}
+          style={{ background: '#f0efec', borderRadius: '6px' }} size="small" />
+
+        <div className="flex items-center gap-3">
+          <Button icon={<FiChevronLeft size={14} />} size="small"
+            onClick={() => {
+              if (calendarMode === 'week') setCurrentWeekStart((w) => w.subtract(1, 'week'));
+              else setCurrentMonth((m) => m.subtract(1, 'month'));
+            }}
+            style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} />
+          <h2 style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', margin: 0, minWidth: '200px', textAlign: 'center', fontFamily: "'Georgia', serif", color: '#1a1a1a' }}>
+            {calendarMode === 'week'
+              ? `${currentWeekStart.format('MMM D')} – ${currentWeekStart.add(6, 'day').format('MMM D, YYYY')}`
+              : currentMonth.format('MMMM YYYY')
+            }
+          </h2>
+          <Button icon={<FiChevronRight size={14} />} size="small"
+            onClick={() => {
+              if (calendarMode === 'week') setCurrentWeekStart((w) => w.add(1, 'week'));
+              else setCurrentMonth((m) => m.add(1, 'month'));
+            }}
+            style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} />
+        </div>
+
+        <Button size="small" onClick={() => {
+          if (calendarMode === 'week') {
+            const today = dayjs();
+            setCurrentWeekStart(today.day() === 0 ? today.subtract(6, 'day').startOf('day') : today.day(1).startOf('day'));
+          } else {
+            setCurrentMonth(dayjs().startOf('month'));
+          }
+        }} style={{ borderColor: '#d0ccc5', borderRadius: '6px', fontSize: '11px', color: '#888' }}>
+          Today
+        </Button>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e0ddd8', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', height: '100%', tableLayout: 'fixed' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', height: calendarMode === 'week' ? 'auto' : '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
@@ -107,7 +155,7 @@ const CalendarView = ({
             </tr>
           </thead>
           <tbody>
-            {calendarGrid.map((week, wi) => (
+            {(calendarMode === 'week' ? weekGrid : calendarGrid).map((week, wi) => (
               <tr key={wi}>
                 {week.map((cell) => {
                   const hasSchedule = cell.schedulesOnDay.length > 0;
@@ -126,8 +174,10 @@ const CalendarView = ({
                   return (
                     <td key={cell.dayKey} onClick={() => handleCellClick(cell)}
                       style={{
-                        border: isSelected ? '2px solid #1a1a1a' : '1px solid #eee', padding: '4px 6px',
+                        border: isSelected ? '2px solid #1a1a1a' : '1px solid #eee',
+                        padding: calendarMode === 'week' ? '10px 10px' : '4px 6px',
                         verticalAlign: 'top',
+                        minHeight: calendarMode === 'week' ? '200px' : undefined,
                         background: isSelected ? '#fdfcf4' : hasSchedule ? `${primary.color}0C` : isWeekend ? '#fdfcfa' : '#fff',
                         opacity: !cell.isCurrentMonth ? 0.3 : isPast && !isPastClickable ? 0.45 : 1,
                         transition: 'all 0.15s ease',
@@ -137,12 +187,18 @@ const CalendarView = ({
                       onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.background = hasSchedule ? `${primary.color}0C` : isWeekend ? '#fdfcfa' : '#fff'; e.currentTarget.style.boxShadow = 'none'; } }}>
 
                       <div style={{
-                        fontSize: '14px', fontWeight: isToday ? '800' : '600', color: isToday ? '#1a1a1a' : '#555',
-                        marginBottom: '3px', fontFamily: "'Georgia', serif",
-                        ...(isToday ? { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: '#1a1a1a', color: '#fff', fontSize: '12px' } : {}),
+                        fontSize: calendarMode === 'week' ? '16px' : '14px',
+                        fontWeight: isToday ? '800' : '600', color: isToday ? '#1a1a1a' : '#555',
+                        marginBottom: calendarMode === 'week' ? '6px' : '3px', fontFamily: "'Georgia', serif",
+                        ...(isToday ? { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: calendarMode === 'week' ? '28px' : '24px', height: calendarMode === 'week' ? '28px' : '24px', borderRadius: '50%', background: '#1a1a1a', color: '#fff', fontSize: calendarMode === 'week' ? '14px' : '12px' } : {}),
                       }}>
                         {cell.date.date()}
                       </div>
+                      {calendarMode === 'week' && (
+                        <div style={{ fontSize: '10px', color: '#bbb', marginBottom: '4px', letterSpacing: '0.5px' }}>
+                          {cell.date.format('ddd, MMM D')}
+                        </div>
+                      )}
 
                       {hasSchedule && cell.schedulesOnDay.map((s, si) => (
                         <div key={si} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px 2px 5px', borderRadius: '4px', background: `${s.color}20`, border: `1px solid ${s.color}35`, marginBottom: '3px', fontSize: '11px', fontWeight: '600', color: '#444', letterSpacing: '0.3px' }}>
@@ -294,6 +350,38 @@ const CalendarView = ({
                 <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>&#x1f4c5;</div>
                 <p style={{ fontSize: '15px', fontWeight: '600', color: '#999', margin: '0 0 4px' }}>No schedule on this day</p>
                 <p style={{ fontSize: '13px', color: '#ccc' }}>{dayjs(selectedCell.dayKey).format('MMMM D, YYYY')}</p>
+              </div>
+            )}
+
+            {/* Quick actions — Create Schedule / Event / Note (future dates only) */}
+            {!selectedCell.isPast && (
+              <div style={{
+                padding: '16px 20px', borderTop: '1px solid #e0ddd8', background: '#fafaf8',
+              }}>
+                <div style={{
+                  fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', color: '#888',
+                  textTransform: 'uppercase', marginBottom: '10px',
+                }}>
+                  Add to this day
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="small" icon={<FiCalendar size={12} />}
+                    onClick={() => {
+                      handleCloseDrawer();
+                      if (onQuickCreateSchedule) onQuickCreateSchedule(selectedCell.dayKey);
+                    }}
+                    style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#1a1a1a', color: '#1a1a1a', fontWeight: '600' }}>
+                    Create Schedule
+                  </Button>
+                  <Button size="small" icon={<FiClock size={12} />}
+                    onClick={() => {
+                      handleCloseDrawer();
+                      if (onQuickCreateEvent) onQuickCreateEvent(selectedCell.dayKey);
+                    }}
+                    style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#d0ccc5', color: '#555' }}>
+                    Create Event
+                  </Button>
+                </div>
               </div>
             )}
           </>

@@ -83,15 +83,8 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
 
   const isEditing = !!editingEvent;
 
-  // ── Advanced fields toggle ──
-  // Auto-enable advanced if any advanced field has data
-  const [advancedEnabled, setAdvancedEnabled] = useState(
-    editingEvent?.advancedEnabled ||
-    !!(editingEvent?.timezone || editingEvent?.reminder && editingEvent.reminder !== 'none' ||
-       editingEvent?.callType || editingEvent?.location || editingEvent?.repeatStatus && editingEvent.repeatStatus !== 'none' ||
-       editingEvent?.textColor || editingEvent?.distributeTo || editingEvent?.organizerExcluded) ||
-    false
-  );
+  // Advanced is always enabled — all fields visible
+  const advancedEnabled = true;
 
   // ── Event fields (pre-fill from editingEvent) ──
   const [title, setTitle] = useState(editingEvent?.title || '');
@@ -171,7 +164,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
           scheduleDayId: resolvedDayId, date: Number(resolvedDate), eventType: 'event',
           title: title.trim(), description, startDateTime: startDT, endDateTime: endDT,
           fullDay, location, locationLat, locationLng, reminder, repeatStatus, color,
-          repeatEndDate: advancedEnabled ? repeatEndDate : null,
+          repeatEndDate,
           timezone,
           callType, textColor,
           distributeTo, organizerExcluded, advancedEnabled,
@@ -235,23 +228,6 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
 
         {activeTab === 'Event' ? (
           <div>
-            {/* ═══ Info Banner — Advanced Fields Toggle ═══ */}
-            <div style={{
-              marginBottom: '16px', padding: '12px 14px',
-              background: advancedEnabled ? '#fef9ee' : '#f8f8f6',
-              border: `1px solid ${advancedEnabled ? '#f0d9a0' : '#e0ddd8'}`,
-              borderRadius: '8px',
-            }}>
-              <Checkbox checked={advancedEnabled} onChange={(e) => setAdvancedEnabled(e.target.checked)}>
-                <span style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>Check this box for the following:</span>
-              </Checkbox>
-              <ul style={{ margin: '8px 0 0', paddingLeft: '28px', fontSize: '12px', color: '#666', lineHeight: '1.8' }}>
-                <li>If you want this event to show up on the 'Calendar on Home Page' for the attendees</li>
-                <li>If you want to set a time reminder, for the attendees</li>
-                <li>If you want to set a location for the event for the attendees</li>
-                <li>If you want to set a repeated event with reminder</li>
-              </ul>
-            </div>
 
             {/* Title + Full Day toggle on same row */}
             <div style={{ marginBottom: '14px' }}>
@@ -282,7 +258,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
                 <label style={labelStyle}>Start Date</label>
                 <DatePicker value={startDate} onChange={(v) => { setStartDate(v); setErrors((p) => ({ ...p, endDate: undefined, endTime: undefined })); }}
                   style={{ width: '100%' }} format="MMM D, YYYY"
-                  disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))} />
+                  disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))} allowClear className="schedule-datepicker-clear" />
               </div>
               {!fullDay && (
                 <div style={{ width: '115px' }}>
@@ -305,33 +281,26 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
                 <DatePicker value={endDate} onChange={(v) => { setEndDate(v); setErrors((p) => ({ ...p, endDate: undefined })); }}
                   style={{ width: '100%' }} format="MMM D, YYYY"
                   disabledDate={(current) => (current && current.isBefore(dayjs().startOf('day'))) || (startDate && current && current.isBefore(startDate, 'day'))}
-                  status={errors.endDate ? 'error' : undefined} />
+                  status={errors.endDate ? 'error' : undefined} allowClear className="schedule-datepicker-clear" />
                 <FieldError field="endDate" />
               </div>
             </div>
 
-            {/* ═══ Repeat section — only shown when checkbox is checked ═══ */}
-            {advancedEnabled && (
-              <div style={{
-                marginBottom: '14px', padding: '12px 14px',
-                background: '#f0f5ff', border: '1px solid #d6e4ff', borderRadius: '8px',
-              }}>
-                <div className="flex gap-3">
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Repeat</label>
-                    <Select value={repeatStatus} onChange={setRepeatStatus} options={REPEAT_OPTIONS} style={{ width: '100%' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Repeat End Date</label>
-                    <DatePicker value={repeatEndDate ? dayjs(repeatEndDate) : null}
-                      onChange={(v) => setRepeatEndDate(v ? v.toISOString() : null)}
-                      placeholder="Repeat End Date"
-                      disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
-                      style={{ width: '100%' }} format="MMM D, YYYY" />
-                  </div>
-                </div>
+            {/* ═══ Repeat section ═══ */}
+            <div className="flex gap-3 mb-3">
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Repeat</label>
+                <Select value={repeatStatus} onChange={setRepeatStatus} options={REPEAT_OPTIONS} style={{ width: '100%' }} />
               </div>
-            )}
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Repeat End Date</label>
+                <DatePicker value={repeatEndDate ? dayjs(repeatEndDate) : null}
+                  onChange={(v) => setRepeatEndDate(v ? v.toISOString() : null)}
+                  placeholder="Repeat End Date"
+                  disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
+                  style={{ width: '100%' }} format="MMM D, YYYY" allowClear className="schedule-datepicker-clear" />
+              </div>
+            </div>
 
             {/* ═══ Always visible fields ═══ */}
 
@@ -376,17 +345,15 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               </p>
             </div>
 
-            {/* Organizer excluded — only shown when checkbox is checked */}
-            {advancedEnabled && (
-              <div style={{
-                marginTop: '12px', marginBottom: '14px', padding: '10px 14px',
-                background: '#fef9ee', border: '1px solid #f0d9a0', borderRadius: '8px',
-              }}>
-                <Checkbox checked={organizerExcluded} onChange={(e) => setOrganizerExcluded(e.target.checked)}>
-                  <span style={{ fontSize: '13px', fontWeight: '500' }}>The organizer will not be a part of this event.</span>
-                </Checkbox>
-              </div>
-            )}
+            {/* Organizer excluded */}
+            <div style={{
+              marginBottom: '14px', padding: '10px 14px',
+              background: '#f8f8f6', border: '1px solid #e0ddd8', borderRadius: '8px',
+            }}>
+              <Checkbox checked={organizerExcluded} onChange={(e) => setOrganizerExcluded(e.target.checked)}>
+                <span style={{ fontSize: '13px', fontWeight: '500' }}>The organizer will not be a part of this event.</span>
+              </Checkbox>
+            </div>
 
             {/* Background Color (always visible) */}
             <div style={{ marginBottom: '20px' }}>

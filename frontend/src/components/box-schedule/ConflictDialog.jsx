@@ -102,18 +102,16 @@ const ConflictDialog = ({ open, conflicts = [], totalDays = 0, onResolve, onCanc
             </div>
           </Button>
 
-          {/* Extend — only useful when some dates are free */}
+          {/* Extend */}
           <Button
             block
             size="large"
             onClick={() => onResolve('extend')}
-            disabled={allDaysConflict}
             style={{
               textAlign: 'left',
               height: 'auto',
               padding: '12px 16px',
               borderRadius: '8px',
-              opacity: allDaysConflict ? 0.5 : 1,
             }}
           >
             <div>
@@ -122,14 +120,6 @@ const ConflictDialog = ({ open, conflicts = [], totalDays = 0, onResolve, onCanc
               <span style={{ fontSize: '12px', color: '#666' }}>
                 Keep existing schedule, only fill empty dates with new schedule
               </span>
-              {allDaysConflict && (
-                <>
-                  <br />
-                  <span style={{ fontSize: '11px', color: '#e74c3c', fontWeight: '500' }}>
-                    Not available — all selected dates already have a schedule
-                  </span>
-                </>
-              )}
             </div>
           </Button>
 

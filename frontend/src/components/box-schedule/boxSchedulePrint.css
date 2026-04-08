@@ -140,3 +140,17 @@
     display: none !important;
   }
 }
+
+/* ── DatePicker: Always show clear icon, hide calendar icon when date selected ── */
+.schedule-datepicker-clear .ant-picker-clear {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  background: #fff !important;
+  z-index: 2;
+  right: 0;
+  width: 28px;
+  height: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}

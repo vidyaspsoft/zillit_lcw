@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Spin, Segmented, Modal, Input, Select } from 'antd';
+import { Button, Spin, Segmented, Modal, Input, Select, Popover } from 'antd';
 import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
@@ -17,7 +17,6 @@ import CreateEventModal from './CreateEventModal';
 import PrintableSchedule from './PrintableSchedule';
 import ActivityLogDrawer from './ActivityLogDrawer';
 import ViewEventDrawer from './ViewEventDrawer';
-import RevisionHistoryDrawer from './RevisionHistoryDrawer';
 import ShareScheduleModal from './ShareScheduleModal';
 import './boxSchedulePrint.css';
 
@@ -39,6 +38,7 @@ const BoxSchedulePage = () => {
   const [savedDefaultView, setSavedDefaultView] = useState(() => {
     return localStorage.getItem('boxScheduleDefaultView') || 'Calendar View';
   });
+  const [showDefaultViewPopover, setShowDefaultViewPopover] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTypeManager, setShowTypeManager] = useState(false);
   const [expandedDayId, setExpandedDayId] = useState(null);
@@ -59,7 +59,6 @@ const BoxSchedulePage = () => {
 
   // New feature drawers/modals
   const [showActivityLog, setShowActivityLog] = useState(false);
-  const [showRevisionHistory, setShowRevisionHistory] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentRevision, setCurrentRevision] = useState(null);
 
@@ -292,12 +291,6 @@ const BoxSchedulePage = () => {
                 <Button icon={<FiCheckSquare size={13} />} onClick={enterSelectMode} size="middle"
                   style={toolbarBtnStyle}>Select</Button>
               )}
-              {currentRevision && currentRevision.revisionNumber > 0 && (
-                <Button icon={<FiClock size={13} />} onClick={() => setShowRevisionHistory(true)} size="middle"
-                  style={toolbarBtnStyle}>
-                  Rev {currentRevision.revisionNumber}
-                </Button>
-              )}
               <Button icon={<FiClock size={13} />} onClick={() => setShowActivityLog(true)} size="middle"
                 style={toolbarBtnStyle}>Activity</Button>
               <Button icon={<FiShare2 size={13} />} onClick={() => setShowShareModal(true)} size="middle"
@@ -368,52 +361,66 @@ const BoxSchedulePage = () => {
             <div className="flex items-center gap-3 flex-wrap">
               <Segmented options={['Calendar View', 'List View']} value={activeView} onChange={(val) => { setActiveView(val); }}
                 style={{ background: '#f0efec', borderRadius: '8px', padding: '2px' }} />
-              {(() => {
-                const isDefault = savedDefaultView === activeView;
-                const savedLabel = savedDefaultView === 'Calendar View' ? 'Calendar' : 'List';
-                return (
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                    background: isDefault ? '#f0fdf4' : '#fffdf0',
-                    border: `1px solid ${isDefault ? '#bbf7d0' : '#f0e6b8'}`,
-                    borderRadius: '8px', padding: '6px 14px', fontSize: '12px',
-                    color: isDefault ? '#166534' : '#8a7430',
-                    transition: 'all 0.3s ease',
-                  }}>
-                    <span style={{ fontSize: '16px' }}>{isDefault ? '\u2705' : '\uD83D\uDC41'}</span>
-                    <div style={{ lineHeight: '1.4' }}>
-                      {isDefault ? (
-                        <span style={{ fontWeight: '600' }}>
-                          {activeView} is your default view
-                        </span>
-                      ) : (
-                        <>
-                          <span style={{ fontWeight: '600' }}>
-                            You are viewing: {activeView}
-                          </span>
-                          <span style={{ color: '#b8a050', fontWeight: '400' }}>
-                            {' '}(Default: {savedLabel})
-                          </span>
-                          <br />
-                          <button
+              <Popover
+                open={showDefaultViewPopover}
+                onOpenChange={setShowDefaultViewPopover}
+                trigger="click"
+                placement="bottomLeft"
+                content={
+                  <div style={{ width: '240px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1a1a', marginBottom: '10px' }}>
+                      Choose your default view
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', lineHeight: '1.4' }}>
+                      This view will load first every time you open the Production Schedule.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {['Calendar View', 'List View'].map((view) => {
+                        const isSelected = savedDefaultView === view;
+                        return (
+                          <button key={view}
                             onClick={() => {
-                              localStorage.setItem('boxScheduleDefaultView', activeView);
-                              setSavedDefaultView(activeView);
-                              toast.success(`Done! ${activeView} is now your default. Next time you open this page, it will show ${activeView} first.`);
+                              localStorage.setItem('boxScheduleDefaultView', view);
+                              setSavedDefaultView(view);
+                              setShowDefaultViewPopover(false);
+                              toast.success(`${view} is now your default view.`);
                             }}
                             style={{
-                              fontSize: '11px', color: '#1a73e8', background: 'none', border: 'none',
-                              cursor: 'pointer', textDecoration: 'underline', padding: 0, fontWeight: '600',
+                              display: 'flex', alignItems: 'center', gap: '10px',
+                              padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                              border: isSelected ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
+                              background: isSelected ? '#f8f8f4' : '#fff',
+                              transition: 'all 0.15s', textAlign: 'left', width: '100%',
                             }}
                           >
-                            Always open in {activeView}?
+                            <span style={{
+                              width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+                              border: isSelected ? '5px solid #1a1a1a' : '2px solid #ccc',
+                              background: '#fff',
+                            }} />
+                            <div>
+                              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>
+                                {view === 'Calendar View' ? 'Calendar View' : 'List View'}
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#999' }}>
+                                {view === 'Calendar View' ? 'Monthly calendar grid' : 'Table with expandable rows'}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#27ae60', fontWeight: '600' }}>Current</span>
+                            )}
                           </button>
-                        </>
-                      )}
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })()}
+                }
+              >
+                <Button size="middle" icon={<FiGrid size={13} />}
+                  style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '13px' }}>
+                  Set Default View
+                </Button>
+              </Popover>
               {activeView === 'List View' && (
                 <>
                   <Input placeholder="Search by title, type, date..." prefix={<FiSearch size={13} style={{ color: '#bbb' }} />}
@@ -445,7 +452,11 @@ const BoxSchedulePage = () => {
                   onToggleSelect={toggleSelectRow} onSelectAll={selectAll} onDeselectAll={deselectAll}
                   standaloneEvents={standaloneEvents} onDeleteEvent={async (id) => { await deleteEvent(id); loadStandaloneEvents(); }}
                   onEditStandaloneEvent={handleEditStandaloneEvent}
-                  onViewEvent={(evt) => setViewingEvent(evt)} />
+                  onViewEvent={(evt) => setViewingEvent(evt)}
+                  scheduleDays={scheduleDays}
+                  onEditFullBlock={(block) => { setEditingDay(block); setShowCreateModal(true); }}
+                  onDeleteFullBlock={async (blockId) => { await deleteDay(blockId); refreshAll(); }}
+ />
               </div>
             )}
             {activeView === 'Calendar View' && (
@@ -455,7 +466,7 @@ const BoxSchedulePage = () => {
                   onDeleteDay={handleDeleteDay} onEditDay={handleEditDay} onEditSchedule={handleEditSchedule}
                   standaloneEvents={standaloneEvents} onEditStandaloneEvent={handleEditStandaloneEvent}
                   onQuickCreateSchedule={(dateVal) => {
-                    setEditingDay({ startDate: dateVal, calendarDays: [dateVal], numberOfDays: 1 });
+                    setEditingDay({ startDate: dateVal, calendarDays: [dateVal], numberOfDays: 1, _lockedStartDate: true });
                     setShowCreateModal(true);
                   }}
                   onQuickCreateEvent={(dateVal) => {
@@ -539,7 +550,6 @@ const BoxSchedulePage = () => {
       <ActivityLogDrawer open={showActivityLog} onClose={() => setShowActivityLog(false)} />
 
       {/* Revision History Drawer */}
-      <RevisionHistoryDrawer open={showRevisionHistory} onClose={() => setShowRevisionHistory(false)} />
 
       {/* Share Modal */}
       {showShareModal && (

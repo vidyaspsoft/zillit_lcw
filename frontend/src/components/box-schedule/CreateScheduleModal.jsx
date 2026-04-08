@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
  */
 const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], editingDay = null, onEdit }) => {
   const isSingleDayEdit = editingDay?._singleDayEdit === true;
+  const isLockedStartDate = editingDay?._lockedStartDate === true;
   const editTypeId = editingDay?.typeId?._id || editingDay?.typeId || '';
   const editCalendarDays = editingDay?.calendarDays || [];
   const editStartDate = editCalendarDays.length > 0
@@ -24,6 +25,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   const [typeId, setTypeId] = useState(String(editTypeId));
   const [submitting, setSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarDone, setCalendarDone] = useState(editCalendarDays.length > 0);
 
   // Single-day edit conflict state
   const [singleDayConflict, setSingleDayConflict] = useState(null);
@@ -35,9 +37,19 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   const [newTypeColor, setNewTypeColor] = useState('#3498DB');
   const [creatingType, setCreatingType] = useState(false);
 
-  // Date mode tabs
+  // Date mode tabs — detect gaps in dates to auto-select Calendar tab
   const getInitialDateTab = () => {
     if (editingDay?.dateRangeType === 'by_dates') return 'calendar';
+    // If editing a block with non-consecutive dates (gaps), use Calendar tab
+    if (editingDay?._id && editCalendarDays.length > 1) {
+      const sorted = [...editCalendarDays].map(Number).sort((a, b) => a - b);
+      const oneDay = 24 * 60 * 60 * 1000;
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] - sorted[i - 1] > oneDay + 3600000) { // +1hr tolerance for DST
+          return 'calendar';
+        }
+      }
+    }
     return 'date_range';
   };
   const [dateTab, setDateTab] = useState(getInitialDateTab());
@@ -62,7 +74,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   );
 
   // --- Day Wise mode ---
-  const [dayWiseStart, setDayWiseStart] = useState(null);
+  const [dayWiseStart, setDayWiseStart] = useState(isLockedStartDate ? editStartDate : null);
   const [dayWiseEnd, setDayWiseEnd] = useState(null);
   const [selectedWeekDays, setSelectedWeekDays] = useState([]);
 
@@ -232,7 +244,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
         startDate: Math.min(...calendarDays), endDate: Math.max(...calendarDays),
         numberOfDays: calendarDays.length, calendarDays,
       };
-      if (editingDay) {
+      if (editingDay && editingDay._id) {
         await onEdit(editingDay._id, data);
         toast.success('Schedule updated successfully');
         onClose();
@@ -249,14 +261,18 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   const handlePickDate = useCallback((date) => {
     if (!date) return;
     const dateVal = date.startOf('day');
+    // Don't allow removing the locked start date
+    if (isLockedStartDate && editStartDate && dateVal.isSame(editStartDate, 'day')) return;
     const exists = pickedDates.some((d) => d.isSame(dateVal, 'day'));
     if (exists) setPickedDates((prev) => prev.filter((d) => !d.isSame(dateVal, 'day')));
     else setPickedDates((prev) => [...prev, dateVal]);
-  }, [pickedDates]);
+  }, [pickedDates, isLockedStartDate, editStartDate]);
 
   const removePickedDate = useCallback((dateToRemove) => {
+    // Don't allow removing the locked start date
+    if (isLockedStartDate && editStartDate && dateToRemove.isSame(editStartDate, 'day')) return;
     setPickedDates((prev) => prev.filter((d) => !d.isSame(dateToRemove, 'day')));
-  }, []);
+  }, [isLockedStartDate, editStartDate]);
 
   const toggleWeekDay = useCallback((dayIndex) => {
     setSelectedWeekDays((prev) =>
@@ -286,7 +302,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   const tabDescriptions = {
     date_range: 'Set a start date and specify the number of consecutive days, or choose a start and end date.',
     calendar: 'Pick individual dates from the calendar. Useful for non-consecutive days like Apr 1, 5, 8, 12.',
-    range_between: 'Select a start and end date to include all days in between.',
     day_wise: 'Choose specific weekdays (e.g. Mon, Wed, Fri) within a date range.',
   };
 
@@ -309,7 +324,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
             <div>
               <label style={labelStyle}>Start Date</label>
-              <DatePicker value={startDate} onChange={setStartDate} style={{ width: '100%' }} size="large" format="MMMM D, YYYY" disabledDate={disabledPastDate} />
+              <DatePicker value={startDate} onChange={setStartDate} style={{ width: '100%' }} size="large" format="MMMM D, YYYY" disabledDate={disabledPastDate} allowClear={!isLockedStartDate} disabled={isLockedStartDate} className="schedule-datepicker-clear" />
             </div>
             {rangeSubMode === 'by_days' ? (
               <div>
@@ -320,7 +335,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
               <div>
                 <label style={labelStyle}>End Date</label>
                 <DatePicker value={endDate} onChange={setEndDate} style={{ width: '100%' }} size="large" format="MMMM D, YYYY"
-                  disabledDate={(d) => disabledPastDate(d) || (startDate && d.isBefore(startDate, 'day'))} />
+                  disabledDate={(d) => disabledPastDate(d) || (startDate && d.isBefore(startDate, 'day'))} allowClear className="schedule-datepicker-clear" />
               </div>
             )}
           </div>
@@ -337,8 +352,9 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <div style={{ marginBottom: '10px' }}>
             <DatePicker
               open={calendarOpen}
-              onOpenChange={(o) => setCalendarOpen(o)}
-              onChange={(date) => { handlePickDate(date); setCalendarOpen(true); }}
+              onOpenChange={() => {}} // Prevent auto-close — only Done button closes
+              onClick={() => setCalendarOpen(true)}
+              onChange={(date) => { handlePickDate(date); }}
               value={null}
               style={{ width: '100%' }}
               size="large"
@@ -348,52 +364,50 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
               allowClear={false}
               dateRender={(current) => {
                 const isSelected = pickedDates.some((d) => d.isSame(current, 'day'));
+                const isLocked = isLockedStartDate && editStartDate && current.isSame(editStartDate, 'day');
                 return (
                   <div className="ant-picker-cell-inner" style={{
-                    backgroundColor: isSelected ? '#1a1a1a' : 'transparent',
-                    color: isSelected ? '#fff' : undefined,
-                    borderRadius: '4px', fontWeight: isSelected ? '700' : '400',
+                    backgroundColor: isLocked ? '#e67e22' : isSelected ? '#1a1a1a' : 'transparent',
+                    color: (isSelected || isLocked) ? '#fff' : undefined,
+                    borderRadius: '4px', fontWeight: (isSelected || isLocked) ? '700' : '400',
                   }}>
                     {current.date()}
                   </div>
                 );
               }}
+              renderExtraFooter={() => (
+                <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '12px', color: '#888' }}>
+                    {pickedDates.length > 0 ? `${pickedDates.length} date(s) selected` : 'No dates selected'}
+                  </span>
+                  <button
+                    onClick={() => { setCalendarOpen(false); setCalendarDone(true); }}
+                    disabled={pickedDates.length === 0}
+                    style={{
+                      padding: '5px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
+                      background: pickedDates.length > 0 ? '#1a1a1a' : '#e0ddd8',
+                      color: pickedDates.length > 0 ? '#fff' : '#aaa',
+                      border: 'none', cursor: pickedDates.length > 0 ? 'pointer' : 'not-allowed',
+                    }}>
+                    Done
+                  </button>
+                </div>
+              )}
             />
           </div>
-          {pickedDates.length > 0 && (
+          {calendarDone && pickedDates.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {[...pickedDates].sort((a, b) => a.valueOf() - b.valueOf()).map((d) => (
-                <Tag key={d.valueOf()} closable onClose={() => removePickedDate(d)}
-                  style={{ borderRadius: '4px', fontSize: '12px', margin: '2px' }}>
-                  {d.format('MMM D')}
-                </Tag>
-              ))}
+              {[...pickedDates].sort((a, b) => a.valueOf() - b.valueOf()).map((d) => {
+                const isLocked = isLockedStartDate && editStartDate && d.isSame(editStartDate, 'day');
+                return (
+                  <Tag key={d.valueOf()} closable={!isLocked} onClose={() => removePickedDate(d)}
+                    style={{ borderRadius: '4px', fontSize: '12px', margin: '2px', fontWeight: isLocked ? '700' : '400' }}>
+                    {d.format('ddd, MMM D')}{isLocked ? ' (fixed)' : ''}
+                  </Tag>
+                );
+              })}
             </div>
           )}
-        </div>
-      ),
-    },
-    {
-      key: 'range_between',
-      label: 'Range',
-      children: (
-        <div>
-          <div style={tabDescStyle}>{tabDescriptions.range_between}</div>
-          <label style={labelStyle}>Select Date Range</label>
-          <DatePicker.RangePicker
-            disabledDate={disabledPastDate}
-            value={rangeBetweenStart && rangeBetweenEnd ? [rangeBetweenStart, rangeBetweenEnd] : []}
-            onChange={(dates) => {
-              if (dates && dates[0] && dates[1]) {
-                setRangeBetweenStart(dates[0]);
-                setRangeBetweenEnd(dates[1]);
-              } else {
-                setRangeBetweenStart(null);
-                setRangeBetweenEnd(null);
-              }
-            }}
-            style={{ width: '100%' }} size="large" format="MMM D, YYYY"
-          />
         </div>
       ),
     },
@@ -406,13 +420,13 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <label style={labelStyle}>Select Date Range</label>
           <div style={{ display: 'flex', gap: '12px', flexDirection: 'column', marginBottom: '14px' }}>
             <div>
-              <DatePicker value={dayWiseStart} onChange={setDayWiseStart} placeholder="Start date"
-                style={{ width: '100%' }} size="large" format="MMM D, YYYY" disabledDate={disabledPastDate} />
+              <DatePicker value={isLockedStartDate ? startDate : dayWiseStart} onChange={setDayWiseStart} placeholder="Start date"
+                style={{ width: '100%' }} size="large" format="MMM D, YYYY" disabledDate={disabledPastDate} allowClear={!isLockedStartDate} disabled={isLockedStartDate} className="schedule-datepicker-clear" />
             </div>
             <div>
               <DatePicker value={dayWiseEnd} onChange={setDayWiseEnd} placeholder="End date"
                 style={{ width: '100%' }} size="large" format="MMM D, YYYY"
-                disabledDate={(d) => disabledPastDate(d) || (dayWiseStart && d.isBefore(dayWiseStart, 'day'))} />
+                disabledDate={(d) => disabledPastDate(d) || (dayWiseStart && d.isBefore(dayWiseStart, 'day'))} allowClear className="schedule-datepicker-clear" />
             </div>
           </div>
           <label style={labelStyle}>Select Days</label>
@@ -467,7 +481,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       width={420}
       title={
         <span style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
-          {isSingleDayEdit ? 'Edit Day' : editingDay ? 'Edit Schedule' : 'Add New Schedule'}
+          {isSingleDayEdit ? 'Edit Day' : (editingDay && editingDay._id) ? 'Edit Schedule' : 'Add New Schedule'}
         </span>
       }
       footer={
@@ -476,7 +490,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <Button type="primary" onClick={handleSubmit} loading={submitting}
             disabled={!typeId || (!isSingleDayEdit && calendarDays.length === 0)} size="large"
             style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff', borderRadius: '6px', fontWeight: '600' }}>
-            {editingDay ? 'Save Changes' : 'Save Schedule'}
+            {(editingDay && editingDay._id) ? 'Save Changes' : 'Save Schedule'}
           </Button>
         </div>
       }
@@ -642,8 +656,8 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       {!isSingleDayEdit && (
         <div style={{ marginBottom: '8px' }}>
           <label style={labelStyle}>How to set dates</label>
-          <Tabs activeKey={dateTab} onChange={setDateTab} items={dateTabItems} size="small"
-            style={{ marginTop: '4px' }} />
+          <Tabs activeKey={dateTab} onChange={setDateTab} items={dateTabItems}
+            size="small" style={{ marginTop: '4px' }} />
         </div>
       )}
 

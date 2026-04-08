@@ -71,7 +71,8 @@ const RevisionHistoryDrawer = ({ open, onClose }) => {
             size="small"
             format="MMM D, YYYY"
             placeholder={['Start date', 'End date']}
-            allowClear={false}
+            allowClear
+            className="schedule-datepicker-clear"
           />
           {dateRange && (
             <Button size="small" icon={<FiX size={12} />} onClick={clearFilter}
