@@ -61,6 +61,7 @@ const ScheduleTable = ({
               const rowKey = `${row._id}-${row.singleDate}`;
               const isSelected = selectedRowKeys.includes(rowKey);
               const isDayOff = row.typeName === 'Day Off';
+              const isPast = dayjs(row.singleDate).isBefore(dayjs().startOf('day'));
 
               return (
                 <React.Fragment key={key}>
@@ -73,6 +74,7 @@ const ScheduleTable = ({
                       borderBottom: isExpanded ? 'none' : '1px solid #eeece8', cursor: 'pointer',
                       background: isSelected ? '#eef3ff' : isExpanded ? '#fdfcf8' : isDayOff ? '#fbfbfb' : '#fff',
                       transition: 'all 0.2s ease',
+                      opacity: isPast ? 0.5 : 1,
                     }}
                     onMouseEnter={(e) => { if (!isExpanded && !isSelected) e.currentTarget.style.background = '#fafaf6'; }}
                     onMouseLeave={(e) => { if (!isExpanded && !isSelected) e.currentTarget.style.background = isDayOff ? '#fbfbfb' : '#fff'; }}>
@@ -109,7 +111,8 @@ const ScheduleTable = ({
                       <ScheduleDayDetail day={row}
                         fetchEvents={fetchEvents} createEvent={createEvent} updateEvent={updateEvent} deleteEvent={deleteEvent}
                         onDelete={() => onDeleteDay(row._id, row.singleDate)} onEdit={(data) => onEditDay(row._id, data)}
-                        onEditSchedule={onEditSchedule} scheduleTypes={scheduleTypes} />
+                        onEditSchedule={onEditSchedule} scheduleTypes={scheduleTypes}
+                        readOnly={isPast} />
                     </td></tr>
                   )}
                 </React.Fragment>
@@ -141,12 +144,15 @@ const ScheduleTable = ({
             const timeStr = isEvent && evt.startDateTime
               ? (evt.fullDay ? 'Full Day' : `${dayjs(evt.startDateTime).format('h:mm A')}${evt.endDateTime ? ` – ${dayjs(evt.endDateTime).format('h:mm A')}` : ''}`)
               : '';
+            const evtDate = evt.startDateTime ? dayjs(evt.startDateTime) : evt.date ? dayjs(evt.date) : null;
+            const isEvtPast = evtDate && evtDate.isBefore(dayjs().startOf('day'));
 
             return (
               <div key={evt._id} style={{
                 display: 'flex', alignItems: 'flex-start', gap: '10px',
                 padding: '12px 16px', borderBottom: '1px solid #f0eeea',
                 borderLeft: `3px solid ${evt.color || '#3498DB'}`,
+                opacity: isEvtPast ? 0.5 : 1,
               }}>
                 <div style={{ flex: 1 }}>
                   {timeStr && <div style={{ fontSize: '12px', color: '#888', fontWeight: '500', marginBottom: '2px' }}>{timeStr}</div>}
@@ -170,7 +176,7 @@ const ScheduleTable = ({
                       <FiEye size={11} /> View
                     </button>
                   )}
-                  {onEditStandaloneEvent && (
+                  {!isEvtPast && onEditStandaloneEvent && (
                     <button onClick={() => onEditStandaloneEvent(evt)}
                       style={standaloneBtnStyle}
                       onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
@@ -178,7 +184,7 @@ const ScheduleTable = ({
                       <FiEdit2 size={11} /> Edit
                     </button>
                   )}
-                  {onDeleteEvent && (
+                  {!isEvtPast && onDeleteEvent && (
                     <button onClick={() => { onDeleteEvent(evt._id); }}
                       style={standaloneBtnStyle}
                       onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}

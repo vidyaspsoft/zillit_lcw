@@ -97,8 +97,8 @@ const boxScheduleService = {
 
   // ── Revisions ──
 
-  getRevisions: async () => {
-    const response = await boxScheduleApi.get('/revisions');
+  getRevisions: async (params = {}) => {
+    const response = await boxScheduleApi.get('/revisions', { params });
     return response.data;
   },
 

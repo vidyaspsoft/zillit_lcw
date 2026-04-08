@@ -8,6 +8,7 @@ import DuplicateScheduleModal from './DuplicateScheduleModal';
 const ScheduleDayDetail = ({
   day, fetchEvents, createEvent, updateEvent, deleteEvent,
   onDelete, onEdit, onEditSchedule, scheduleTypes = [],
+  readOnly = false,
 }) => {
   const [dayEvents, setDayEvents] = useState([]);
   const [dayNotes, setDayNotes] = useState([]);
@@ -86,9 +87,9 @@ const ScheduleDayDetail = ({
           </p>
         </div>
         <div className="flex gap-2">
-          {onEditSchedule && (
+          {!readOnly && onEditSchedule && (
             <Button size="small" icon={<FiEdit2 size={12} />}
-              onClick={(e) => { e.stopPropagation(); onEditSchedule(day); }}
+              onClick={(e) => { e.stopPropagation(); onEditSchedule({ ...day, _singleDayEdit: true }); }}
               style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#d0ccc5', color: '#555' }}>
               Edit
             </Button>
@@ -98,10 +99,12 @@ const ScheduleDayDetail = ({
             style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#d0ccc5', color: '#555' }}>
             Duplicate
           </Button>
-          <Button size="small" icon={<FiTrash2 size={12} />} danger onClick={onDelete}
-            style={{ borderRadius: '6px', fontSize: '12px' }}>
-            Delete
-          </Button>
+          {!readOnly && (
+            <Button size="small" icon={<FiTrash2 size={12} />} danger onClick={onDelete}
+              style={{ borderRadius: '6px', fontSize: '12px' }}>
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 
@@ -119,11 +122,13 @@ const ScheduleDayDetail = ({
               <div className="flex items-center gap-1.5">
                 <FiClock size={13} style={{ opacity: 0.6 }} /> EVENTS
               </div>
-              <Button size="small" type="link" icon={<FiPlus size={11} />}
-                onClick={() => { setEditingEvent(null); setCreateEventTab('Event'); setShowCreateEvent(true); }}
-                style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
-                Create Event
-              </Button>
+              {!readOnly && (
+                <Button size="small" type="link" icon={<FiPlus size={11} />}
+                  onClick={() => { setEditingEvent(null); setCreateEventTab('Event'); setShowCreateEvent(true); }}
+                  style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
+                  Create Event
+                </Button>
+              )}
             </div>
 
             {dayEvents.length > 0 ? (
@@ -183,18 +188,20 @@ const ScheduleDayDetail = ({
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
-                        <button onClick={() => handleEditEvent(evt)} style={actionBtnStyle}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                          <FiEdit2 size={11} /> Edit
-                        </button>
-                        <button onClick={() => handleDeleteEvent(evt._id)} style={actionBtnStyle}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                          <FiTrash2 size={11} /> Remove
-                        </button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+                          <button onClick={() => handleEditEvent(evt)} style={actionBtnStyle}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            <FiEdit2 size={11} /> Edit
+                          </button>
+                          <button onClick={() => handleDeleteEvent(evt._id)} style={actionBtnStyle}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            <FiTrash2 size={11} /> Remove
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -214,11 +221,13 @@ const ScheduleDayDetail = ({
               <div className="flex items-center gap-1.5">
                 <FiEdit2 size={12} style={{ opacity: 0.6 }} /> NOTES
               </div>
-              <Button size="small" type="link" icon={<FiPlus size={11} />}
-                onClick={() => { setEditingEvent(null); setCreateEventTab('Note'); setShowCreateEvent(true); }}
-                style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
-                Create Note
-              </Button>
+              {!readOnly && (
+                <Button size="small" type="link" icon={<FiPlus size={11} />}
+                  onClick={() => { setEditingEvent(null); setCreateEventTab('Note'); setShowCreateEvent(true); }}
+                  style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
+                  Create Note
+                </Button>
+              )}
             </div>
 
             {dayNotes.length > 0 ? (
@@ -236,18 +245,20 @@ const ScheduleDayDetail = ({
                           <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{note.notes || note.description}</div>
                         )}
                       </div>
-                      <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
-                        <button onClick={() => handleEditEvent(note)} style={actionBtnStyle}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                          <FiEdit2 size={11} /> Edit
-                        </button>
-                        <button onClick={() => handleDeleteEvent(note._id)} style={actionBtnStyle}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                          <FiTrash2 size={11} /> Remove
-                        </button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+                          <button onClick={() => handleEditEvent(note)} style={actionBtnStyle}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            <FiEdit2 size={11} /> Edit
+                          </button>
+                          <button onClick={() => handleDeleteEvent(note._id)} style={actionBtnStyle}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            <FiTrash2 size={11} /> Remove
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

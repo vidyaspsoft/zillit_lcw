@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Spin, Segmented, Modal, Input, Select } from 'antd';
-import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
@@ -33,7 +33,12 @@ const BoxSchedulePage = () => {
     joinProject, setRefreshCallback,
   } = useBoxSchedule();
 
-  const [activeView, setActiveView] = useState('List View');
+  const [activeView, setActiveView] = useState(() => {
+    return localStorage.getItem('boxScheduleDefaultView') || 'Calendar View';
+  });
+  const [savedDefaultView, setSavedDefaultView] = useState(() => {
+    return localStorage.getItem('boxScheduleDefaultView') || 'Calendar View';
+  });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTypeManager, setShowTypeManager] = useState(false);
   const [expandedDayId, setExpandedDayId] = useState(null);
@@ -79,9 +84,23 @@ const BoxSchedulePage = () => {
     }).catch(() => {});
   }, [fetchTypes, fetchDays, loadStandaloneEvents, joinProject, user?.projectId]);
 
+  // Unified refresh — call this after any CRUD to update whichever view is active
+  const refreshAll = useCallback(() => {
+    fetchDays();
+    loadStandaloneEvents();
+    fetchCalendar();
+  }, [fetchDays, loadStandaloneEvents, fetchCalendar]);
+
+  // Expose refresh functions globally for CreateScheduleModal
   useEffect(() => {
-    setRefreshCallback(() => { fetchTypes(); fetchDays(); loadStandaloneEvents(); });
-  }, [fetchTypes, fetchDays, loadStandaloneEvents, setRefreshCallback]);
+    window.__boxScheduleRefreshTypes = fetchTypes;
+    window.__boxScheduleRefreshDays = refreshAll;
+    return () => { delete window.__boxScheduleRefreshTypes; delete window.__boxScheduleRefreshDays; };
+  }, [fetchTypes, refreshAll]);
+
+  useEffect(() => {
+    setRefreshCallback(() => { fetchTypes(); refreshAll(); });
+  }, [fetchTypes, refreshAll, setRefreshCallback]);
 
   useEffect(() => {
     if (activeView === 'Calendar View') fetchCalendar();
@@ -127,18 +146,18 @@ const BoxSchedulePage = () => {
   const handleCreateSchedule = useCallback(async (dayData) => {
     try {
       const result = await createDay(dayData);
-      setShowCreateModal(false); setPendingDayData(null); fetchDays();
+      setShowCreateModal(false); setPendingDayData(null); refreshAll();
       return result;
     } catch (err) {
       if (err.response?.status === 409) { setConflictData(err.response.data.data); setPendingDayData(dayData); setShowCreateModal(false); }
       throw err;
     }
-  }, [createDay, fetchDays]);
+  }, [createDay, refreshAll]);
 
   const handleConflictResolve = useCallback(async (action) => {
     if (!pendingDayData) return;
-    try { await createDay({ ...pendingDayData, conflictAction: action }); setConflictData(null); setPendingDayData(null); fetchDays(); } catch {}
-  }, [pendingDayData, createDay, fetchDays]);
+    try { await createDay({ ...pendingDayData, conflictAction: action }); setConflictData(null); setPendingDayData(null); refreshAll(); } catch {}
+  }, [pendingDayData, createDay, refreshAll]);
 
   const handleDeleteDay = useCallback((id, singleDate) => { setDeleteConfirm({ id, singleDate }); }, []);
 
@@ -153,13 +172,13 @@ const BoxSchedulePage = () => {
         try { await boxScheduleService.removeDates([{ id, dates: [Number(singleDate)] }]); toast.success('Day removed'); }
         catch { await deleteDay(id); }
       }
-      setExpandedDayId(null); fetchDays();
+      setExpandedDayId(null); refreshAll();
     } catch { toast.error('Failed to delete'); }
-  }, [deleteConfirm, scheduleDays, deleteDay, fetchDays]);
+  }, [deleteConfirm, scheduleDays, deleteDay, refreshAll]);
 
   const handleEditDay = useCallback(async (id, data) => {
-    try { await updateDay(id, data); fetchDays(); } catch {}
-  }, [updateDay, fetchDays]);
+    try { await updateDay(id, data); refreshAll(); } catch {}
+  }, [updateDay, refreshAll]);
 
   const handleEditSchedule = useCallback((day) => { setEditingDay(day); setShowCreateModal(true); }, []);
 
@@ -208,12 +227,12 @@ const BoxSchedulePage = () => {
     try {
       await boxScheduleService.removeDates(entries);
       toast.success(`${selectedRowKeys.length} day(s) deleted`);
-      setSelectedRowKeys([]); setIsSelectMode(false); fetchDays();
+      setSelectedRowKeys([]); setIsSelectMode(false); refreshAll();
     } catch {
-      try { for (const e of entries) await deleteDay(e.id); toast.success('Schedules deleted'); setSelectedRowKeys([]); setIsSelectMode(false); fetchDays(); }
+      try { for (const e of entries) await deleteDay(e.id); toast.success('Schedules deleted'); setSelectedRowKeys([]); setIsSelectMode(false); refreshAll(); }
       catch { toast.error('Failed to delete'); }
     } finally { setBulkDeleting(false); }
-  }, [selectedRowKeys, flatSchedule, fetchDays, deleteDay]);
+  }, [selectedRowKeys, flatSchedule, refreshAll, deleteDay]);
 
   const selectedRows = useMemo(() => {
     if (selectedRowKeys.length === 0) return [];
@@ -273,6 +292,12 @@ const BoxSchedulePage = () => {
                 <Button icon={<FiCheckSquare size={13} />} onClick={enterSelectMode} size="middle"
                   style={toolbarBtnStyle}>Select</Button>
               )}
+              {currentRevision && currentRevision.revisionNumber > 0 && (
+                <Button icon={<FiClock size={13} />} onClick={() => setShowRevisionHistory(true)} size="middle"
+                  style={toolbarBtnStyle}>
+                  Rev {currentRevision.revisionNumber}
+                </Button>
+              )}
               <Button icon={<FiClock size={13} />} onClick={() => setShowActivityLog(true)} size="middle"
                 style={toolbarBtnStyle}>Activity</Button>
               <Button icon={<FiShare2 size={13} />} onClick={() => setShowShareModal(true)} size="middle"
@@ -306,20 +331,6 @@ const BoxSchedulePage = () => {
             </h1>
             <p style={{ fontSize: '12px', color: '#999', margin: 0, fontStyle: 'italic' }}>
               Prepared: {dayjs().format('MMMM D, YYYY')}
-              {currentRevision && currentRevision.revisionNumber > 0 && (
-                <button onClick={() => setShowRevisionHistory(true)}
-                  style={{
-                    marginLeft: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '11px',
-                    color: '#555', background: '#f0efec', border: '1px solid #d0ccc5',
-                    borderRadius: '4px', padding: '2px 10px', fontStyle: 'normal',
-                    transition: 'all 0.15s', verticalAlign: 'middle',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#e8e7e3'; e.currentTarget.style.borderColor = '#999'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#f0efec'; e.currentTarget.style.borderColor = '#d0ccc5'; }}
-                  title="Click to see revision history">
-                  Rev {currentRevision.revisionNumber} ({currentRevision.revisionColor})
-                </button>
-              )}
             </p>
           </div>
         </div>
@@ -355,8 +366,54 @@ const BoxSchedulePage = () => {
         {!isSelectMode && (
           <div style={{ borderBottom: '1px solid #e0ddd8', padding: '10px 28px', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div className="flex items-center gap-3 flex-wrap">
-              <Segmented options={['List View', 'Calendar View']} value={activeView} onChange={setActiveView}
+              <Segmented options={['Calendar View', 'List View']} value={activeView} onChange={(val) => { setActiveView(val); }}
                 style={{ background: '#f0efec', borderRadius: '8px', padding: '2px' }} />
+              {(() => {
+                const isDefault = savedDefaultView === activeView;
+                const savedLabel = savedDefaultView === 'Calendar View' ? 'Calendar' : 'List';
+                return (
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    background: isDefault ? '#f0fdf4' : '#fffdf0',
+                    border: `1px solid ${isDefault ? '#bbf7d0' : '#f0e6b8'}`,
+                    borderRadius: '8px', padding: '6px 14px', fontSize: '12px',
+                    color: isDefault ? '#166534' : '#8a7430',
+                    transition: 'all 0.3s ease',
+                  }}>
+                    <span style={{ fontSize: '16px' }}>{isDefault ? '\u2705' : '\uD83D\uDC41'}</span>
+                    <div style={{ lineHeight: '1.4' }}>
+                      {isDefault ? (
+                        <span style={{ fontWeight: '600' }}>
+                          {activeView} is your default view
+                        </span>
+                      ) : (
+                        <>
+                          <span style={{ fontWeight: '600' }}>
+                            You are viewing: {activeView}
+                          </span>
+                          <span style={{ color: '#b8a050', fontWeight: '400' }}>
+                            {' '}(Default: {savedLabel})
+                          </span>
+                          <br />
+                          <button
+                            onClick={() => {
+                              localStorage.setItem('boxScheduleDefaultView', activeView);
+                              setSavedDefaultView(activeView);
+                              toast.success(`Done! ${activeView} is now your default. Next time you open this page, it will show ${activeView} first.`);
+                            }}
+                            style={{
+                              fontSize: '11px', color: '#1a73e8', background: 'none', border: 'none',
+                              cursor: 'pointer', textDecoration: 'underline', padding: 0, fontWeight: '600',
+                            }}
+                          >
+                            Always open in {activeView}?
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               {activeView === 'List View' && (
                 <>
                   <Input placeholder="Search by title, type, date..." prefix={<FiSearch size={13} style={{ color: '#bbb' }} />}
@@ -453,8 +510,7 @@ const BoxSchedulePage = () => {
             } else {
               await createEvent(eventData);
             }
-            fetchDays(); loadStandaloneEvents();
-            if (activeView === 'Calendar View') fetchCalendar();
+            refreshAll();
             setQuickCreateDate(null);
           }}
           scheduleDays={scheduleDays}

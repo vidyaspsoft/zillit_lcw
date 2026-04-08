@@ -65,16 +65,19 @@ const CalendarView = ({
     return weeks;
   }, [currentMonth, dayLookup]);
 
+  const isPastDate = (cell) => dayjs(cell.dayKey).isBefore(dayjs().startOf('day'));
+
   const handleCellClick = (cell) => {
     if (!cell.isCurrentMonth) return;
+    const past = isPastDate(cell);
     const hasSchedule = cell.schedulesOnDay.length > 0;
     const hasStandalone = (standaloneByDate[cell.dayKey] || []).length > 0;
 
     if (hasSchedule || hasStandalone) {
-      setSelectedCell(cell);
+      setSelectedCell({ ...cell, isPast: past });
       setQuickActionCell(null);
-    } else {
-      // Empty cell — show quick action popup
+    } else if (!past) {
+      // Empty cell — show quick action popup (only for future dates)
       setQuickActionCell(cell);
       setSelectedCell(null);
     }
@@ -112,6 +115,9 @@ const CalendarView = ({
                   const isWeekend = cell.date.day() === 0 || cell.date.day() === 6;
                   const isToday = cell.date.isSame(dayjs(), 'day');
                   const isSelected = selectedCell?.dayKey === cell.dayKey;
+                  const isPast = cell.date.isBefore(dayjs().startOf('day'));
+                  const hasStandalone = (standaloneByDate[cell.dayKey] || []).length > 0;
+                  const isPastClickable = isPast && (hasSchedule || hasStandalone); // past with data = view only
 
                   // Count events and notes from calendar data
                   const eventCount = cell.schedulesOnDay.reduce((sum, s) => sum + (s.events?.length || 0), 0);
@@ -123,7 +129,9 @@ const CalendarView = ({
                         border: isSelected ? '2px solid #1a1a1a' : '1px solid #eee', padding: '4px 6px',
                         verticalAlign: 'top',
                         background: isSelected ? '#fdfcf4' : hasSchedule ? `${primary.color}0C` : isWeekend ? '#fdfcfa' : '#fff',
-                        opacity: cell.isCurrentMonth ? 1 : 0.3, transition: 'all 0.15s ease', cursor: cell.isCurrentMonth ? 'pointer' : 'default',
+                        opacity: !cell.isCurrentMonth ? 0.3 : isPast && !isPastClickable ? 0.45 : 1,
+                        transition: 'all 0.15s ease',
+                        cursor: !cell.isCurrentMonth ? 'default' : isPast && !isPastClickable ? 'not-allowed' : 'pointer',
                       }}
                       onMouseEnter={(e) => { if (cell.isCurrentMonth && !isSelected) { e.currentTarget.style.background = '#f8f7f0'; e.currentTarget.style.boxShadow = 'inset 0 0 0 1px #d0ccc5'; } }}
                       onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.background = hasSchedule ? `${primary.color}0C` : isWeekend ? '#fdfcfa' : '#fff'; e.currentTarget.style.boxShadow = 'none'; } }}>
@@ -201,7 +209,7 @@ const CalendarView = ({
             )}
           </div>
         ) : 'Day Details'}
-        placement="right" width={520} onClose={handleCloseDrawer} open={!!selectedCell}
+        placement="right" width={640} onClose={handleCloseDrawer} open={!!selectedCell}
         styles={{ header: { borderBottom: '1px solid #e0ddd8', background: '#fafaf8' }, body: { padding: 0, background: '#fdfcf8' } }}>
 
         {selectedCell && (
@@ -215,7 +223,8 @@ const CalendarView = ({
                     onDelete={() => { onDeleteDay(scheduleDay._id, selectedCell.dayKey); handleCloseDrawer(); if (onRefresh) onRefresh(); }}
                     onEdit={(data) => { onEditDay(scheduleDay._id, data); if (onRefresh) onRefresh(); }}
                     onEditSchedule={(day) => { handleCloseDrawer(); if (onEditSchedule) onEditSchedule(day); }}
-                    scheduleTypes={scheduleTypes} />
+                    scheduleTypes={scheduleTypes}
+                    readOnly={selectedCell.isPast} />
                 </div>
               ))
             )}
@@ -256,20 +265,22 @@ const CalendarView = ({
                             <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>{evt.description || evt.notes}</div>
                           )}
                         </div>
-                        <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
-                          <button onClick={() => { if (onEditStandaloneEvent) onEditStandaloneEvent(evt); }}
-                            style={drawerBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                            <FiEdit2 size={11} /> Edit
-                          </button>
-                          <button onClick={async () => { await deleteEvent(evt._id); if (onRefresh) onRefresh(); }}
-                            style={drawerBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
-                            <FiTrash2 size={11} /> Remove
-                          </button>
-                        </div>
+                        {!selectedCell.isPast && (
+                          <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+                            <button onClick={() => { if (onEditStandaloneEvent) onEditStandaloneEvent(evt); }}
+                              style={drawerBtnStyle}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                              <FiEdit2 size={11} /> Edit
+                            </button>
+                            <button onClick={async () => { await deleteEvent(evt._id); if (onRefresh) onRefresh(); }}
+                              style={drawerBtnStyle}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                              <FiTrash2 size={11} /> Remove
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

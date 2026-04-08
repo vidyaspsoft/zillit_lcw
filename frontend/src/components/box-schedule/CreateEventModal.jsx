@@ -281,7 +281,8 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               <div style={{ flex: 1, minWidth: '120px' }}>
                 <label style={labelStyle}>Start Date</label>
                 <DatePicker value={startDate} onChange={(v) => { setStartDate(v); setErrors((p) => ({ ...p, endDate: undefined, endTime: undefined })); }}
-                  style={{ width: '100%' }} format="MMM D, YYYY" />
+                  style={{ width: '100%' }} format="MMM D, YYYY"
+                  disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))} />
               </div>
               {!fullDay && (
                 <div style={{ width: '115px' }}>
@@ -303,7 +304,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
                 <label style={labelStyle}>End Date</label>
                 <DatePicker value={endDate} onChange={(v) => { setEndDate(v); setErrors((p) => ({ ...p, endDate: undefined })); }}
                   style={{ width: '100%' }} format="MMM D, YYYY"
-                  disabledDate={(current) => startDate && current && current.isBefore(startDate, 'day')}
+                  disabledDate={(current) => (current && current.isBefore(dayjs().startOf('day'))) || (startDate && current && current.isBefore(startDate, 'day'))}
                   status={errors.endDate ? 'error' : undefined} />
                 <FieldError field="endDate" />
               </div>
@@ -325,6 +326,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
                     <DatePicker value={repeatEndDate ? dayjs(repeatEndDate) : null}
                       onChange={(v) => setRepeatEndDate(v ? v.toISOString() : null)}
                       placeholder="Repeat End Date"
+                      disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
                       style={{ width: '100%' }} format="MMM D, YYYY" />
                   </div>
                 </div>

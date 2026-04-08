@@ -547,12 +547,19 @@ const getCalendar = async (req, res) => {
 const getActivityLog = async (req, res) => {
   try {
     const projectId = req.moduleData.project_id;
-    const { limit = 50, page = 0 } = req.query;
+    const { limit = 50, page = 0, startDate, endDate } = req.query;
     const skip = Number(page) * Number(limit);
 
+    const filter = { projectId };
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(Number(startDate));
+      if (endDate) filter.createdAt.$lte = new Date(Number(endDate));
+    }
+
     const [logs, total] = await Promise.all([
-      BoxScheduleActivityLog.find({ projectId }).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
-      BoxScheduleActivityLog.countDocuments({ projectId }),
+      BoxScheduleActivityLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
+      BoxScheduleActivityLog.countDocuments(filter),
     ]);
 
     return sendSuccess(res, { logs, total, page: Number(page), limit: Number(limit) });
@@ -567,7 +574,16 @@ const getActivityLog = async (req, res) => {
 const getRevisions = async (req, res) => {
   try {
     const projectId = req.moduleData.project_id;
-    const revisions = await BoxScheduleRevision.find({ projectId }).sort({ revisionNumber: -1 }).lean();
+    const { startDate, endDate } = req.query;
+
+    const filter = { projectId };
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(Number(startDate));
+      if (endDate) filter.createdAt.$lte = new Date(Number(endDate));
+    }
+
+    const revisions = await BoxScheduleRevision.find(filter).sort({ revisionNumber: -1 }).lean();
     return sendSuccess(res, revisions);
   } catch (error) {
     console.error("getRevisions error:", error);
