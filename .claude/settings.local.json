@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find /Users/vidyasagar/Downloads/zillit_lcw/frontend/src -name *Service* -o -name *service*)",
+      "Bash(find /Users/vidyasagar/Downloads/zillit_lcw/frontend/src -name *Hook* -o -name *hook*)",
+      "Bash(find /Users/vidyasagar/Downloads/zillit_lcw/frontend/src -name *api* -o -name *axios*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

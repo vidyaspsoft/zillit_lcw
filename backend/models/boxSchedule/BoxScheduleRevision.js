@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const epochTimestamps = require("./_epochTimestamps");
 
 const REVISION_COLORS = ["White", "Blue", "Pink", "Yellow", "Green", "Goldenrod"];
 
@@ -15,8 +16,10 @@ const boxScheduleRevisionSchema = new mongoose.Schema(
       name: { type: String, default: "" },
     },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
+
+boxScheduleRevisionSchema.plugin(epochTimestamps);
 
 boxScheduleRevisionSchema.index({ projectId: 1, revisionNumber: -1 });
 

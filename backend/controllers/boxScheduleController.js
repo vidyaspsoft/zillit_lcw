@@ -7,6 +7,34 @@ const BoxScheduleShare = require("../models/boxSchedule/BoxScheduleShare");
 const { sendSuccess, sendError, isValidObjectId } = require("../utils/helpers");
 const { v4: uuidv4 } = require("uuid");
 
+// ── Helper: Convert any date-like input (number, ISO string, Date) to epoch ms ──
+const toEpoch = (v) => {
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number") return v;
+  const ms = new Date(v).getTime();
+  return isNaN(ms) ? 0 : ms;
+};
+
+// ── Helper: Format an epoch ms as "Mon D" ──
+const fmtShortDate = (ms) => {
+  if (!ms) return "";
+  const d = new Date(ms);
+  return `${d.toLocaleString("en-US", { month: "short" })} ${d.getDate()}`;
+};
+
+// ── Helper: Build a human-readable identifier for a schedule day ──
+//    Prefers the day's title, else falls back to "TypeName · Apr 8 – Apr 12".
+const dayIdentifier = (title, typeName, startDate, endDate) => {
+  if (title) return title;
+  if (startDate && endDate) {
+    const range = startDate === endDate
+      ? fmtShortDate(startDate)
+      : `${fmtShortDate(startDate)} – ${fmtShortDate(endDate)}`;
+    return `${typeName} · ${range}`;
+  }
+  return typeName || "";
+};
+
 // ── Helper: Log activity ──
 const logActivity = async (projectId, action, targetType, targetId, targetTitle, details, performedBy) => {
   try {
@@ -52,6 +80,9 @@ const createType = async (req, res) => {
       systemDefined: false, order: (maxOrder?.order ?? -1) + 1,
       createdBy: { userId, name: userName || "" },
     });
+
+    const performer = { userId, name: userName || "" };
+    await logActivity(projectId, "created", "schedule_type", type._id, type.title, "", performer);
     return sendSuccess(res, type, "Schedule type created", 201);
   } catch (error) {
     console.error("createType error:", error);
@@ -63,19 +94,28 @@ const updateType = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
-    const { title, color, order } = req.body;
+    const userId = req.moduleData.user_id;
+    const { title, color, order, userName } = req.body;
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid type ID");
 
     const type = await BoxScheduleType.findOne({ _id: id, projectId });
     if (!type) return sendError(res, 404, "Schedule type not found");
     if (type.systemDefined && title && title.trim() !== type.title) return sendError(res, 400, "Cannot rename system-defined types");
 
-    if (title) type.title = title.trim();
-    if (color) type.color = color;
+    const changes = [];
+    const oldTitle = type.title;
+    const oldColor = type.color;
+    if (title && title.trim() !== oldTitle) { type.title = title.trim(); changes.push("renamed"); }
+    if (color && color !== oldColor) { type.color = color; changes.push("color changed"); }
     if (order !== undefined) type.order = order;
     await type.save();
 
     await BoxScheduleDay.updateMany({ projectId, typeId: id }, { $set: { typeName: type.title, color: type.color } });
+
+    if (changes.length > 0) {
+      const performer = { userId, name: userName || "" };
+      await logActivity(projectId, "updated", "schedule_type", type._id, type.title, changes.join(", "), performer);
+    }
     return sendSuccess(res, type, "Schedule type updated");
   } catch (error) {
     console.error("updateType error:", error);
@@ -87,6 +127,8 @@ const deleteType = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
+    const userId = req.moduleData.user_id;
+    const { userName } = req.body;
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid type ID");
 
     const type = await BoxScheduleType.findOne({ _id: id, projectId });
@@ -96,7 +138,11 @@ const deleteType = async (req, res) => {
     const daysUsingType = await BoxScheduleDay.countDocuments({ projectId, typeId: id, deleted: 0 });
     if (daysUsingType > 0) return sendError(res, 400, `Cannot delete — ${daysUsingType} schedule day(s) use this type`);
 
+    const typeTitle = type.title;
     await BoxScheduleType.deleteOne({ _id: id });
+
+    const performer = { userId, name: userName || "" };
+    await logActivity(projectId, "deleted", "schedule_type", id, typeTitle, "", performer);
     return sendSuccess(res, { id }, "Schedule type deleted");
   } catch (error) {
     console.error("deleteType error:", error);
@@ -156,30 +202,113 @@ const createDay = async (req, res) => {
     let finalDays = requestedDays;
     if (conflicting.length > 0 && conflictAction) {
       const conflictingDayValues = new Set();
-      conflicting.forEach((d) => d.calendarDays.forEach((cd) => { if (requestedDays.includes(cd)) conflictingDayValues.add(cd); }));
+      conflicting.forEach((d) =>
+        d.calendarDays.forEach((cd) => {
+          if (requestedDays.includes(cd)) conflictingDayValues.add(cd);
+        })
+      );
+      const perf = { userId, name: userName || "" };
 
+      // ─────────────────────────── REPLACE ───────────────────────────
+      // Kick out the overlap from existing blocks. The new schedule
+      // takes every requested day; existing blocks shrink or get deleted.
       if (conflictAction === "replace") {
+        finalDays = requestedDays;
+
         for (const day of conflicting) {
+          const stolen = day.calendarDays.filter((cd) => conflictingDayValues.has(cd));
+          if (stolen.length === 0) continue;
+
           const remaining = day.calendarDays.filter((cd) => !conflictingDayValues.has(cd));
+          const ident = dayIdentifier(day.title, day.typeName, day.startDate, day.endDate);
+
           if (remaining.length === 0) {
-            await BoxScheduleDay.updateOne({ _id: day._id }, { $set: { deleted: Date.now() } });
+            // Block entirely overwritten → soft-delete it + its events
+            await BoxScheduleDay.updateOne(
+              { _id: day._id },
+              { $set: { deleted: Date.now() }, $inc: { version: 1 } }
+            );
+            await BoxScheduleEvent.updateMany(
+              { scheduleDayId: day._id, deleted: 0 },
+              { $set: { deleted: Date.now() } }
+            );
+            await logActivity(
+              projectId, "deleted", "schedule_day", day._id, ident,
+              `replaced by ${type.title}`, perf
+            );
+            await bumpRevision(
+              projectId, `Replaced ${day.typeName} "${ident}" with ${type.title}`,
+              perf, day.color
+            );
           } else {
-            await BoxScheduleDay.updateOne({ _id: day._id }, { $set: { calendarDays: remaining, startDate: new Date(Math.min(...remaining)), endDate: new Date(Math.max(...remaining)), numberOfDays: remaining.length } });
+            // Block partially overwritten → shrink it
+            await BoxScheduleDay.updateOne(
+              { _id: day._id },
+              { $set: {
+                calendarDays: remaining,
+                startDate: Math.min(...remaining),
+                endDate: Math.max(...remaining),
+                numberOfDays: remaining.length,
+              }, $inc: { version: 1 } }
+            );
+            await logActivity(
+              projectId, "updated", "schedule_day", day._id, ident,
+              `${stolen.length} day(s) replaced by ${type.title}`, perf
+            );
           }
         }
-      } else if (conflictAction === "extend") {
-        finalDays = requestedDays.filter((d) => !conflictingDayValues.has(d));
-        if (finalDays.length === 0) {
-          // All dates occupied — treat as overlap (create alongside existing)
-          finalDays = requestedDays;
+      }
+
+      // ─────────────────────────── EXTEND ───────────────────────────
+      // The new schedule takes every requested day. Every affected
+      // existing block loses the overlap and grows by the same count
+      // at its end, so its total day count stays the same.
+      else if (conflictAction === "extend") {
+        finalDays = requestedDays;
+        const ONE_DAY_MS = 86400000;
+
+        for (const day of conflicting) {
+          const stolen = day.calendarDays.filter((cd) => conflictingDayValues.has(cd));
+          if (stolen.length === 0) continue;
+
+          const remaining = day.calendarDays.filter((cd) => !conflictingDayValues.has(cd));
+          const anchor = Math.max(...day.calendarDays);
+          const appended = [];
+          for (let i = 1; i <= stolen.length; i++) {
+            appended.push(anchor + i * ONE_DAY_MS);
+          }
+          const newDays = [...remaining, ...appended].sort((a, b) => a - b);
+          const ident = dayIdentifier(day.title, day.typeName, day.startDate, day.endDate);
+
+          await BoxScheduleDay.updateOne(
+            { _id: day._id },
+            { $set: {
+              calendarDays: newDays,
+              startDate: Math.min(...newDays),
+              endDate: Math.max(...newDays),
+              numberOfDays: newDays.length,
+            }, $inc: { version: 1 } }
+          );
+          await logActivity(
+            projectId, "updated", "schedule_day", day._id, ident,
+            `extended by ${stolen.length} day(s) to make room for ${type.title}`, perf
+          );
         }
+      }
+
+      // ─────────────────────────── OVERLAP ───────────────────────────
+      // Keep every existing block exactly as it is. The new schedule
+      // is created alongside and both types will render on the same day.
+      else if (conflictAction === "overlap") {
+        finalDays = requestedDays;
+        // no-op on existing blocks
       }
     }
 
     const newDay = await BoxScheduleDay.create({
       projectId, title: title || "", typeId: type._id, typeName: type.title, color: type.color,
       dateRangeType: dateRangeType || "by_dates",
-      startDate: new Date(Math.min(...finalDays)), endDate: new Date(Math.max(...finalDays)),
+      startDate: Math.min(...finalDays), endDate: Math.max(...finalDays),
       numberOfDays: finalDays.length, calendarDays: finalDays, timezone: timezone || "UTC",
       conflictAction: conflictAction || "", version: 1, createdBy: { userId, name: userName || "" },
     });
@@ -200,26 +329,49 @@ const updateDay = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
-    const { title, typeId, calendarDays, startDate, endDate, numberOfDays, dateRangeType, timezone } = req.body;
+    const userId = req.moduleData.user_id;
+    const { title, typeId, calendarDays, startDate, endDate, numberOfDays, dateRangeType, timezone, userName } = req.body;
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid schedule day ID");
 
     const day = await BoxScheduleDay.findOne({ _id: id, projectId, deleted: 0 });
     if (!day) return sendError(res, 404, "Schedule day not found");
 
+    const changes = [];
+    const oldTitle = day.title;
+    const oldTypeName = day.typeName;
+    const oldStartDate = day.startDate;
+    const oldEndDate = day.endDate;
+    const oldCalendarDays = [...(day.calendarDays || [])];
+
     if (typeId && isValidObjectId(typeId) && typeId !== String(day.typeId)) {
       const type = await BoxScheduleType.findOne({ _id: typeId, projectId });
       if (!type) return sendError(res, 404, "Schedule type not found");
       day.typeId = type._id; day.typeName = type.title; day.color = type.color;
+      changes.push(`type changed from "${oldTypeName}" to "${type.title}"`);
     }
-    if (title !== undefined) day.title = title;
+    if (title !== undefined && title !== oldTitle) {
+      day.title = title;
+      changes.push(oldTitle ? `title renamed from "${oldTitle}" to "${title}"` : `title set to "${title}"`);
+    }
     if (calendarDays && Array.isArray(calendarDays)) {
-      day.calendarDays = calendarDays.map(Number);
-      day.startDate = new Date(Math.min(...day.calendarDays));
-      day.endDate = new Date(Math.max(...day.calendarDays));
+      const newDays = calendarDays.map(Number);
+      const oldSet = new Set(oldCalendarDays.map(Number));
+      const newSet = new Set(newDays);
+      if (newDays.length !== oldCalendarDays.length ||
+          newDays.some((d) => !oldSet.has(d)) ||
+          oldCalendarDays.some((d) => !newSet.has(Number(d)))) {
+        const diff = newDays.length - oldCalendarDays.length;
+        if (diff > 0) changes.push(`${diff} day(s) added`);
+        else if (diff < 0) changes.push(`${-diff} day(s) removed`);
+        else changes.push("dates shifted");
+      }
+      day.calendarDays = newDays;
+      day.startDate = Math.min(...day.calendarDays);
+      day.endDate = Math.max(...day.calendarDays);
       day.numberOfDays = day.calendarDays.length;
     }
-    if (startDate) day.startDate = new Date(startDate);
-    if (endDate) day.endDate = new Date(endDate);
+    if (startDate) day.startDate = toEpoch(startDate);
+    if (endDate) day.endDate = toEpoch(endDate);
     if (numberOfDays !== undefined) day.numberOfDays = numberOfDays;
     if (dateRangeType) day.dateRangeType = dateRangeType;
     if (timezone) day.timezone = timezone;
@@ -228,6 +380,14 @@ const updateDay = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_day_updated", { day });
+
+    if (changes.length > 0) {
+      // Use the ORIGINAL title/typeName/date range so the user recognises
+      // the entry even if they just renamed it.
+      const identifier = dayIdentifier(oldTitle, oldTypeName, oldStartDate, oldEndDate);
+      const performer = { userId, name: userName || "" };
+      await logActivity(projectId, "updated", "schedule_day", day._id, identifier, changes.join(" · "), performer);
+    }
     return sendSuccess(res, day, "Schedule updated");
   } catch (error) {
     console.error("updateDay error:", error);
@@ -239,6 +399,7 @@ const deleteDay = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
+    const { userName } = req.body || {};
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid schedule day ID");
 
     const day = await BoxScheduleDay.findOne({ _id: id, projectId, deleted: 0 });
@@ -250,9 +411,10 @@ const deleteDay = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_day_deleted", { dayId: id });
-    const performer = { userId: req.moduleData.user_id, name: "" };
-    await logActivity(projectId, "deleted", "schedule_day", id, day.title || day.typeName, "", performer);
-    await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${day.title || day.typeName}`, performer, day.color);
+    const performer = { userId: req.moduleData.user_id, name: userName || "" };
+    const identifier = dayIdentifier(day.title, day.typeName, day.startDate, day.endDate);
+    await logActivity(projectId, "deleted", "schedule_day", id, identifier, "", performer);
+    await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${identifier}`, performer, day.color);
     return sendSuccess(res, { id }, "Schedule deleted");
   } catch (error) {
     console.error("deleteDay error:", error);
@@ -263,9 +425,11 @@ const deleteDay = async (req, res) => {
 const removeDates = async (req, res) => {
   try {
     const projectId = req.moduleData.project_id;
-    const { entries } = req.body;
+    const userId = req.moduleData.user_id;
+    const { entries, userName } = req.body;
     if (!Array.isArray(entries) || entries.length === 0) return sendError(res, 400, "Entries array is required");
 
+    const performer = { userId, name: userName || "" };
     const results = { updated: [], deleted: [] };
     for (const entry of entries) {
       if (!entry.id || !isValidObjectId(entry.id)) continue;
@@ -274,22 +438,30 @@ const removeDates = async (req, res) => {
       const day = await BoxScheduleDay.findOne({ _id: entry.id, projectId, deleted: 0 });
       if (!day) continue;
 
+      const removedCount = entry.dates.length;
       const datesToRemove = new Set(entry.dates.map((d) => Number(d)));
       const remaining = day.calendarDays.map((cd) => Number(cd)).filter((cd) => !datesToRemove.has(cd));
+
+      // Capture identifier BEFORE mutation so "from" state is preserved
+      const identifier = dayIdentifier(day.title, day.typeName, day.startDate, day.endDate);
 
       if (remaining.length === 0) {
         day.deleted = Date.now();
         await day.save();
         await BoxScheduleEvent.updateMany({ scheduleDayId: day._id, deleted: 0 }, { $set: { deleted: Date.now() } });
         results.deleted.push(String(day._id));
+        await logActivity(projectId, "deleted", "schedule_day", day._id, identifier, "all days removed", performer);
+        await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${identifier}`, performer, day.color);
       } else {
         day.calendarDays = remaining;
-        day.startDate = new Date(Math.min(...remaining));
-        day.endDate = new Date(Math.max(...remaining));
+        day.startDate = Math.min(...remaining);
+        day.endDate = Math.max(...remaining);
         day.numberOfDays = remaining.length;
         day.version += 1;
         await day.save();
         results.updated.push(String(day._id));
+        const dayWord = removedCount === 1 ? "day" : "days";
+        await logActivity(projectId, "updated", "schedule_day", day._id, identifier, `${removedCount} ${dayWord} removed`, performer);
       }
     }
 
@@ -315,8 +487,8 @@ const bulkUpdateDays = async (req, res) => {
       if (update.calendarDays && Array.isArray(update.calendarDays)) {
         const days = update.calendarDays.map(Number);
         setFields.calendarDays = days;
-        setFields.startDate = new Date(Math.min(...days));
-        setFields.endDate = new Date(Math.max(...days));
+        setFields.startDate = Math.min(...days);
+        setFields.endDate = Math.max(...days);
         setFields.numberOfDays = days.length;
       }
       if (Object.keys(setFields).length > 0) {
@@ -394,15 +566,15 @@ const createEvent = async (req, res) => {
 
     if (type === "event") {
       eventData.description = description || "";
-      eventData.startDateTime = startDateTime ? new Date(startDateTime) : null;
-      eventData.endDateTime = endDateTime ? new Date(endDateTime) : null;
+      eventData.startDateTime = toEpoch(startDateTime);
+      eventData.endDateTime = toEpoch(endDateTime);
       eventData.fullDay = fullDay || false;
       eventData.location = location || "";
       eventData.locationLat = locationLat || null;
       eventData.locationLng = locationLng || null;
       eventData.reminder = reminder || "none";
       eventData.repeatStatus = repeatStatus || "none";
-      eventData.repeatEndDate = repeatEndDate ? new Date(repeatEndDate) : null;
+      eventData.repeatEndDate = toEpoch(repeatEndDate);
       eventData.timezone = timezone || "";
       eventData.callType = callType || "";
       eventData.textColor = textColor || "";
@@ -431,6 +603,7 @@ const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
+    const userId = req.moduleData.user_id;
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid event ID");
 
     const event = await BoxScheduleEvent.findOne({ _id: id, projectId, deleted: 0 });
@@ -440,19 +613,34 @@ const updateEvent = async (req, res) => {
       title, color, description, startDateTime, endDateTime, fullDay, location, reminder, repeatStatus, repeatEndDate,
       timezone, callType, textColor, locationLat, locationLng,
       distributeTo, distributeUserIds, distributeDepartmentIds, organizerExcluded, advancedEnabled,
-      notes, date,
+      notes, date, userName,
     } = req.body;
 
-    if (title !== undefined) event.title = title;
+    const changes = [];
+    const oldTitle = event.title;
+    const oldDescription = event.description;
+    const oldLocation = event.location;
+    const oldStart = event.startDateTime || 0;
+    const oldEnd = event.endDateTime || 0;
+
+    if (title !== undefined && title !== oldTitle) { event.title = title; changes.push("title updated"); }
     if (color !== undefined) event.color = color;
     if (date !== undefined) event.date = Number(date);
 
     if (event.eventType === "event") {
-      if (description !== undefined) event.description = description;
-      if (startDateTime !== undefined) event.startDateTime = startDateTime ? new Date(startDateTime) : null;
-      if (endDateTime !== undefined) event.endDateTime = endDateTime ? new Date(endDateTime) : null;
+      if (description !== undefined && description !== oldDescription) { event.description = description; changes.push("description changed"); }
+      if (startDateTime !== undefined) {
+        const newStart = toEpoch(startDateTime);
+        if (newStart !== oldStart) changes.push("start time changed");
+        event.startDateTime = newStart;
+      }
+      if (endDateTime !== undefined) {
+        const newEnd = toEpoch(endDateTime);
+        if (newEnd !== oldEnd) changes.push("end time changed");
+        event.endDateTime = newEnd;
+      }
       if (fullDay !== undefined) event.fullDay = fullDay;
-      if (location !== undefined) event.location = location;
+      if (location !== undefined && location !== oldLocation) { event.location = location; changes.push("location changed"); }
       if (locationLat !== undefined) event.locationLat = locationLat;
       if (locationLng !== undefined) event.locationLng = locationLng;
       if (timezone !== undefined) event.timezone = timezone;
@@ -465,15 +653,20 @@ const updateEvent = async (req, res) => {
       if (advancedEnabled !== undefined) event.advancedEnabled = advancedEnabled;
       if (reminder !== undefined) event.reminder = reminder;
       if (repeatStatus !== undefined) event.repeatStatus = repeatStatus;
-      if (repeatEndDate !== undefined) event.repeatEndDate = repeatEndDate ? new Date(repeatEndDate) : null;
+      if (repeatEndDate !== undefined) event.repeatEndDate = toEpoch(repeatEndDate);
     } else {
-      if (notes !== undefined) event.notes = notes;
+      if (notes !== undefined && notes !== event.notes) { event.notes = notes; changes.push("notes updated"); }
     }
 
     await event.save();
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_event_updated", { event });
+
+    if (changes.length > 0) {
+      const performer = { userId, name: userName || "" };
+      await logActivity(projectId, "updated", event.eventType === "event" ? "event" : "note", event._id, event.title, changes.join(", "), performer);
+    }
     return sendSuccess(res, event, "Event updated");
   } catch (error) {
     console.error("updateEvent error:", error);
@@ -485,16 +678,23 @@ const deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
     const projectId = req.moduleData.project_id;
+    const userId = req.moduleData.user_id;
+    const { userName } = req.body || {};
     if (!isValidObjectId(id)) return sendError(res, 400, "Invalid event ID");
 
     const event = await BoxScheduleEvent.findOne({ _id: id, projectId, deleted: 0 });
     if (!event) return sendError(res, 404, "Event not found");
 
+    const eventTitle = event.title;
+    const eventType = event.eventType === "event" ? "event" : "note";
     event.deleted = Date.now();
     await event.save();
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_event_deleted", { eventId: id });
+
+    const performer = { userId, name: userName || "" };
+    await logActivity(projectId, "deleted", eventType, id, eventTitle, "", performer);
     return sendSuccess(res, { id }, "Event deleted");
   } catch (error) {
     console.error("deleteEvent error:", error);
@@ -556,8 +756,8 @@ const getActivityLog = async (req, res) => {
     const filter = { projectId };
     if (startDate || endDate) {
       filter.createdAt = {};
-      if (startDate) filter.createdAt.$gte = new Date(Number(startDate));
-      if (endDate) filter.createdAt.$lte = new Date(Number(endDate));
+      if (startDate) filter.createdAt.$gte = Number(startDate);
+      if (endDate) filter.createdAt.$lte = Number(endDate);
     }
 
     const [logs, total] = await Promise.all([
@@ -582,8 +782,8 @@ const getRevisions = async (req, res) => {
     const filter = { projectId };
     if (startDate || endDate) {
       filter.createdAt = {};
-      if (startDate) filter.createdAt.$gte = new Date(Number(startDate));
-      if (endDate) filter.createdAt.$lte = new Date(Number(endDate));
+      if (startDate) filter.createdAt.$gte = Number(startDate);
+      if (endDate) filter.createdAt.$lte = Number(endDate);
     }
 
     const revisions = await BoxScheduleRevision.find(filter).sort({ revisionNumber: -1 }).lean();
@@ -630,8 +830,8 @@ const duplicateDay = async (req, res) => {
       projectId, title: source.title ? `${source.title} (Copy)` : `${source.typeName} (Copy)`,
       typeId: source.typeId, typeName: source.typeName, color: source.color,
       dateRangeType: source.dateRangeType,
-      startDate: new Date(Math.min(...newCalendarDays)),
-      endDate: new Date(Math.max(...newCalendarDays)),
+      startDate: Math.min(...newCalendarDays),
+      endDate: Math.max(...newCalendarDays),
       numberOfDays: newCalendarDays.length,
       calendarDays: newCalendarDays,
       timezone: source.timezone, version: 1,
@@ -646,8 +846,8 @@ const duplicateDay = async (req, res) => {
       delete newEvt.__v;
       newEvt.scheduleDayId = newDay._id;
       newEvt.date = evt.date + offset;
-      if (newEvt.startDateTime) newEvt.startDateTime = new Date(new Date(newEvt.startDateTime).getTime() + offset);
-      if (newEvt.endDateTime) newEvt.endDateTime = new Date(new Date(newEvt.endDateTime).getTime() + offset);
+      if (newEvt.startDateTime) newEvt.startDateTime = toEpoch(newEvt.startDateTime) + offset;
+      if (newEvt.endDateTime) newEvt.endDateTime = toEpoch(newEvt.endDateTime) + offset;
       newEvt.createdBy = { userId, name: userName || "" };
       await BoxScheduleEvent.create(newEvt);
     }
@@ -695,7 +895,7 @@ const getSharedSchedule = async (req, res) => {
     const share = await BoxScheduleShare.findOne({ token, active: true }).lean();
     if (!share) return sendError(res, 404, "Share link not found or expired");
 
-    if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
+    if (share.expiresAt && share.expiresAt > 0 && share.expiresAt < Date.now()) {
       return sendError(res, 410, "Share link has expired");
     }
 

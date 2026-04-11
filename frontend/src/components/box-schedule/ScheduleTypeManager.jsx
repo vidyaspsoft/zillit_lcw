@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, ColorPicker } from 'antd';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 
 /**
  * ScheduleTypeManager — Manage schedule types (add/edit/delete custom types).
@@ -17,6 +17,12 @@ const ScheduleTypeManager = ({
   const [newTitle, setNewTitle] = useState('');
   const [newColor, setNewColor] = useState('#9B59B6');
   const [creating, setCreating] = useState(false);
+
+  // Inline edit state (one row at a time)
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editColor, setEditColor] = useState('#9B59B6');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -48,6 +54,39 @@ const ScheduleTypeManager = ({
     }
   };
 
+  const startEdit = (type) => {
+    setEditingId(type._id);
+    setEditTitle(type.title);
+    setEditColor(type.color);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditColor('#9B59B6');
+  };
+
+  const saveEdit = async (type) => {
+    const title = editTitle.trim();
+    if (!title) return;
+    const payload = {};
+    if (title !== type.title) payload.title = title;
+    if (editColor !== type.color) payload.color = editColor;
+    if (Object.keys(payload).length === 0) {
+      cancelEdit();
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await onUpdateType(type._id, payload);
+      cancelEdit();
+    } catch {
+      // Already toasted
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -65,59 +104,134 @@ const ScheduleTypeManager = ({
       footer={
         <Button onClick={onClose}>Done</Button>
       }
-      width={420}
+      width={440}
       centered
     >
       <div style={{ padding: '8px 0' }}>
         {/* Existing types */}
         <div style={{ marginBottom: '16px' }}>
-          {types.map((type) => (
-            <div
-              key={type._id}
-              className="flex items-center justify-between"
-              style={{
-                padding: '8px 0',
-                borderBottom: '1px solid #eee',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <ColorPicker
-                  value={type.color}
-                  onChange={(_, hex) => handleColorChange(type._id, hex)}
-                  size="small"
-                />
-                <span style={{ fontSize: '14px', fontWeight: type.systemDefined ? '600' : '400' }}>
-                  {type.title}
-                </span>
-                {type.systemDefined && (
-                  <span style={{
-                    fontSize: '10px',
-                    color: '#999',
-                    border: '1px solid #ddd',
-                    padding: '1px 4px',
-                    borderRadius: '2px',
-                  }}>
-                    SYSTEM
-                  </span>
+          {types.map((type) => {
+            const isEditing = editingId === type._id;
+            return (
+              <div
+                key={type._id}
+                className="flex items-center justify-between"
+                style={{
+                  padding: '8px 0',
+                  borderBottom: '1px solid #eee',
+                  gap: '8px',
+                }}
+              >
+                {isEditing ? (
+                  <>
+                    <div className="flex items-center gap-2" style={{ flex: 1 }}>
+                      <ColorPicker
+                        value={editColor}
+                        onChange={(_, hex) => setEditColor(hex)}
+                        size="small"
+                      />
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onPressEnter={() => saveEdit(type)}
+                        autoFocus
+                        size="small"
+                        style={{ flex: 1 }}
+                        disabled={type.systemDefined}
+                        placeholder="Type name"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => saveEdit(type)}
+                        disabled={savingEdit || !editTitle.trim()}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: savingEdit ? 'default' : 'pointer',
+                          color: '#27ae60',
+                          padding: '4px',
+                          opacity: !editTitle.trim() ? 0.4 : 1,
+                        }}
+                        title="Save"
+                      >
+                        <FiCheck size={16} />
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#999',
+                          padding: '4px',
+                        }}
+                        title="Cancel"
+                      >
+                        <FiX size={16} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3" style={{ flex: 1, minWidth: 0 }}>
+                      <ColorPicker
+                        value={type.color}
+                        onChange={(_, hex) => handleColorChange(type._id, hex)}
+                        size="small"
+                      />
+                      <span style={{ fontSize: '14px', fontWeight: type.systemDefined ? '600' : '400' }}>
+                        {type.title}
+                      </span>
+                      {type.systemDefined && (
+                        <span style={{
+                          fontSize: '10px',
+                          color: '#999',
+                          border: '1px solid #ddd',
+                          padding: '1px 4px',
+                          borderRadius: '2px',
+                        }}>
+                          SYSTEM
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {!type.systemDefined && (
+                        <button
+                          onClick={() => startEdit(type)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#3498db',
+                            padding: '4px',
+                          }}
+                          title="Edit type"
+                        >
+                          <FiEdit2 size={15} />
+                        </button>
+                      )}
+                      {!type.systemDefined && (
+                        <button
+                          onClick={() => handleDelete(type._id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#999',
+                            padding: '4px',
+                          }}
+                          title="Delete type"
+                        >
+                          <FiTrash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
-              {!type.systemDefined && (
-                <button
-                  onClick={() => handleDelete(type._id)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#999',
-                    padding: '4px',
-                  }}
-                  title="Delete type"
-                >
-                  <FiTrash2 />
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Add new type */}

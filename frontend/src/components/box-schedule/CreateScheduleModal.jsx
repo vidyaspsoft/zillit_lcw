@@ -246,15 +246,12 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       };
       if (editingDay && editingDay._id) {
         await onEdit(editingDay._id, data);
-        toast.success('Schedule updated successfully');
         onClose();
       } else {
         await onSubmit(data);
-        toast.success('Schedule created successfully');
       }
-    } catch (err) {
-      const apiMessage = err.response?.data?.message || err.message || 'Failed to save schedule';
-      if (err.response?.status !== 409) toast.error(apiMessage); // Don't toast on conflict (handled by ConflictDialog)
+    } catch {
+      // Errors are toasted inside useBoxSchedule (409 conflicts are handled by ConflictDialog)
     } finally { setSubmitting(false); }
   };
 

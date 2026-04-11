@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Drawer, Modal, Segmented } from 'antd';
-import { FiPlus, FiCalendar } from 'react-icons/fi';
+import { Button, Drawer, Modal, Segmented, Popover } from 'antd';
+import { FiPlus, FiCalendar, FiGrid } from 'react-icons/fi';
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import ScheduleDayDetail from './ScheduleDayDetail';
+
+const CALENDAR_MODE_KEY = 'box-schedule-calendar-mode';
 
 const CalendarView = ({
   calendarData = [], scheduleTypes = [], onRefresh,
@@ -12,7 +15,21 @@ const CalendarView = ({
   standaloneEvents = [], onEditStandaloneEvent,
   onQuickCreateSchedule, onQuickCreateEvent, onQuickCreateNote,
 }) => {
-  const [calendarMode, setCalendarMode] = useState('week'); // 'week' | 'month'
+  // Default calendar mode: read from localStorage, fallback to 'month'
+  const [calendarMode, setCalendarMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CALENDAR_MODE_KEY);
+      return saved === 'week' || saved === 'month' ? saved : 'month';
+    } catch { return 'month'; }
+  });
+  // Saved default (what was stored in localStorage) — shown as "Current" marker in popover
+  const [savedCalendarMode, setSavedCalendarMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CALENDAR_MODE_KEY);
+      return saved === 'week' || saved === 'month' ? saved : 'month';
+    } catch { return 'month'; }
+  });
+  const [showDefaultPopover, setShowDefaultPopover] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(dayjs().startOf('month'));
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     // Start of current week (Monday)
@@ -106,9 +123,79 @@ const CalendarView = ({
   return (
     <div style={{ padding: '8px 16px 8px', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="flex items-center justify-between" style={{ padding: '4px 0 8px', flexShrink: 0 }}>
-        <Segmented options={['Week', 'Month']} value={calendarMode === 'week' ? 'Week' : 'Month'}
-          onChange={(val) => setCalendarMode(val === 'Week' ? 'week' : 'month')}
-          style={{ background: '#f0efec', borderRadius: '6px' }} size="small" />
+        <div className="flex items-center gap-2">
+          <Segmented options={['Month', 'Week']} value={calendarMode === 'week' ? 'Week' : 'Month'}
+            onChange={(val) => setCalendarMode(val === 'Week' ? 'week' : 'month')}
+            style={{ background: '#f0efec', borderRadius: '6px' }} size="small" />
+          <Popover
+            trigger="click"
+            placement="bottomLeft"
+            open={showDefaultPopover}
+            onOpenChange={setShowDefaultPopover}
+            content={
+              <div style={{ width: '240px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1a1a', marginBottom: '10px' }}>
+                  Choose your default view
+                </div>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', lineHeight: '1.4' }}>
+                  This view will load first every time you open the Calendar.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                    { value: 'month', label: 'Month View', desc: 'Full month grid with all weeks' },
+                    { value: 'week', label: 'Week View', desc: 'One week at a time with bigger cells' },
+                  ].map((opt) => {
+                    const isSelected = savedCalendarMode === opt.value;
+                    return (
+                      <button key={opt.value}
+                        onClick={() => {
+                          try {
+                            localStorage.setItem(CALENDAR_MODE_KEY, opt.value);
+                            setSavedCalendarMode(opt.value);
+                            setCalendarMode(opt.value);
+                            setShowDefaultPopover(false);
+                            toast.success(`${opt.label} is now your default calendar view.`);
+                          } catch {
+                            toast.error('Failed to save default view');
+                          }
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                          border: isSelected ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
+                          background: isSelected ? '#f8f8f4' : '#fff',
+                          transition: 'all 0.15s', textAlign: 'left', width: '100%',
+                        }}
+                      >
+                        <span style={{
+                          width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+                          border: isSelected ? '5px solid #1a1a1a' : '2px solid #ccc',
+                          background: '#fff',
+                        }} />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>
+                            {opt.label}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#999' }}>
+                            {opt.desc}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#27ae60', fontWeight: '600' }}>Current</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            }
+          >
+            <Button size="small" icon={<FiGrid size={12} />}
+              style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '11px' }}>
+              Set as Default
+            </Button>
+          </Popover>
+        </div>
 
         <div className="flex items-center gap-3">
           <Button icon={<FiChevronLeft size={14} />} size="small"

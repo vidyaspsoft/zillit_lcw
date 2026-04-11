@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const epochTimestamps = require("./_epochTimestamps");
 
 /**
  * BoxScheduleEvent — Events and notes attached to schedule days.
@@ -6,6 +7,8 @@ const mongoose = require("mongoose");
  * Two types:
  * - "event" = Full calendar event (time, location, reminder, repeat)
  * - "note"  = Quick note (just title + text)
+ *
+ * All date fields are stored as epoch milliseconds (Number).
  */
 const boxScheduleEventSchema = new mongoose.Schema(
   {
@@ -48,13 +51,15 @@ const boxScheduleEventSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // Epoch ms
     startDateTime: {
-      type: Date,
-      default: null,
+      type: Number,
+      default: 0,
     },
+    // Epoch ms
     endDateTime: {
-      type: Date,
-      default: null,
+      type: Number,
+      default: 0,
     },
     fullDay: {
       type: Boolean,
@@ -75,9 +80,10 @@ const boxScheduleEventSchema = new mongoose.Schema(
       enum: ["none", "daily", "weekly", "monthly"],
       default: "none",
     },
+    // Epoch ms
     repeatEndDate: {
-      type: Date,
-      default: null,
+      type: Number,
+      default: 0,
     },
     // Timezone (e.g., "Asia/Calcutta", "America/Los_Angeles")
     timezone: {
@@ -136,13 +142,16 @@ const boxScheduleEventSchema = new mongoose.Schema(
       userId: { type: String, default: "" },
       name: { type: String, default: "" },
     },
+    // Soft delete timestamp (epoch ms, 0 = active)
     deleted: {
       type: Number,
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
+
+boxScheduleEventSchema.plugin(epochTimestamps);
 
 boxScheduleEventSchema.index({ projectId: 1, date: 1 });
 boxScheduleEventSchema.index({ projectId: 1, scheduleDayId: 1 });

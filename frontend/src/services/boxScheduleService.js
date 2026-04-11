@@ -16,12 +16,14 @@ const boxScheduleService = {
   },
 
   updateType: async (id, { title, color, order }) => {
-    const response = await boxScheduleApi.put(`/types/${id}`, { title, color, order });
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.put(`/types/${id}`, { title, color, order, userName });
     return response.data;
   },
 
   deleteType: async (id) => {
-    const response = await boxScheduleApi.delete(`/types/${id}`);
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.delete(`/types/${id}`, { data: { userName } });
     return response.data;
   },
 
@@ -39,22 +41,26 @@ const boxScheduleService = {
   },
 
   updateDay: async (id, dayData) => {
-    const response = await boxScheduleApi.put(`/days/${id}`, dayData);
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.put(`/days/${id}`, { ...dayData, userName });
     return response.data;
   },
 
   deleteDay: async (id) => {
-    const response = await boxScheduleApi.delete(`/days/${id}`);
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.delete(`/days/${id}`, { data: { userName } });
     return response.data;
   },
 
   bulkUpdateDays: async (updates) => {
-    const response = await boxScheduleApi.post('/days/bulk', { updates });
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.post('/days/bulk', { updates, userName });
     return response.data;
   },
 
   removeDates: async (entries) => {
-    const response = await boxScheduleApi.post('/days/remove-dates', { entries });
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.post('/days/remove-dates', { entries, userName });
     return response.data;
   },
 
@@ -72,12 +78,14 @@ const boxScheduleService = {
   },
 
   updateEvent: async (id, eventData) => {
-    const response = await boxScheduleApi.put(`/events/${id}`, eventData);
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.put(`/events/${id}`, { ...eventData, userName });
     return response.data;
   },
 
   deleteEvent: async (id) => {
-    const response = await boxScheduleApi.delete(`/events/${id}`);
+    const userName = getCurrentUserName();
+    const response = await boxScheduleApi.delete(`/events/${id}`, { data: { userName } });
     return response.data;
   },
 

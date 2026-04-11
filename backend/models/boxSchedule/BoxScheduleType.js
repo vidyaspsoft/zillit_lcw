@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
+const epochTimestamps = require("./_epochTimestamps");
 
 /**
  * BoxScheduleType — Schedule type definitions (Prep, Shoot, Wrap, Day Off, Travel + custom).
  * System-defined types are seeded on first fetch and cannot be deleted.
+ * Timestamps stored as epoch milliseconds (Number).
  */
 const boxScheduleTypeSchema = new mongoose.Schema(
   {
@@ -34,8 +36,10 @@ const boxScheduleTypeSchema = new mongoose.Schema(
       name: { type: String, default: "" },
     },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
+
+boxScheduleTypeSchema.plugin(epochTimestamps);
 
 boxScheduleTypeSchema.index({ projectId: 1, title: 1 }, { unique: true });
 

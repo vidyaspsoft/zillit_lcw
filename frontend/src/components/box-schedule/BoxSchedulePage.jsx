@@ -292,7 +292,7 @@ const BoxSchedulePage = () => {
                   style={toolbarBtnStyle}>Select</Button>
               )}
               <Button icon={<FiClock size={13} />} onClick={() => setShowActivityLog(true)} size="middle"
-                style={toolbarBtnStyle}>Activity</Button>
+                style={toolbarBtnStyle}>History</Button>
               <Button icon={<FiShare2 size={13} />} onClick={() => setShowShareModal(true)} size="middle"
                 style={toolbarBtnStyle}>Share</Button>
               <Button icon={<FiSettings size={13} />} onClick={() => setShowTypeManager(true)} size="middle"

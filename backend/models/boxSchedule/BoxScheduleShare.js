@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const epochTimestamps = require("./_epochTimestamps");
 
 const boxScheduleShareSchema = new mongoose.Schema(
   {
@@ -8,10 +9,13 @@ const boxScheduleShareSchema = new mongoose.Schema(
       userId: { type: String, default: "" },
       name: { type: String, default: "" },
     },
-    expiresAt: { type: Date, default: null },
+    // Epoch ms (0 = no expiration)
+    expiresAt: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
+
+boxScheduleShareSchema.plugin(epochTimestamps);
 
 module.exports = mongoose.model("BoxScheduleShare", boxScheduleShareSchema);

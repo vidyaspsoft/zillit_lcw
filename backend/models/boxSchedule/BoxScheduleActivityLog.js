@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const epochTimestamps = require("./_epochTimestamps");
 
 const boxScheduleActivityLogSchema = new mongoose.Schema(
   {
@@ -21,8 +22,10 @@ const boxScheduleActivityLogSchema = new mongoose.Schema(
       name: { type: String, default: "" },
     },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
+
+boxScheduleActivityLogSchema.plugin(epochTimestamps);
 
 boxScheduleActivityLogSchema.index({ projectId: 1, createdAt: -1 });
 

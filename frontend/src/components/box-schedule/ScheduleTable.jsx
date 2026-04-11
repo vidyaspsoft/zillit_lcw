@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Checkbox, Segmented, Modal, Tag } from 'antd';
-import { FiChevronDown, FiChevronRight, FiClock, FiMapPin, FiTrash2, FiEdit2, FiEye, FiCalendar } from 'react-icons/fi';
+import { Checkbox, Segmented, Modal, Tag, Popover, Button } from 'antd';
+import { toast } from 'react-toastify';
+import { FiChevronDown, FiChevronRight, FiClock, FiMapPin, FiTrash2, FiEdit2, FiEye, FiCalendar, FiGrid } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import ScheduleDayDetail from './ScheduleDayDetail';
+
+const LIST_MODE_KEY = 'box-schedule-list-mode';
 
 const ScheduleTable = ({
   rows = [], expandedDayId, onToggleExpand, onDeleteDay, onEditDay, onEditSchedule,
@@ -13,7 +16,14 @@ const ScheduleTable = ({
   // New props for "By Schedule" view
   scheduleDays = [], onEditFullBlock, onDeleteFullBlock,
 }) => {
-  const [listMode, setListMode] = useState('by_date'); // 'by_date' | 'by_schedule'
+  const [savedListMode, setSavedListMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem(LIST_MODE_KEY);
+      return stored === 'by_schedule' ? 'by_schedule' : 'by_date';
+    } catch { return 'by_date'; }
+  });
+  const [listMode, setListMode] = useState(savedListMode); // 'by_date' | 'by_schedule'
+  const [showListDefaultPopover, setShowListDefaultPopover] = useState(false);
   const [deleteBlockConfirm, setDeleteBlockConfirm] = useState(null);
 
   // Group schedule blocks for "By Schedule" view
@@ -43,7 +53,7 @@ const ScheduleTable = ({
 
       {/* ── View Mode Toggle ── */}
       {!isSelectMode && (rows.length > 0 || scheduleDays.length > 0) && (
-        <div style={{ marginBottom: '14px' }}>
+        <div className="flex items-center gap-2" style={{ marginBottom: '14px' }}>
           <Segmented
             options={[
               { label: 'By Date', value: 'by_date' },
@@ -54,6 +64,75 @@ const ScheduleTable = ({
             size="small"
             style={{ background: '#f0efec', borderRadius: '6px' }}
           />
+          <Popover
+            trigger="click"
+            placement="bottomLeft"
+            open={showListDefaultPopover}
+            onOpenChange={setShowListDefaultPopover}
+            content={
+              <div style={{ width: '240px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1a1a', marginBottom: '10px' }}>
+                  Choose your default view
+                </div>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', lineHeight: '1.4' }}>
+                  This view will load first every time you open the List view.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                    { value: 'by_date', label: 'By Date', desc: 'One row per calendar day in order' },
+                    { value: 'by_schedule', label: 'By Schedule', desc: 'Grouped by each schedule block' },
+                  ].map((opt) => {
+                    const isSelected = savedListMode === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          try {
+                            localStorage.setItem(LIST_MODE_KEY, opt.value);
+                            setSavedListMode(opt.value);
+                            setListMode(opt.value);
+                            setShowListDefaultPopover(false);
+                            toast.success(`${opt.label} is now your default list view.`);
+                          } catch {
+                            toast.error('Failed to save default view');
+                          }
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                          border: isSelected ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
+                          background: isSelected ? '#f8f8f4' : '#fff',
+                          transition: 'all 0.15s', textAlign: 'left', width: '100%',
+                        }}
+                      >
+                        <span style={{
+                          width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+                          border: isSelected ? '5px solid #1a1a1a' : '2px solid #ccc',
+                          background: '#fff',
+                        }} />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>
+                            {opt.label}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#999' }}>
+                            {opt.desc}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#27ae60', fontWeight: '600' }}>Current</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            }
+          >
+            <Button size="small" icon={<FiGrid size={12} />}
+              style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '11px' }}>
+              Set as Default
+            </Button>
+          </Popover>
         </div>
       )}
 
