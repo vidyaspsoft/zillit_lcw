@@ -1,11 +1,16 @@
 import React from 'react';
 
-const ScheduleLegend = ({ types = [] }) => {
+const MAX_VISIBLE = 5;
+
+const ScheduleLegend = ({ types = [], onManageTypes }) => {
   if (types.length === 0) return null;
+
+  const visibleTypes = types.slice(0, MAX_VISIBLE);
+  const hiddenCount = Math.max(0, types.length - MAX_VISIBLE);
 
   return (
     <div className="flex items-center gap-5 flex-wrap">
-      {types.map((type) => (
+      {visibleTypes.map((type) => (
         <div key={type._id} className="flex items-center gap-1.5">
           <span
             style={{
@@ -27,6 +32,41 @@ const ScheduleLegend = ({ types = [] }) => {
           </span>
         </div>
       ))}
+
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={onManageTypes}
+          title="Manage all schedule types"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '3px 10px',
+            borderRadius: '12px',
+            border: '1px solid #d0ccc5',
+            background: '#fafaf8',
+            color: '#555',
+            fontSize: '11px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            letterSpacing: '0.3px',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#1a1a1a';
+            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.borderColor = '#1a1a1a';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#fafaf8';
+            e.currentTarget.style.color = '#555';
+            e.currentTarget.style.borderColor = '#d0ccc5';
+          }}
+        >
+          +{hiddenCount} more
+        </button>
+      )}
     </div>
   );
 };

@@ -106,10 +106,16 @@ const ScheduleTypeManager = ({
       }
       width={440}
       centered
+      styles={{ body: { padding: 0 } }}
     >
-      <div style={{ padding: '8px 0' }}>
-        {/* Existing types */}
-        <div style={{ marginBottom: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '60vh' }}>
+        {/* Existing types — ONLY this section scrolls */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '8px 24px 4px',
+          minHeight: '80px',
+        }}>
           {types.map((type) => {
             const isEditing = editingId === type._id;
             return (
@@ -234,10 +240,12 @@ const ScheduleTypeManager = ({
           })}
         </div>
 
-        {/* Add new type */}
+        {/* Add new type — stays pinned at the bottom, does NOT scroll */}
         <div style={{
-          borderTop: '1px solid #ddd',
-          paddingTop: '12px',
+          borderTop: '1px solid #e0ddd8',
+          padding: '14px 24px 16px',
+          background: '#fafaf8',
+          flexShrink: 0,
         }}>
           <label style={{
             fontSize: '11px',

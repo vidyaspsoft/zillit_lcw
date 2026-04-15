@@ -4,7 +4,7 @@ const BoxScheduleEvent = require("../models/boxSchedule/BoxScheduleEvent");
 const BoxScheduleActivityLog = require("../models/boxSchedule/BoxScheduleActivityLog");
 const BoxScheduleRevision = require("../models/boxSchedule/BoxScheduleRevision");
 const BoxScheduleShare = require("../models/boxSchedule/BoxScheduleShare");
-const { sendSuccess, sendError, isValidObjectId } = require("../utils/helpers");
+const { sendSuccessV2: sendSuccess, sendErrorV2: sendError, isValidObjectId } = require("../utils/helpers");
 const { v4: uuidv4 } = require("uuid");
 
 // ── Helper: Convert any date-like input (number, ISO string, Date) to epoch ms ──
@@ -20,6 +20,25 @@ const fmtShortDate = (ms) => {
   if (!ms) return "";
   const d = new Date(ms);
   return `${d.toLocaleString("en-US", { month: "short" })} ${d.getDate()}`;
+};
+
+// ── Helper: Normalise a color string so hex/rgb compare equally ──
+//    "#FF0000", "#ff0000", "rgb(255, 0, 0)", " #ff0000 " → "#ff0000"
+const normaliseColor = (c) => {
+  if (!c || typeof c !== "string") return "";
+  const trimmed = c.trim().toLowerCase();
+  // rgb(r,g,b) or rgba(r,g,b,a) → hex
+  const rgb = trimmed.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (rgb) {
+    const r = Math.max(0, Math.min(255, parseInt(rgb[1], 10))).toString(16).padStart(2, "0");
+    const g = Math.max(0, Math.min(255, parseInt(rgb[2], 10))).toString(16).padStart(2, "0");
+    const b = Math.max(0, Math.min(255, parseInt(rgb[3], 10))).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`;
+  }
+  // Short hex (#abc) → full hex (#aabbcc)
+  const short = trimmed.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/);
+  if (short) return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`;
+  return trimmed;
 };
 
 // ── Helper: Build a human-readable identifier for a schedule day ──
@@ -74,16 +93,28 @@ const createType = async (req, res) => {
     const existing = await BoxScheduleType.findOne({ projectId, title: title.trim() });
     if (existing) return sendError(res, 400, "A type with this name already exists");
 
+    // Color uniqueness — every type in the project must have a different color
+    const finalColor = color || "#3498DB";
+    const normalised = normaliseColor(finalColor);
+    const allTypes = await BoxScheduleType.find({ projectId }).select("title color").lean();
+    const colorClash = allTypes.find((t) => normaliseColor(t.color) === normalised);
+    if (colorClash) {
+      return sendError(
+        res, 400,
+        `That color is already used by "${colorClash.title}". Please pick a different color.`
+      );
+    }
+
     const maxOrder = await BoxScheduleType.findOne({ projectId }).sort({ order: -1 }).select("order").lean();
     const type = await BoxScheduleType.create({
-      projectId, title: title.trim(), color: color || "#3498DB",
+      projectId, title: title.trim(), color: finalColor,
       systemDefined: false, order: (maxOrder?.order ?? -1) + 1,
       createdBy: { userId, name: userName || "" },
     });
 
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "created", "schedule_type", type._id, type.title, "", performer);
-    return sendSuccess(res, type, "Schedule type created", 201);
+    return sendSuccess(res, type, "schedule_type_created", 201);
   } catch (error) {
     console.error("createType error:", error);
     return sendError(res, 500, "Failed to create schedule type");
@@ -102,6 +133,29 @@ const updateType = async (req, res) => {
     if (!type) return sendError(res, 404, "Schedule type not found");
     if (type.systemDefined && title && title.trim() !== type.title) return sendError(res, 400, "Cannot rename system-defined types");
 
+    // Name uniqueness (when renaming)
+    if (title && title.trim() !== type.title) {
+      const nameClash = await BoxScheduleType.findOne({
+        projectId, title: title.trim(), _id: { $ne: type._id },
+      });
+      if (nameClash) return sendError(res, 400, "A type with this name already exists");
+    }
+
+    // Color uniqueness (when changing color) — must differ from every OTHER type
+    if (color && normaliseColor(color) !== normaliseColor(type.color)) {
+      const others = await BoxScheduleType.find({
+        projectId, _id: { $ne: type._id },
+      }).select("title color").lean();
+      const target = normaliseColor(color);
+      const clash = others.find((t) => normaliseColor(t.color) === target);
+      if (clash) {
+        return sendError(
+          res, 400,
+          `That color is already used by "${clash.title}". Please pick a different color.`
+        );
+      }
+    }
+
     const changes = [];
     const oldTitle = type.title;
     const oldColor = type.color;
@@ -116,7 +170,7 @@ const updateType = async (req, res) => {
       const performer = { userId, name: userName || "" };
       await logActivity(projectId, "updated", "schedule_type", type._id, type.title, changes.join(", "), performer);
     }
-    return sendSuccess(res, type, "Schedule type updated");
+    return sendSuccess(res, type, "schedule_type_updated");
   } catch (error) {
     console.error("updateType error:", error);
     return sendError(res, 500, "Failed to update schedule type");
@@ -143,7 +197,7 @@ const deleteType = async (req, res) => {
 
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "deleted", "schedule_type", id, typeTitle, "", performer);
-    return sendSuccess(res, { id }, "Schedule type deleted");
+    return sendSuccess(res, { id }, "schedule_type_deleted");
   } catch (error) {
     console.error("deleteType error:", error);
     return sendError(res, 500, "Failed to delete schedule type");
@@ -196,7 +250,7 @@ const createDay = async (req, res) => {
           }
         }
       }
-      return res.status(409).json({ success: false, message: "conflict", data: { conflicts: conflictDays } });
+      return res.status(409).json({ status: 0, message: "schedule_day_conflict", messageElements: [], data: { conflicts: conflictDays } });
     }
 
     let finalDays = requestedDays;
@@ -318,7 +372,7 @@ const createDay = async (req, res) => {
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "created", "schedule_day", newDay._id, title || type.title, `${finalDays.length} day(s)`, performer);
     await bumpRevision(projectId, `Added ${type.title} schedule: ${title || type.title}`, performer, type.color);
-    return sendSuccess(res, newDay, "Schedule created", 201);
+    return sendSuccess(res, newDay, "schedule_day_created", 201);
   } catch (error) {
     console.error("createDay error:", error);
     return sendError(res, 500, "Failed to create schedule");
@@ -388,7 +442,7 @@ const updateDay = async (req, res) => {
       const performer = { userId, name: userName || "" };
       await logActivity(projectId, "updated", "schedule_day", day._id, identifier, changes.join(" · "), performer);
     }
-    return sendSuccess(res, day, "Schedule updated");
+    return sendSuccess(res, day, "schedule_day_updated");
   } catch (error) {
     console.error("updateDay error:", error);
     return sendError(res, 500, "Failed to update schedule");
@@ -415,7 +469,7 @@ const deleteDay = async (req, res) => {
     const identifier = dayIdentifier(day.title, day.typeName, day.startDate, day.endDate);
     await logActivity(projectId, "deleted", "schedule_day", id, identifier, "", performer);
     await bumpRevision(projectId, `Deleted ${day.typeName} schedule: ${identifier}`, performer, day.color);
-    return sendSuccess(res, { id }, "Schedule deleted");
+    return sendSuccess(res, { id }, "schedule_day_deleted");
   } catch (error) {
     console.error("deleteDay error:", error);
     return sendError(res, 500, "Failed to delete schedule");
@@ -467,7 +521,7 @@ const removeDates = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_day_updated", { results });
-    return sendSuccess(res, results, "Dates removed");
+    return sendSuccess(res, results, "schedule_day_dates_removed");
   } catch (error) {
     console.error("removeDates error:", error);
     return sendError(res, 500, "Failed to remove dates");
@@ -503,7 +557,7 @@ const bulkUpdateDays = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_day_updated", { days: results });
-    return sendSuccess(res, results, "Schedules updated");
+    return sendSuccess(res, results, "schedule_days_bulk_updated");
   } catch (error) {
     console.error("bulkUpdateDays error:", error);
     return sendError(res, 500, "Failed to bulk update schedules");
@@ -592,7 +646,7 @@ const createEvent = async (req, res) => {
     const io = req.app.get("io");
     if (io) io.to(projectId).emit("box_schedule_event_added", { event });
     await logActivity(projectId, "created", type === "event" ? "event" : "note", event._id, title.trim(), "", { userId, name: userName || "" });
-    return sendSuccess(res, event, "Event created", 201);
+    return sendSuccess(res, event, "event_created", 201);
   } catch (error) {
     console.error("createEvent error:", error);
     return sendError(res, 500, "Failed to create event");
@@ -667,7 +721,7 @@ const updateEvent = async (req, res) => {
       const performer = { userId, name: userName || "" };
       await logActivity(projectId, "updated", event.eventType === "event" ? "event" : "note", event._id, event.title, changes.join(", "), performer);
     }
-    return sendSuccess(res, event, "Event updated");
+    return sendSuccess(res, event, "event_updated");
   } catch (error) {
     console.error("updateEvent error:", error);
     return sendError(res, 500, "Failed to update event");
@@ -695,7 +749,7 @@ const deleteEvent = async (req, res) => {
 
     const performer = { userId, name: userName || "" };
     await logActivity(projectId, "deleted", eventType, id, eventTitle, "", performer);
-    return sendSuccess(res, { id }, "Event deleted");
+    return sendSuccess(res, { id }, "event_deleted");
   } catch (error) {
     console.error("deleteEvent error:", error);
     return sendError(res, 500, "Failed to delete event");
@@ -859,7 +913,7 @@ const duplicateDay = async (req, res) => {
     await logActivity(projectId, "duplicated", "schedule_day", newDay._id, newDay.title, `Duplicated from ${source.title || source.typeName}`, performer);
     await bumpRevision(projectId, `Duplicated ${source.typeName}: ${source.title || source.typeName}`, performer, source.color);
 
-    return sendSuccess(res, newDay, "Schedule duplicated", 201);
+    return sendSuccess(res, newDay, "schedule_day_duplicated", 201);
   } catch (error) {
     console.error("duplicateDay error:", error);
     return sendError(res, 500, "Failed to duplicate schedule");
@@ -882,7 +936,7 @@ const generateShareLink = async (req, res) => {
 
     await logActivity(projectId, "shared", "schedule_day", "", "Schedule", "Generated share link", { userId, name: userName || "" });
 
-    return sendSuccess(res, { token, shareUrl: `/shared/box-schedule/${token}` }, "Share link generated");
+    return sendSuccess(res, { token, shareUrl: `/shared/box-schedule/${token}` }, "share_link_generated");
   } catch (error) {
     console.error("generateShareLink error:", error);
     return sendError(res, 500, "Failed to generate share link");

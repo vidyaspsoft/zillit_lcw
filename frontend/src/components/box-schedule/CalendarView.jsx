@@ -19,14 +19,14 @@ const CalendarView = ({
   const [calendarMode, setCalendarMode] = useState(() => {
     try {
       const saved = localStorage.getItem(CALENDAR_MODE_KEY);
-      return saved === 'week' || saved === 'month' ? saved : 'month';
+      return saved === 'day' || saved === 'week' || saved === 'month' ? saved : 'month';
     } catch { return 'month'; }
   });
   // Saved default (what was stored in localStorage) — shown as "Current" marker in popover
   const [savedCalendarMode, setSavedCalendarMode] = useState(() => {
     try {
       const saved = localStorage.getItem(CALENDAR_MODE_KEY);
-      return saved === 'week' || saved === 'month' ? saved : 'month';
+      return saved === 'day' || saved === 'week' || saved === 'month' ? saved : 'month';
     } catch { return 'month'; }
   });
   const [showDefaultPopover, setShowDefaultPopover] = useState(false);
@@ -36,6 +36,7 @@ const CalendarView = ({
     const today = dayjs();
     return today.day() === 0 ? today.subtract(6, 'day').startOf('day') : today.day(1).startOf('day');
   });
+  const [currentDay, setCurrentDay] = useState(() => dayjs().startOf('day'));
   const [selectedCell, setSelectedCell] = useState(null);
   const [quickActionCell, setQuickActionCell] = useState(null);
 
@@ -100,6 +101,17 @@ const CalendarView = ({
     return [week]; // Return as array of weeks (1 week) to reuse same table rendering
   }, [currentWeekStart, dayLookup]);
 
+  // Day grid — single cell
+  const dayCell = useMemo(() => {
+    const dayKey = currentDay.startOf('day').valueOf();
+    return {
+      date: currentDay,
+      dayKey,
+      schedulesOnDay: dayLookup[dayKey] || [],
+      isCurrentMonth: true,
+    };
+  }, [currentDay, dayLookup]);
+
   const isPastDate = (cell) => dayjs(cell.dayKey).isBefore(dayjs().startOf('day'));
 
   const handleCellClick = (cell) => {
@@ -124,8 +136,10 @@ const CalendarView = ({
     <div style={{ padding: '8px 16px 8px', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="flex items-center justify-between" style={{ padding: '4px 0 8px', flexShrink: 0 }}>
         <div className="flex items-center gap-2">
-          <Segmented options={['Month', 'Week']} value={calendarMode === 'week' ? 'Week' : 'Month'}
-            onChange={(val) => setCalendarMode(val === 'Week' ? 'week' : 'month')}
+          <Segmented
+            options={['Month', 'Week', 'Day']}
+            value={calendarMode === 'day' ? 'Day' : calendarMode === 'week' ? 'Week' : 'Month'}
+            onChange={(val) => setCalendarMode(val === 'Day' ? 'day' : val === 'Week' ? 'week' : 'month')}
             style={{ background: '#f0efec', borderRadius: '6px' }} size="small" />
           <Popover
             trigger="click"
@@ -144,6 +158,7 @@ const CalendarView = ({
                   {[
                     { value: 'month', label: 'Month View', desc: 'Full month grid with all weeks' },
                     { value: 'week', label: 'Week View', desc: 'One week at a time with bigger cells' },
+                    { value: 'day', label: 'Day View', desc: 'Single day focused view with full details' },
                   ].map((opt) => {
                     const isSelected = savedCalendarMode === opt.value;
                     return (
@@ -200,26 +215,32 @@ const CalendarView = ({
         <div className="flex items-center gap-3">
           <Button icon={<FiChevronLeft size={14} />} size="small"
             onClick={() => {
-              if (calendarMode === 'week') setCurrentWeekStart((w) => w.subtract(1, 'week'));
+              if (calendarMode === 'day') setCurrentDay((d) => d.subtract(1, 'day'));
+              else if (calendarMode === 'week') setCurrentWeekStart((w) => w.subtract(1, 'week'));
               else setCurrentMonth((m) => m.subtract(1, 'month'));
             }}
             style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} />
-          <h2 style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', margin: 0, minWidth: '200px', textAlign: 'center', fontFamily: "'Georgia', serif", color: '#1a1a1a' }}>
-            {calendarMode === 'week'
-              ? `${currentWeekStart.format('MMM D')} – ${currentWeekStart.add(6, 'day').format('MMM D, YYYY')}`
-              : currentMonth.format('MMMM YYYY')
+          <h2 style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', margin: 0, minWidth: '240px', textAlign: 'center', fontFamily: "'Georgia', serif", color: '#1a1a1a' }}>
+            {calendarMode === 'day'
+              ? currentDay.format('dddd, MMM D, YYYY')
+              : calendarMode === 'week'
+                ? `${currentWeekStart.format('MMM D')} – ${currentWeekStart.add(6, 'day').format('MMM D, YYYY')}`
+                : currentMonth.format('MMMM YYYY')
             }
           </h2>
           <Button icon={<FiChevronRight size={14} />} size="small"
             onClick={() => {
-              if (calendarMode === 'week') setCurrentWeekStart((w) => w.add(1, 'week'));
+              if (calendarMode === 'day') setCurrentDay((d) => d.add(1, 'day'));
+              else if (calendarMode === 'week') setCurrentWeekStart((w) => w.add(1, 'week'));
               else setCurrentMonth((m) => m.add(1, 'month'));
             }}
             style={{ borderColor: '#d0ccc5', borderRadius: '6px' }} />
         </div>
 
         <Button size="small" onClick={() => {
-          if (calendarMode === 'week') {
+          if (calendarMode === 'day') {
+            setCurrentDay(dayjs().startOf('day'));
+          } else if (calendarMode === 'week') {
             const today = dayjs();
             setCurrentWeekStart(today.day() === 0 ? today.subtract(6, 'day').startOf('day') : today.day(1).startOf('day'));
           } else {
@@ -231,6 +252,15 @@ const CalendarView = ({
       </div>
 
       <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e0ddd8', overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.04)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {calendarMode === 'day' ? (
+          <DayFocusCard
+            cell={dayCell}
+            standaloneEvents={standaloneByDate[dayCell.dayKey] || []}
+            onOpenDetail={() => setSelectedCell({ ...dayCell, isPast: dayjs(dayCell.dayKey).isBefore(dayjs().startOf('day')) })}
+            onCreateSchedule={() => { if (onQuickCreateSchedule) onQuickCreateSchedule(dayCell.dayKey); }}
+            onCreateEvent={() => { if (onQuickCreateEvent) onQuickCreateEvent(dayCell.dayKey); }}
+          />
+        ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', height: calendarMode === 'week' ? 'auto' : '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
@@ -331,6 +361,7 @@ const CalendarView = ({
             ))}
           </tbody>
         </table>
+        )}
       </div>
 
       {/* Detail Drawer */}
@@ -532,5 +563,170 @@ const CalendarView = ({
 };
 
 const drawerBtnStyle = { display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fff', border: '1px solid #ddd', borderRadius: '5px', cursor: 'pointer', color: '#888', fontSize: '11px', fontWeight: '500', padding: '3px 8px', transition: 'all 0.15s' };
+
+// ── DayFocusCard — single-day focused view with full schedule/event/note details ──
+const DayFocusCard = ({ cell, standaloneEvents, onOpenDetail, onCreateSchedule, onCreateEvent }) => {
+  const isToday = cell.date.isSame(dayjs(), 'day');
+  const isPast = cell.date.isBefore(dayjs().startOf('day'));
+  const schedules = cell.schedulesOnDay || [];
+  const allEvents = schedules.flatMap((s) => s.events || []);
+  const allNotes = schedules.flatMap((s) => s.notes || []);
+  const standaloneList = standaloneEvents || [];
+  const isEmpty = schedules.length === 0 && allEvents.length === 0 && allNotes.length === 0 && standaloneList.length === 0;
+
+  return (
+    <div style={{ padding: '24px 32px', overflowY: 'auto', flex: 1 }}>
+      {/* Big date header */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '18px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid #e8e5e0' }}>
+        <div style={{
+          fontSize: '72px', fontWeight: '800', lineHeight: 1, color: isToday ? '#1a1a1a' : '#555',
+          fontFamily: "'Georgia', serif",
+          ...(isToday ? { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '96px', height: '96px', borderRadius: '50%', background: '#1a1a1a', color: '#fff', fontSize: '56px' } : {}),
+        }}>
+          {cell.date.date()}
+        </div>
+        <div>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a1a', fontFamily: "'Georgia', serif", letterSpacing: '0.5px' }}>
+            {cell.date.format('dddd')}
+          </div>
+          <div style={{ fontSize: '13px', color: '#888', fontWeight: '500', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '4px' }}>
+            {cell.date.format('MMMM YYYY')}
+          </div>
+          {isToday && (
+            <div style={{ marginTop: '8px', display: 'inline-block', fontSize: '10px', fontWeight: '700', color: '#27ae60', background: '#eafaf1', border: '1px solid #c8e6c9', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.5px' }}>
+              TODAY
+            </div>
+          )}
+          {isPast && !isToday && (
+            <div style={{ marginTop: '8px', display: 'inline-block', fontSize: '10px', fontWeight: '700', color: '#888', background: '#f0efec', border: '1px solid #e0ddd8', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.5px' }}>
+              PAST
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Schedule pills */}
+      {schedules.length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+            Schedules on this day
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {schedules.map((s) => (
+              <div key={s._id} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '8px 14px', borderRadius: '8px',
+                background: `${s.color}15`, border: `1px solid ${s.color}40`,
+              }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: s.color }} />
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1a1a' }}>
+                    {s.typeName}
+                  </div>
+                  {s.title && (
+                    <div style={{ fontSize: '11px', color: '#666', fontFamily: "'Georgia', serif" }}>
+                      "{s.title}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Events */}
+      {(allEvents.length > 0 || standaloneList.length > 0) && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+            Events
+          </div>
+          <div className="flex flex-col gap-2">
+            {[...allEvents, ...standaloneList].map((evt, i) => (
+              <div key={`${evt._id || i}`} style={{
+                padding: '10px 14px', background: '#fdfcfa',
+                border: '1px solid #ece9e3', borderRadius: '6px',
+                borderLeft: `4px solid ${evt.color || '#3498DB'}`,
+              }}>
+                {evt.startDateTime && (
+                  <div style={{ fontSize: '11px', color: '#888', fontWeight: '600', marginBottom: '3px' }}>
+                    {evt.fullDay ? 'Full Day' : dayjs(evt.startDateTime).format('h:mm A')}
+                    {evt.endDateTime && !evt.fullDay ? ` – ${dayjs(evt.endDateTime).format('h:mm A')}` : ''}
+                  </div>
+                )}
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#1a1a1a' }}>{evt.title}</div>
+                {evt.location && (
+                  <div style={{ fontSize: '11px', color: '#1a73e8', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiMapPin size={11} /> {evt.location}
+                  </div>
+                )}
+                {evt.description && (
+                  <div style={{ fontSize: '12px', color: '#777', marginTop: '4px' }}>{evt.description}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      {allNotes.length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '700', color: '#888', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '10px' }}>
+            Notes
+          </div>
+          <div className="flex flex-col gap-2">
+            {allNotes.map((n, i) => (
+              <div key={i} style={{
+                padding: '10px 14px', background: '#fffdf0',
+                border: '1px solid #f0ebc8', borderRadius: '6px',
+              }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>{n.title}</div>
+                {n.notes && (
+                  <div style={{ fontSize: '12px', color: '#777', marginTop: '3px' }}>{n.notes}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {isEmpty && (
+        <div style={{ textAlign: 'center', padding: '40px 24px', color: '#bbb' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.35 }}>&#x1f4c5;</div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#999', marginBottom: '4px' }}>
+            Nothing scheduled on this day
+          </div>
+          <div style={{ fontSize: '12px', color: '#ccc' }}>
+            {isPast ? 'This date is in the past.' : 'Add a schedule or event to get started.'}
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2" style={{ marginTop: isEmpty ? '16px' : '8px', paddingTop: '14px', borderTop: '1px dashed #e8e5e0' }}>
+        {(schedules.length > 0 || standaloneList.length > 0) && (
+          <Button size="small" onClick={onOpenDetail}
+            style={{ borderColor: '#1a1a1a', color: '#1a1a1a', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
+            View Full Details
+          </Button>
+        )}
+        {!isPast && (
+          <>
+            <Button size="small" icon={<FiCalendar size={12} />} onClick={onCreateSchedule}
+              style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '12px' }}>
+              Add Schedule
+            </Button>
+            <Button size="small" icon={<FiClock size={12} />} onClick={onCreateEvent}
+              style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '12px' }}>
+              Add Event
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default CalendarView;

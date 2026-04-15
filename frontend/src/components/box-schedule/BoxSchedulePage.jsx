@@ -432,17 +432,30 @@ const BoxSchedulePage = () => {
                 </>
               )}
             </div>
-            <ScheduleLegend types={scheduleTypes} />
+            <ScheduleLegend types={scheduleTypes} onManageTypes={() => setShowTypeManager(true)} />
           </div>
         )}
       </div>
 
       {/* ══════════ MAIN CONTENT ══════════ */}
-      <div className="flex-1 overflow-y-auto box-schedule-content">
-        {loading ? (
+      <div className="flex-1 overflow-y-auto box-schedule-content" style={{ position: 'relative' }}>
+        {loading && scheduleDays.length === 0 && calendarData.length === 0 ? (
+          // Initial empty load — show blocking spinner
           <div className="flex items-center justify-center h-64"><Spin size="large" /></div>
         ) : (
           <>
+            {/* Non-blocking refresh indicator — keeps view mounted so state is preserved */}
+            {loading && (
+              <div style={{
+                position: 'absolute', top: '12px', right: '16px', zIndex: 20,
+                background: 'rgba(255, 255, 255, 0.95)', border: '1px solid #e0ddd8',
+                borderRadius: '20px', padding: '4px 12px', display: 'flex',
+                alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}>
+                <Spin size="small" />
+                <span style={{ fontSize: '11px', color: '#888', fontWeight: '600' }}>Refreshing…</span>
+              </div>
+            )}
             {activeView === 'List View' && (
               <div className="box-schedule-screen-only">
                 <ScheduleTable rows={filteredSchedule} expandedDayId={expandedDayId} onToggleExpand={toggleDayExpand}
