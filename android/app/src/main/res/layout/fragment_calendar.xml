@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pageBg"
+    android:padding="@dimen/spacing_sm">
+
+    <!-- Calendar toolbar: Month/Week/Day toggle + navigation + Today -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingVertical="@dimen/spacing_sm"
+        android:paddingHorizontal="@dimen/spacing_sm">
+
+        <!-- Mode toggle: Month / Week / Day -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/modeToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMonth"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="@string/bs_month"
+                android:textSize="@dimen/text_sm" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnWeek"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="@string/bs_week"
+                android:textSize="@dimen/text_sm" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDay"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="@string/bs_day"
+                android:textSize="@dimen/text_sm" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- Set as Default -->
+        <Button
+            android:id="@+id/btnSetDefault"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_set_default"
+            android:layout_marginStart="@dimen/spacing_sm" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Navigation: < Title > -->
+        <ImageButton
+            android:id="@+id/btnPrev"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_button_secondary"
+            android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="Previous"
+            app:tint="@color/textSecondary" />
+
+        <TextView
+            android:id="@+id/tvCalTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="APRIL 2026"
+            android:textSize="@dimen/text_lg"
+            android:textColor="@color/textPrimary"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:textAllCaps="true"
+            android:gravity="center"
+            android:minWidth="200dp"
+            android:paddingHorizontal="@dimen/spacing_md" />
+
+        <ImageButton
+            android:id="@+id/btnNext"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_button_secondary"
+            android:src="@android:drawable/ic_media_next"
+            android:contentDescription="Next"
+            app:tint="@color/textSecondary" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Today -->
+        <Button
+            android:id="@+id/btnToday"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_today" />
+    </LinearLayout>
+
+    <!-- Calendar grid container -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardCornerRadius="@dimen/radius_md"
+        app:cardBackgroundColor="@color/surface"
+        app:cardElevation="1dp"
+        android:layout_marginTop="@dimen/spacing_xs">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Weekday headers: Mon Tue Wed Thu Fri Sat Sun -->
+            <LinearLayout
+                android:id="@+id/weekdayHeaders"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/cal_header_height"
+                android:orientation="horizontal"
+                android:background="@color/surfaceAlt2"
+                android:gravity="center_vertical" />
+
+            <View style="@style/ZillitDivider" android:background="@color/borderMedium" />
+
+            <!-- Calendar RecyclerView (grid of cells) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/calendarGrid"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false" />
+
+            <!-- Day View container (shown when mode=day) -->
+            <ScrollView
+                android:id="@+id/dayViewContainer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:visibility="gone">
+
+                <include layout="@layout/item_day_focus" />
+            </ScrollView>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

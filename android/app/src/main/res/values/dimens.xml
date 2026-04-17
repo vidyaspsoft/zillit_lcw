@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing -->
+    <dimen name="spacing_xxs">2dp</dimen>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">12dp</dimen>
+    <dimen name="spacing_base">16dp</dimen>
+    <dimen name="spacing_lg">20dp</dimen>
+    <dimen name="spacing_xl">24dp</dimen>
+    <dimen name="spacing_xxl">32dp</dimen>
+    <dimen name="spacing_xxxl">40dp</dimen>
+
+    <!-- Corner Radius -->
+    <dimen name="radius_sm">6dp</dimen>
+    <dimen name="radius_md">8dp</dimen>
+    <dimen name="radius_lg">10dp</dimen>
+    <dimen name="radius_xl">12dp</dimen>
+    <dimen name="radius_pill">20dp</dimen>
+    <dimen name="radius_circle">50dp</dimen>
+
+    <!-- Text Sizes -->
+    <dimen name="text_xs">10sp</dimen>
+    <dimen name="text_sm">11sp</dimen>
+    <dimen name="text_body">13sp</dimen>
+    <dimen name="text_md">14sp</dimen>
+    <dimen name="text_lg">16sp</dimen>
+    <dimen name="text_xl">18sp</dimen>
+    <dimen name="text_title">22sp</dimen>
+    <dimen name="text_hero">56sp</dimen>
+
+    <!-- Calendar -->
+    <dimen name="cal_cell_min_height">86dp</dimen>
+    <dimen name="cal_today_circle">28dp</dimen>
+    <dimen name="cal_pill_height">24dp</dimen>
+    <dimen name="cal_dot_size">7dp</dimen>
+    <dimen name="cal_header_height">36dp</dimen>
+
+    <!-- Toolbar -->
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="toolbar_icon_size">20dp</dimen>
+    <dimen name="toolbar_btn_padding_h">12dp</dimen>
+    <dimen name="toolbar_btn_padding_v">8dp</dimen>
+
+    <!-- Input -->
+    <dimen name="input_height">44dp</dimen>
+    <dimen name="input_height_lg">48dp</dimen>
+    <dimen name="input_padding_h">14dp</dimen>
+
+    <!-- Legend -->
+    <dimen name="legend_dot_size">11dp</dimen>
+    <dimen name="legend_pill_padding_h">10dp</dimen>
+    <dimen name="legend_pill_padding_v">3dp</dimen>
+
+    <!-- History -->
+    <dimen name="history_border_width">4dp</dimen>
+    <dimen name="history_dot_size">8dp</dimen>
+    <dimen name="history_card_padding">14dp</dimen>
+
+    <!-- Bottom Sheet -->
+    <dimen name="bottom_sheet_peek">400dp</dimen>
+    <dimen name="bottom_sheet_corner">16dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+
+    <!-- Schedule Pill -->
+    <dimen name="pill_dot_size">7dp</dimen>
+    <dimen name="pill_padding_h">8dp</dimen>
+    <dimen name="pill_padding_v">4dp</dimen>
+
+    <!-- Login -->
+    <dimen name="login_logo_size">64dp</dimen>
+    <dimen name="login_max_width">400dp</dimen>
+    <dimen name="login_input_spacing">16dp</dimen>
+</resources>

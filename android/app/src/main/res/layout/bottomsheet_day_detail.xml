@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day detail bottom sheet — matches web's CalendarView drawer.
+     Date header, schedule type pills, events, notes, quick actions. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/drawerBodyBg">
+
+    <!-- Handle bar -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginBottom="@dimen/spacing_sm"
+        android:background="@color/borderMedium" />
+
+    <!-- Date header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/drawerHeaderBg"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_base">
+
+        <!-- Day name (e.g., "Wednesday") -->
+        <TextView
+            android:id="@+id/tvDayName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_title"
+            android:textColor="@color/textPrimary"
+            android:fontFamily="serif"
+            android:textStyle="bold" />
+
+        <!-- Full date (e.g., "April 16, 2026") -->
+        <TextView
+            android:id="@+id/tvFullDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_body"
+            android:textColor="@color/textMuted"
+            android:layout_marginTop="@dimen/spacing_xxs"
+            android:layout_marginBottom="@dimen/spacing_md" />
+
+        <!-- Schedule type pills row -->
+        <LinearLayout
+            android:id="@+id/pillsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- ═══ Events section ═══ -->
+            <TextView
+                android:id="@+id/tvEventsLabel"
+                style="@style/ZillitLabel.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_events"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/eventsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/spacing_md" />
+
+            <!-- ═══ Notes section ═══ -->
+            <TextView
+                android:id="@+id/tvNotesLabel"
+                style="@style/ZillitLabel.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_notes"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/notesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/spacing_md" />
+
+            <!-- ═══ Empty state ═══ -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="@dimen/spacing_xxxl"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="48sp"
+                    android:text="📅" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_empty"
+                    android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textSubtle"
+                    android:textStyle="bold"
+                    android:layout_marginTop="@dimen/spacing_md" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_add_prompt"
+                    android:textSize="@dimen/text_body"
+                    android:textColor="@color/textDisabled"
+                    android:layout_marginTop="@dimen/spacing_xs" />
+            </LinearLayout>
+
+            <!-- ═══ Quick actions ═══ -->
+            <View
+                style="@style/ZillitDivider"
+                android:layout_marginVertical="@dimen/spacing_md" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <Button
+                    android:id="@+id/btnAddSchedule"
+                    style="@style/ZillitButton.Toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_add_schedule"
+                    android:layout_marginEnd="@dimen/spacing_sm" />
+
+                <Button
+                    android:id="@+id/btnAddEvent"
+                    style="@style/ZillitButton.Toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_add_event" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

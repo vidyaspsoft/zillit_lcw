@@ -2,12 +2,14 @@ import React from 'react';
 import { Drawer, Button } from 'antd';
 import { FiClock, FiMapPin, FiCalendar, FiRepeat, FiUsers, FiEdit2 } from 'react-icons/fi';
 import dayjs from 'dayjs';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * ViewEventDrawer — Read-only detail view for an event/note.
  * Shows ALL filled fields in a clean paper-like layout.
  */
 const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
+  const { colors } = useTheme();
   if (!event) return null;
 
   const isEvent = event.eventType === 'event';
@@ -16,7 +18,7 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
     if (event.fullDay) return 'Full Day';
     const start = event.startDateTime ? dayjs(event.startDateTime).format('h:mm A') : '';
     const end = event.endDateTime ? dayjs(event.endDateTime).format('h:mm A') : '';
-    if (start && end) return `${start} – ${end}`;
+    if (start && end) return `${start} \u2013 ${end}`;
     if (start) return start;
     return null;
   };
@@ -25,7 +27,7 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
     if (!isEvent) return null;
     const start = event.startDateTime ? dayjs(event.startDateTime).format('dddd, MMMM D, YYYY') : '';
     const end = event.endDateTime ? dayjs(event.endDateTime).format('dddd, MMMM D, YYYY') : '';
-    if (start && end && start !== end) return `${start} → ${end}`;
+    if (start && end && start !== end) return `${start} \u2192 ${end}`;
     return start;
   };
 
@@ -44,14 +46,14 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
   const DetailRow = ({ icon: Icon, label, value, onClick, linkStyle }) => {
     if (!value) return null;
     return (
-      <div style={{ display: 'flex', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f5f4f2' }}>
+      <div style={{ display: 'flex', gap: '12px', padding: '12px 0', borderBottom: `1px solid ${colors.surfaceAlt2}` }}>
         <div style={{ width: '24px', display: 'flex', justifyContent: 'center', paddingTop: '2px' }}>
-          <Icon size={15} style={{ color: '#aaa' }} />
+          <Icon size={15} style={{ color: colors.textFaint }} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#aaa', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>{label}</div>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: colors.textFaint, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>{label}</div>
           <div onClick={onClick} style={{
-            fontSize: '14px', color: linkStyle ? '#1a73e8' : '#333',
+            fontSize: '14px', color: linkStyle ? colors.textLink : colors.textBody,
             cursor: onClick ? 'pointer' : 'default',
             textDecoration: onClick ? 'underline' : 'none',
           }}>{value}</div>
@@ -63,8 +65,8 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
   return (
     <Drawer open={open} onClose={onClose} placement="right" width={480}
       styles={{
-        header: { borderBottom: '1px solid #e0ddd8', background: '#fafaf8' },
-        body: { padding: 0, background: '#fff' },
+        header: { borderBottom: `1px solid ${colors.border}`, background: colors.drawerHeaderBg },
+        body: { padding: 0, background: colors.drawerBodyBg },
       }}
       title={<span style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
         {isEvent ? 'Event Details' : 'Note Details'}
@@ -72,20 +74,20 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
 
       {/* Header with color and title */}
       <div style={{
-        padding: '20px 24px', borderBottom: '1px solid #eee',
+        padding: '20px 24px', borderBottom: `1px solid ${colors.borderLight}`,
         borderLeft: `4px solid ${event.color || '#3498DB'}`,
-        background: '#fdfcf8',
+        background: colors.surfaceAlt,
       }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', color: event.textColor || '#1a1a1a', fontFamily: "'Georgia', serif" }}>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: event.textColor || colors.textPrimary, fontFamily: "'Georgia', serif" }}>
           {event.title}
         </div>
         {isEvent && formatTime() && (
-          <div style={{ fontSize: '14px', color: '#888', marginTop: '4px', fontWeight: '500' }}>
+          <div style={{ fontSize: '14px', color: colors.textMuted, marginTop: '4px', fontWeight: '500' }}>
             {formatTime()}
           </div>
         )}
         {isEvent && formatDate() && (
-          <div style={{ fontSize: '13px', color: '#aaa', marginTop: '2px' }}>
+          <div style={{ fontSize: '13px', color: colors.textFaint, marginTop: '2px' }}>
             {formatDate()}
           </div>
         )}
@@ -140,15 +142,15 @@ const ViewEventDrawer = ({ open, onClose, event, onEdit }) => {
 
         {/* Created by */}
         {event.createdBy?.name && (
-          <DetailRow icon={FiUsers} label="Created By" value={`${event.createdBy.name}${event.createdAt ? ` — ${dayjs(event.createdAt).format('MMM D, YYYY h:mm A')}` : ''}`} />
+          <DetailRow icon={FiUsers} label="Created By" value={`${event.createdBy.name}${event.createdAt ? ` \u2014 ${dayjs(event.createdAt).format('MMM D, YYYY h:mm A')}` : ''}`} />
         )}
       </div>
 
       {/* Edit button */}
       {onEdit && (
-        <div style={{ padding: '0 24px 20px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
+        <div style={{ padding: '0 24px 20px', borderTop: `1px solid ${colors.borderLight}`, paddingTop: '16px' }}>
           <Button icon={<FiEdit2 size={13} />} onClick={() => { onClose(); onEdit(event); }} block size="large"
-            style={{ borderRadius: '6px', borderColor: '#1a1a1a', color: '#1a1a1a', fontWeight: '600' }}>
+            style={{ borderRadius: '6px', borderColor: colors.solidDark, color: colors.solidDark, fontWeight: '600' }}>
             Edit This {isEvent ? 'Event' : 'Note'}
           </Button>
         </div>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pageBg">
+
+    <!-- Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surfaceAlt"
+        app:titleTextColor="@color/textPrimary"
+        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    <View style="@style/ZillitDivider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_xl">
+
+            <!-- Date header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <!-- Day number -->
+                <FrameLayout
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="@dimen/spacing_md">
+
+                    <View
+                        android:id="@+id/dayNumberCircle"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_today_circle"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvDayNumber"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:gravity="center"
+                        android:textSize="36sp"
+                        android:fontFamily="serif"
+                        android:textStyle="bold"
+                        android:textColor="@color/textSecondary" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvDayName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_xl"
+                        android:fontFamily="serif"
+                        android:textStyle="bold"
+                        android:textColor="@color/textPrimary" />
+
+                    <TextView
+                        android:id="@+id/tvMonthYear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_body"
+                        android:textColor="@color/textMuted"
+                        android:textAllCaps="true"
+                        android:layout_marginTop="@dimen/spacing_xxs" />
+
+                    <TextView
+                        android:id="@+id/todayBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bs_today"
+                        android:textSize="@dimen/text_xs"
+                        android:textStyle="bold"
+                        android:textColor="@color/successText"
+                        android:visibility="gone"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:paddingHorizontal="@dimen/spacing_sm"
+                        android:paddingVertical="@dimen/spacing_xxs" />
+
+                    <TextView
+                        android:id="@+id/pastBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PAST"
+                        android:textSize="@dimen/text_xs"
+                        android:textStyle="bold"
+                        android:textColor="@color/textMuted"
+                        android:visibility="gone"
+                        android:layout_marginTop="@dimen/spacing_xs" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Schedules section -->
+            <TextView
+                style="@style/ZillitLabel.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_schedules" />
+
+            <LinearLayout
+                android:id="@+id/schedulePillsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Events section -->
+            <TextView
+                android:id="@+id/tvEventsLabel"
+                style="@style/ZillitLabel.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_events"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/eventsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Notes section -->
+            <TextView
+                android:id="@+id/tvNotesLabel"
+                style="@style/ZillitLabel.Section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_notes"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/notesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Empty state -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="@dimen/spacing_xxxl"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📅"
+                    android:textSize="48sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_empty"
+                    android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textSubtle"
+                    android:textStyle="bold"
+                    android:layout_marginTop="@dimen/spacing_md" />
+            </LinearLayout>
+
+            <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_md" />
+
+            <!-- Action buttons -->
+            <LinearLayout
+                android:id="@+id/actionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnAddSchedule"
+                    style="@style/ZillitButton.Toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_add_schedule"
+                    android:layout_marginEnd="@dimen/spacing_sm" />
+
+                <Button
+                    android:id="@+id/btnAddEvent"
+                    style="@style/ZillitButton.Toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dd_add_event" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

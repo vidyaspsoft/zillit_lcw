@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand (same in both themes) -->
+    <color name="primaryAccent">#E8930C</color>
+    <color name="primaryAccentDark">#D17E08</color>
+    <color name="primaryAccentLight">#3A2E10</color>
+
+    <!-- Page & Surface — warm dark parchment -->
+    <color name="pageBg">#1A1916</color>
+    <color name="surface">#252320</color>
+    <color name="surfaceAlt">#2A2825</color>
+    <color name="surfaceAlt2">#232120</color>
+    <color name="surfaceHover">#2E2B27</color>
+    <color name="surfaceSelected">#1E2A3D</color>
+    <color name="surfaceExpanded">#2C2A26</color>
+    <color name="surfaceMuted">#2A2826</color>
+    <color name="surfaceWarning">#2E2618</color>
+    <color name="surfaceInfo">#1A2030</color>
+    <color name="surfaceNoteCard">#2A2718</color>
+    <color name="surfaceHoverGreen">#1A2E1E</color>
+    <color name="surfaceHoverBlue">#1A2540</color>
+    <color name="surfaceHoverRed">#3A1A1A</color>
+
+    <!-- Borders -->
+    <color name="border">#3A3733</color>
+    <color name="borderLight">#322F2B</color>
+    <color name="borderMedium">#3E3B36</color>
+    <color name="borderButton">#4A463F</color>
+    <color name="borderInput">#444038</color>
+    <color name="borderDashed">#3A3733</color>
+
+    <!-- Text Hierarchy -->
+    <color name="textPrimary">#E8E4DE</color>
+    <color name="textBody">#D4D0C8</color>
+    <color name="textSecondary">#A8A49C</color>
+    <color name="textMuted">#807C74</color>
+    <color name="textSubtle">#6E6A62</color>
+    <color name="textFaint">#5A5650</color>
+    <color name="textPlaceholder">#504C46</color>
+    <color name="textDisabled">#444038</color>
+    <color name="textLink">#5B9CF5</color>
+
+    <!-- Solid / Action -->
+    <color name="solidDark">#E8E4DE</color>
+    <color name="solidDarkText">#1A1916</color>
+    <color name="dangerBg">#C0392B</color>
+    <color name="dangerText">#FFFFFF</color>
+    <color name="successText">#2ECC71</color>
+
+    <!-- Calendar -->
+    <color name="calTodayBg">#E8E4DE</color>
+    <color name="calTodayText">#1A1916</color>
+    <color name="calWeekendBg">#242220</color>
+    <color name="calCellSelected">#2C2818</color>
+    <color name="calCellSelectedBorder">#E8E4DE</color>
+
+    <!-- History Action Colors (same in both themes) -->
+    <color name="actionAdded">#27AE60</color>
+    <color name="actionChanged">#3498DB</color>
+    <color name="actionRemoved">#E74C3C</color>
+    <color name="actionCopied">#8E44AD</color>
+    <color name="actionShared">#F39C12</color>
+
+    <!-- Schedule Type Defaults (same in both themes) -->
+    <color name="typePrep">#F39C12</color>
+    <color name="typeShoot">#E74C3C</color>
+    <color name="typeWrap">#27AE60</color>
+    <color name="typeDayOff">#95A5A6</color>
+    <color name="typeTravel">#3498DB</color>
+
+    <!-- Drawer / Card -->
+    <color name="drawerHeaderBg">#2A2825</color>
+    <color name="drawerBodyBg">#252320</color>
+    <color name="historyCardBg">#2A2825</color>
+    <color name="historyCardBorder">#3A3733</color>
+    <color name="typeBadgeBg">#2A2825</color>
+    <color name="typeBadgeBorder">#3A3733</color>
+
+    <!-- Segmented / Popover -->
+    <color name="segmentedBg">#2A2825</color>
+    <color name="popoverBg">#2A2825</color>
+    <color name="popoverSelectedBg">#332F2A</color>
+</resources>

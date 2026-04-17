@@ -28,6 +28,165 @@
   --radius-lg: 16px;
 }
 
+/* ═══════════════════════════════════════════
+   Smooth Theme Transition (matches CNC pattern)
+   ═══════════════════════════════════════════ */
+[data-theme] body,
+[data-theme] main,
+[data-theme] .box-schedule-content {
+  transition: background-color 0.4s ease;
+}
+[data-theme] .ant-drawer-content,
+[data-theme] .ant-modal-content,
+[data-theme] .ant-drawer-header {
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+/* ═══════════════════════════════════════════
+   Dark Theme — CSS Variable Overrides
+   ═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --color-primary: #E8930C;
+  --color-primary-dark: #D17E08;
+  --color-primary-light: #3a2e10;
+  --color-primary-50: #2a2210;
+  --color-accent: #5b9cf5;
+  --color-accent-light: #1a2540;
+  --color-accent-50: #1a2030;
+  --color-success: #2ecc71;
+  --color-success-dark: #27ae60;
+  --color-success-light: #1a2e1e;
+  --color-danger: #e74c3c;
+  --color-bg: #1a1916;
+  --color-surface: #252320;
+  --color-border: #3a3733;
+  --color-border-light: #322f2b;
+  --color-text: #e8e4de;
+  --color-text-secondary: #a8a49c;
+  --color-text-muted: #807c74;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* Dark scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background-color: #4a463f;
+}
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background-color: #1a1916;
+}
+
+/* ── Ant Design Dark Overrides ──
+   Fix components that don't inherit from ConfigProvider alone */
+[data-theme="dark"] .ant-drawer-content-wrapper .ant-drawer-content {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-drawer-header {
+  background-color: #2a2825;
+  border-bottom-color: #3a3733;
+}
+[data-theme="dark"] .ant-drawer-body {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-modal-content {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-modal-header {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-modal-footer {
+  background-color: #252320;
+  border-top-color: #3a3733;
+}
+[data-theme="dark"] .ant-popover-inner {
+  background-color: #2a2825;
+}
+[data-theme="dark"] .ant-select-dropdown {
+  background-color: #2a2825;
+}
+[data-theme="dark"] .ant-picker-dropdown .ant-picker-panel-container {
+  background-color: #2a2825;
+}
+[data-theme="dark"] .ant-tooltip-inner {
+  background-color: #2e2b27;
+}
+/* Ant Design Calendar — dark overrides for weekday header, cells, borders */
+[data-theme="dark"] .ant-picker-calendar {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-picker-calendar-full .ant-picker-panel {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-picker-calendar-full .ant-picker-content {
+  background-color: #252320;
+}
+[data-theme="dark"] .ant-picker-calendar-full .ant-picker-content th {
+  background-color: #2a2825 !important;
+  color: #6e6a62;
+  border-bottom-color: #3e3b36;
+}
+[data-theme="dark"] .ant-picker-calendar-full .ant-picker-cell {
+  border-color: #322f2b;
+}
+[data-theme="dark"] .ant-picker-calendar-full .ant-picker-cell-inner {
+  border-top-color: #322f2b;
+}
+[data-theme="dark"] .ant-picker-calendar .ant-picker-content thead tr th {
+  background-color: #2a2825 !important;
+  color: #6e6a62 !important;
+}
+
+/* Ant Design DatePicker / TimePicker / Input clear icon — remove white circle bg */
+[data-theme="dark"] .ant-picker-clear,
+[data-theme="dark"] .ant-input-clear-icon,
+[data-theme="dark"] .ant-select-clear {
+  background-color: #2a2825 !important;
+  color: #807c74;
+}
+[data-theme="dark"] .ant-picker-clear:hover,
+[data-theme="dark"] .ant-input-clear-icon:hover,
+[data-theme="dark"] .ant-select-clear:hover {
+  color: #e8e4de;
+}
+/* Ant Design DatePicker suffix icon */
+[data-theme="dark"] .ant-picker-suffix {
+  color: #6e6a62;
+}
+
+/* PlacePicker / Google Places search input */
+[data-theme="dark"] .place-picker-input,
+[data-theme="dark"] .place-picker-input input,
+[data-theme="dark"] .place-autocomplete-input {
+  background-color: #2a2825 !important;
+  color: #e8e4de !important;
+  border-color: #3a3733 !important;
+}
+[data-theme="dark"] .place-picker-input input::placeholder,
+[data-theme="dark"] .place-autocomplete-input::placeholder {
+  color: #6e6a62 !important;
+}
+
+/* Google Places autocomplete dropdown */
+[data-theme="dark"] .pac-container {
+  background-color: #2a2825;
+  border-color: #3a3733;
+}
+[data-theme="dark"] .pac-container .pac-item {
+  background-color: #2a2825;
+  color: #e8e4de;
+  border-top-color: #3a3733;
+}
+[data-theme="dark"] .pac-container .pac-item:hover {
+  background-color: #332f2a;
+}
+[data-theme="dark"] .pac-container .pac-item-query {
+  color: #e8e4de;
+}
+[data-theme="dark"] .pac-container .pac-matched {
+  color: #f59e0b;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;

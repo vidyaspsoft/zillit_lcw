@@ -3,6 +3,7 @@ import { Drawer, Input, Select, DatePicker, InputNumber, Button, Checkbox, Tag, 
 import { FiPlus } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * CreateScheduleModal — Drawer form for creating/editing a schedule block.
@@ -13,6 +14,7 @@ import dayjs from 'dayjs';
  *   4. Set by Day Wise — pick days of the week (Mon, Tue, etc.) within a date range
  */
 const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], editingDay = null, onEdit }) => {
+  const { colors } = useTheme();
   const isSingleDayEdit = editingDay?._singleDayEdit === true;
   const isLockedStartDate = editingDay?._lockedStartDate === true;
   const editTypeId = editingDay?.typeId?._id || editingDay?.typeId || '';
@@ -80,6 +82,19 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
 
   const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: colors.textSecondary, marginBottom: '4px', letterSpacing: '0.5px', textTransform: 'uppercase' };
+
+  const conflictOptionStyle = {
+    width: '100%', padding: '12px 14px', borderRadius: '8px',
+    cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
+  };
+
+  const tabDescStyle = {
+    fontSize: '12px', color: colors.textSubtle, marginBottom: '14px', lineHeight: '1.5',
+    padding: '8px 10px', background: colors.surfaceAlt, borderRadius: '6px',
+    border: `1px solid ${colors.typeBadgeBg}`, fontStyle: 'italic',
+  };
+
   // Compute calendarDays based on active tab
   const calendarDays = useMemo(() => {
     if (dateTab === 'date_range') {
@@ -135,9 +150,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   };
 
   // ── Single Day Edit Logic ──
-  // Replace: Remove date from old block (block shrinks by 1). Create new type on that date.
-  // Extend:  Remove date from old block, BUT add 1 day at the end of old block (total stays same). Create new type on that date.
-  // Overlap: Keep old block unchanged. Add new type on same date (both types visible).
   const executeSingleDayEdit = async () => {
     setSubmitting(true);
     try {
@@ -158,9 +170,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       const newTypeName = scheduleTypes.find(t => t._id === typeId)?.title || 'new type';
 
       if (action === 'replace') {
-        // Remove this date from the original block (block shrinks by 1 day)
         await boxScheduleService.removeDates([{ id: editingDay._id, dates: [singleDate] }]);
-        // Create new block with the new type
         await boxScheduleService.createDay({
           title, typeId, dateRangeType: 'by_dates',
           startDate: singleDate, endDate: singleDate,
@@ -170,10 +180,8 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
         toast.success(`${dayjs(singleDate).format('MMM D')} changed from ${editingDay.typeName} to ${newTypeName}`);
 
       } else if (action === 'extend') {
-        // Step 1: Remove this date from the original block
         await boxScheduleService.removeDates([{ id: editingDay._id, dates: [singleDate] }]);
 
-        // Step 2: Fetch the UPDATED block (after removeDates) to get its current calendarDays
         let updatedBlock = null;
         try {
           const daysResp = await boxScheduleService.getDays();
@@ -181,7 +189,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           updatedBlock = allDays.find(d => String(d._id) === String(editingDay._id));
         } catch (e) { console.error('Failed to fetch updated block:', e); }
 
-        // Step 3: Add 1 day at the end to keep the same total count
         if (updatedBlock && updatedBlock.calendarDays && updatedBlock.calendarDays.length > 0) {
           const currentDates = updatedBlock.calendarDays.map(Number).sort((a, b) => a - b);
           const lastDate = Math.max(...currentDates);
@@ -202,7 +209,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           toast.success(`${dayjs(singleDate).format('MMM D')} changed to ${newTypeName}`);
         }
 
-        // Step 4: Create new block with the new type on the removed date
         await boxScheduleService.createDay({
           title, typeId, dateRangeType: 'by_dates',
           startDate: singleDate, endDate: singleDate,
@@ -211,7 +217,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
         });
 
       } else if (action === 'overlap') {
-        // Don't touch original block — just add new type on the same date
         await boxScheduleService.createDay({
           title, typeId, dateRangeType: 'by_dates',
           startDate: singleDate, endDate: singleDate,
@@ -258,7 +263,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   const handlePickDate = useCallback((date) => {
     if (!date) return;
     const dateVal = date.startOf('day');
-    // Don't allow removing the locked start date
     if (isLockedStartDate && editStartDate && dateVal.isSame(editStartDate, 'day')) return;
     const exists = pickedDates.some((d) => d.isSame(dateVal, 'day'));
     if (exists) setPickedDates((prev) => prev.filter((d) => !d.isSame(dateVal, 'day')));
@@ -266,7 +270,6 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   }, [pickedDates, isLockedStartDate, editStartDate]);
 
   const removePickedDate = useCallback((dateToRemove) => {
-    // Don't allow removing the locked start date
     if (isLockedStartDate && editStartDate && dateToRemove.isSame(editStartDate, 'day')) return;
     setPickedDates((prev) => prev.filter((d) => !d.isSame(dateToRemove, 'day')));
   }, [isLockedStartDate, editStartDate]);
@@ -282,16 +285,15 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       value: t._id,
       label: (
         <div className="flex items-center gap-2">
-          <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: t.color, borderRadius: '2px', border: '1px solid #ccc' }} />
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: t.color, borderRadius: '2px', border: `1px solid ${colors.textDisabled}` }} />
           {t.title}
         </div>
       ),
     }));
-  }, [scheduleTypes]);
+  }, [scheduleTypes, colors]);
 
   const presetColors = ['#E74C3C', '#F39C12', '#27AE60', '#3498DB', '#9B59B6', '#1ABC9C', '#E67E22', '#95A5A6', '#2C3E50', '#D35400'];
 
-  // Disable past dates in all date pickers
   const disabledPastDate = useCallback((current) => {
     return current && current.isBefore(dayjs().startOf('day'));
   }, []);
@@ -349,7 +351,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <div style={{ marginBottom: '10px' }}>
             <DatePicker
               open={calendarOpen}
-              onOpenChange={() => {}} // Prevent auto-close — only Done button closes
+              onOpenChange={() => {}}
               onClick={() => setCalendarOpen(true)}
               onChange={(date) => { handlePickDate(date); }}
               value={null}
@@ -364,8 +366,8 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                 const isLocked = isLockedStartDate && editStartDate && current.isSame(editStartDate, 'day');
                 return (
                   <div className="ant-picker-cell-inner" style={{
-                    backgroundColor: isLocked ? '#e67e22' : isSelected ? '#1a1a1a' : 'transparent',
-                    color: (isSelected || isLocked) ? '#fff' : undefined,
+                    backgroundColor: isLocked ? '#e67e22' : isSelected ? colors.solidDark : 'transparent',
+                    color: (isSelected || isLocked) ? colors.solidDarkText : undefined,
                     borderRadius: '4px', fontWeight: (isSelected || isLocked) ? '700' : '400',
                   }}>
                     {current.date()}
@@ -374,7 +376,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
               }}
               renderExtraFooter={() => (
                 <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '12px', color: '#888' }}>
+                  <span style={{ fontSize: '12px', color: colors.textMuted }}>
                     {pickedDates.length > 0 ? `${pickedDates.length} date(s) selected` : 'No dates selected'}
                   </span>
                   <button
@@ -382,8 +384,8 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                     disabled={pickedDates.length === 0}
                     style={{
                       padding: '5px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
-                      background: pickedDates.length > 0 ? '#1a1a1a' : '#e0ddd8',
-                      color: pickedDates.length > 0 ? '#fff' : '#aaa',
+                      background: pickedDates.length > 0 ? colors.solidDark : colors.border,
+                      color: pickedDates.length > 0 ? colors.solidDarkText : colors.textFaint,
                       border: 'none', cursor: pickedDates.length > 0 ? 'pointer' : 'not-allowed',
                     }}>
                     Done
@@ -449,9 +451,9 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                         transition: 'all 0.15s',
                         cursor: isAvailable ? 'pointer' : 'not-allowed',
                         opacity: isAvailable ? 1 : 0.35,
-                        background: isSelected && isAvailable ? '#1a1a1a' : '#f5f4f1',
-                        color: isSelected && isAvailable ? '#fff' : '#555',
-                        border: isSelected && isAvailable ? '1px solid #1a1a1a' : '1px solid #d0ccc5',
+                        background: isSelected && isAvailable ? colors.solidDark : colors.surfaceAlt2,
+                        color: isSelected && isAvailable ? colors.solidDarkText : colors.textSecondary,
+                        border: isSelected && isAvailable ? `1px solid ${colors.solidDark}` : `1px solid ${colors.borderButton}`,
                       }}>
                       {label}
                     </button>
@@ -461,7 +463,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
             );
           })()}
           {dayWiseStart && dayWiseEnd && selectedWeekDays.length > 0 && calendarDays.length > 0 && (
-            <div style={{ marginTop: '8px', fontSize: '12px', color: '#888' }}>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: colors.textMuted }}>
               {calendarDays.length} matching day(s) in range
             </div>
           )}
@@ -486,12 +488,12 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <Button onClick={onClose} size="large" style={{ borderRadius: '6px' }}>Cancel</Button>
           <Button type="primary" onClick={handleSubmit} loading={submitting}
             disabled={!typeId || (!isSingleDayEdit && calendarDays.length === 0)} size="large"
-            style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff', borderRadius: '6px', fontWeight: '600' }}>
+            style={{ background: colors.solidDark, borderColor: colors.solidDark, color: colors.solidDarkText, borderRadius: '6px', fontWeight: '600' }}>
             {(editingDay && editingDay._id) ? 'Save Changes' : 'Save Schedule'}
           </Button>
         </div>
       }
-      styles={{ body: { padding: '16px 20px' }, footer: { borderTop: '1px solid #e0ddd8' } }}
+      styles={{ body: { padding: '16px 20px', background: colors.drawerBodyBg }, header: { background: colors.drawerHeaderBg }, footer: { borderTop: `1px solid ${colors.border}` } }}
     >
       {/* ── Type ── */}
       <div style={{ marginBottom: '20px' }}>
@@ -500,14 +502,14 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
           <Select placeholder="Select schedule type" value={typeId || undefined} onChange={setTypeId}
             options={typeOptions} style={{ flex: 1 }} size="large" />
           <Button icon={<FiPlus size={14} />} onClick={() => setShowNewType(!showNewType)} size="large"
-            style={{ borderRadius: '6px', borderColor: '#d0ccc5' }}
+            style={{ borderRadius: '6px', borderColor: colors.borderButton }}
             title="Add new type" />
         </div>
 
         {/* Inline New Type Form */}
         {showNewType && (
           <div style={{
-            marginTop: '10px', padding: '12px', background: '#fafaf8', border: '1px solid #e0ddd8',
+            marginTop: '10px', padding: '12px', background: colors.surfaceAlt, border: `1px solid ${colors.border}`,
             borderRadius: '8px',
           }}>
             <label style={{ ...labelStyle, marginBottom: '6px' }}>New Type Name</label>
@@ -519,7 +521,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                 <button key={c} onClick={() => setNewTypeColor(c)}
                   style={{
                     width: '24px', height: '24px', borderRadius: '4px', backgroundColor: c,
-                    border: newTypeColor === c ? '2px solid #1a1a1a' : '1px solid #ccc',
+                    border: newTypeColor === c ? `2px solid ${colors.solidDark}` : `1px solid ${colors.textDisabled}`,
                     cursor: 'pointer', transition: 'all 0.15s',
                   }} />
               ))}
@@ -543,7 +545,7 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                     console.error('Failed to create type', err);
                   } finally { setCreatingType(false); }
                 }}
-                style={{ borderRadius: '5px', fontSize: '12px', background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff' }}>
+                style={{ borderRadius: '5px', fontSize: '12px', background: colors.solidDark, borderColor: colors.solidDark, color: colors.solidDarkText }}>
                 Add Type
               </Button>
             </div>
@@ -555,14 +557,14 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       {isSingleDayEdit && (
         <div style={{ marginBottom: '20px' }}>
           <div style={{
-            padding: '12px 14px', background: '#f9f9f0',
-            border: '1px solid #e0ddd8', borderRadius: '8px', marginBottom: '16px',
+            padding: '12px 14px', background: colors.surfaceAlt,
+            border: `1px solid ${colors.border}`, borderRadius: '8px', marginBottom: '16px',
           }}>
             <label style={labelStyle}>Date</label>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a1a' }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: colors.textPrimary }}>
               {dayjs(editingDay.singleDate).format('dddd, MMMM D, YYYY')}
             </div>
-            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: colors.textSubtle, marginTop: '4px' }}>
               Date cannot be changed when editing a single day
             </div>
           </div>
@@ -576,18 +578,18 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                 <button onClick={() => setSingleDayConflictAction('replace')}
                   style={{
                     ...conflictOptionStyle,
-                    border: singleDayConflictAction === 'replace' ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
-                    background: singleDayConflictAction === 'replace' ? '#f8f8f4' : '#fff',
+                    border: singleDayConflictAction === 'replace' ? `2px solid ${colors.solidDark}` : `1px solid ${colors.border}`,
+                    background: singleDayConflictAction === 'replace' ? colors.popoverSelectedBg : colors.surface,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                     <span style={{
                       width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '2px',
-                      border: singleDayConflictAction === 'replace' ? '6px solid #1a1a1a' : '2px solid #ccc',
-                      background: '#fff',
+                      border: singleDayConflictAction === 'replace' ? `6px solid ${colors.solidDark}` : `2px solid ${colors.textDisabled}`,
+                      background: colors.surface,
                     }} />
                     <div>
-                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#1a1a1a' }}>Replace</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px', lineHeight: '1.4' }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: colors.textPrimary }}>Replace</div>
+                      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '2px', lineHeight: '1.4' }}>
                         Remove <strong>{dayjs(editingDay.singleDate).format('MMM D')}</strong> from the current <strong>{editingDay.typeName}</strong> block and assign it to the new type. The {editingDay.typeName} block will shrink from {editingDay.calendarDays?.length || 0} to {(editingDay.calendarDays?.length || 1) - 1} day(s).
                       </div>
                     </div>
@@ -597,25 +599,25 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                 <button onClick={() => setSingleDayConflictAction('extend')}
                   style={{
                     ...conflictOptionStyle,
-                    border: singleDayConflictAction === 'extend' ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
-                    background: singleDayConflictAction === 'extend' ? '#f8f8f4' : '#fff',
+                    border: singleDayConflictAction === 'extend' ? `2px solid ${colors.solidDark}` : `1px solid ${colors.border}`,
+                    background: singleDayConflictAction === 'extend' ? colors.popoverSelectedBg : colors.surface,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                     <span style={{
                       width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '2px',
-                      border: singleDayConflictAction === 'extend' ? '6px solid #1a1a1a' : '2px solid #ccc',
-                      background: '#fff',
+                      border: singleDayConflictAction === 'extend' ? `6px solid ${colors.solidDark}` : `2px solid ${colors.textDisabled}`,
+                      background: colors.surface,
                     }} />
                     <div>
-                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#1a1a1a' }}>Extend</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px', lineHeight: '1.4' }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: colors.textPrimary }}>Extend</div>
+                      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '2px', lineHeight: '1.4' }}>
                         Remove <strong>{dayjs(editingDay.singleDate).format('MMM D')}</strong> from <strong>{editingDay.typeName}</strong> and assign it to the new type. The <strong>{editingDay.typeName}</strong> block will extend by 1 day at the end to keep the same total ({editingDay.calendarDays?.length || 0} days).
                         {editingDay.calendarDays?.length > 1 && (() => {
                           const sorted = [...(editingDay.calendarDays || [])].map(Number).sort((a, b) => a - b);
                           const remaining = sorted.filter(d => d !== Number(editingDay.singleDate));
                           const lastDate = remaining.length > 0 ? Math.max(...remaining) : null;
                           const extendedDate = lastDate ? dayjs(lastDate).add(1, 'day') : null;
-                          return extendedDate ? <><br /><em style={{ color: '#666' }}>{editingDay.typeName} will now end on {extendedDate.format('MMM D')} instead of {dayjs(Math.max(...sorted)).format('MMM D')}.</em></> : null;
+                          return extendedDate ? <><br /><em style={{ color: colors.textSecondary }}>{editingDay.typeName} will now end on {extendedDate.format('MMM D')} instead of {dayjs(Math.max(...sorted)).format('MMM D')}.</em></> : null;
                         })()}
                       </div>
                     </div>
@@ -625,18 +627,18 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
                 <button onClick={() => setSingleDayConflictAction('overlap')}
                   style={{
                     ...conflictOptionStyle,
-                    border: singleDayConflictAction === 'overlap' ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
-                    background: singleDayConflictAction === 'overlap' ? '#f8f8f4' : '#fff',
+                    border: singleDayConflictAction === 'overlap' ? `2px solid ${colors.solidDark}` : `1px solid ${colors.border}`,
+                    background: singleDayConflictAction === 'overlap' ? colors.popoverSelectedBg : colors.surface,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                     <span style={{
                       width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, marginTop: '2px',
-                      border: singleDayConflictAction === 'overlap' ? '6px solid #1a1a1a' : '2px solid #ccc',
-                      background: '#fff',
+                      border: singleDayConflictAction === 'overlap' ? `6px solid ${colors.solidDark}` : `2px solid ${colors.textDisabled}`,
+                      background: colors.surface,
                     }} />
                     <div>
-                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#1a1a1a' }}>Overlap</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px', lineHeight: '1.4' }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: colors.textPrimary }}>Overlap</div>
+                      <div style={{ fontSize: '11px', color: colors.textMuted, marginTop: '2px', lineHeight: '1.4' }}>
                         Keep the existing <strong>{editingDay.typeName}</strong> on this date and also add the new type. Both will appear on <strong>{dayjs(editingDay.singleDate).format('MMM D')}</strong>.
                       </div>
                     </div>
@@ -661,27 +663,14 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       {/* ── Summary ── */}
       {!isSingleDayEdit && calendarDays.length > 0 && (
         <div style={{
-          background: '#f9f9f0', border: '1px solid #ddd', padding: '10px 14px',
-          fontSize: '13px', color: '#555', borderRadius: '6px',
+          background: colors.surfaceAlt, border: `1px solid ${colors.borderInput}`, padding: '10px 14px',
+          fontSize: '13px', color: colors.textSecondary, borderRadius: '6px',
         }}>
           {calendarDays.length} day(s): {dayjs(calendarDays[0]).format('MMM D')} – {dayjs(calendarDays[calendarDays.length - 1]).format('MMM D, YYYY')}
         </div>
       )}
     </Drawer>
   );
-};
-
-const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: '#555', marginBottom: '4px', letterSpacing: '0.5px', textTransform: 'uppercase' };
-
-const conflictOptionStyle = {
-  width: '100%', padding: '12px 14px', borderRadius: '8px',
-  cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-};
-
-const tabDescStyle = {
-  fontSize: '12px', color: '#999', marginBottom: '14px', lineHeight: '1.5',
-  padding: '8px 10px', background: '#fafaf8', borderRadius: '6px',
-  border: '1px solid #f0efec', fontStyle: 'italic',
 };
 
 export default CreateScheduleModal;

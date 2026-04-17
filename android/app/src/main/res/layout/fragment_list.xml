@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pageBg"
+    android:padding="@dimen/spacing_sm">
+
+    <!-- List toolbar: By Date / By Schedule toggle + Set Default -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingVertical="@dimen/spacing_sm"
+        android:paddingHorizontal="@dimen/spacing_sm">
+
+        <!-- Mode toggle: By Date / By Schedule -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/listModeToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnByDate"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="@string/bs_by_date"
+                android:textSize="@dimen/text_sm" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBySchedule"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="@string/bs_by_schedule"
+                android:textSize="@dimen/text_sm" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- Set as Default -->
+        <Button
+            android:id="@+id/btnListSetDefault"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_set_default"
+            android:layout_marginStart="@dimen/spacing_sm" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Select mode toggle -->
+        <Button
+            android:id="@+id/btnSelect"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_select" />
+
+        <!-- Delete Selected (hidden by default) -->
+        <Button
+            android:id="@+id/btnDeleteSelected"
+            style="@style/ZillitButton.Danger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_delete_selected"
+            android:visibility="gone"
+            android:layout_marginStart="@dimen/spacing_sm" />
+    </LinearLayout>
+
+    <!-- Schedule list RecyclerView -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardCornerRadius="@dimen/radius_md"
+        app:cardBackgroundColor="@color/surface"
+        app:cardElevation="1dp"
+        android:layout_marginTop="@dimen/spacing_xs">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/scheduleList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/spacing_sm" />
+
+            <!-- Empty state -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="48sp"
+                    android:text="📋" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_schedule_title"
+                    android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textSubtle"
+                    android:textStyle="bold"
+                    android:layout_marginTop="@dimen/spacing_md" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_schedule_desc"
+                    android:textSize="@dimen/text_body"
+                    android:textColor="@color/textDisabled"
+                    android:layout_marginTop="@dimen/spacing_xs" />
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

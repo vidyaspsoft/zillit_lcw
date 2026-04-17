@@ -154,3 +154,89 @@
   align-items: center;
   justify-content: center;
 }
+
+/* ── AntD Calendar month view styling for Box Schedule ── */
+.box-schedule-antd-calendar .ant-picker-calendar {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.box-schedule-antd-calendar .ant-picker-calendar-header {
+  display: none;
+}
+
+.box-schedule-antd-calendar .ant-picker-calendar-full,
+.box-schedule-antd-calendar .ant-picker-panel {
+  background: #fff;
+  padding: 0;
+  margin: 0;
+  border-top: 0;
+}
+
+.box-schedule-antd-calendar .ant-picker-body {
+  padding: 0;
+  margin-top: 0;
+  margin: 0;
+}
+
+.box-schedule-antd-calendar .ant-picker-content {
+  height: 100%;
+  table-layout: fixed;
+  margin-top: 0;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.box-schedule-antd-calendar .ant-picker-content thead th {
+  padding: 14px 4px 14px;
+  border-bottom: 1px solid #d8d5cf;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 1.5px;
+  text-align: center;
+  text-transform: uppercase;
+  color: #999;
+  background: #f7f6f3;
+  vertical-align: bottom;
+}
+
+.box-schedule-antd-calendar .ant-picker-content thead tr,
+.box-schedule-antd-calendar .ant-picker-content tbody tr {
+  margin: 0;
+  padding: 0;
+}
+
+.box-schedule-antd-calendar .ant-picker-cell {
+  padding: 0;
+  border-inline-end: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.box-schedule-antd-calendar .ant-picker-cell::before {
+  display: none;
+}
+
+.box-schedule-antd-calendar .ant-picker-cell .ant-picker-calendar-date {
+  margin: 0;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.box-schedule-antd-calendar .ant-picker-content tbody tr {
+  height: calc((100% - 42px) / 6);
+}
+
+.box-schedule-antd-calendar .ant-picker-cell-selected .ant-picker-calendar-date,
+.box-schedule-antd-calendar .ant-picker-cell-today .ant-picker-calendar-date {
+  background: transparent;
+}
+
+.box-schedule-antd-calendar .ant-picker-calendar-date-value,
+.box-schedule-antd-calendar .ant-picker-calendar-date-content {
+  display: none;
+}

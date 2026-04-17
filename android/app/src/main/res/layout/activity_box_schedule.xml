@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Main content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/pageBg">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/surfaceAlt"
+            android:paddingHorizontal="@dimen/spacing_base"
+            android:paddingTop="@dimen/spacing_sm"
+            android:paddingBottom="@dimen/spacing_sm">
+
+            <!-- Top bar: Back + Share + Menu -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/spacing_xs">
+
+                <TextView
+                    android:id="@+id/btnBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bs_back_to_tools"
+                    android:textSize="@dimen/text_body"
+                    android:textColor="@color/textMuted"
+                    android:padding="@dimen/spacing_xs"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableStart="@android:drawable/ic_media_previous"
+                    android:drawablePadding="@dimen/spacing_xxs" />
+
+                <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btnShare"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_share"
+                    android:contentDescription="@string/bs_share"
+                    app:tint="@color/textMuted"
+                    android:layout_marginEnd="@dimen/spacing_sm" />
+
+                <ImageButton
+                    android:id="@+id/btnMenu"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_more"
+                    android:contentDescription="Menu"
+                    app:tint="@color/textPrimary" />
+            </LinearLayout>
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bs_title"
+                style="@style/ZillitTitle.Hero"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tvPrepared"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_sm"
+                android:textColor="@color/textMuted"
+                android:gravity="center"
+                android:layout_marginBottom="@dimen/spacing_xs" />
+        </LinearLayout>
+
+        <View style="@style/ZillitDivider" />
+
+        <!-- View toggle + Set Default + Legend -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:paddingVertical="@dimen/spacing_sm">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/viewToggle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCalendarView"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/bs_calendar_view"
+                        android:textSize="@dimen/text_sm" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnListView"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="@string/bs_list_view"
+                        android:textSize="@dimen/text_sm" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <Button
+                    android:id="@+id/btnSetDefaultView"
+                    style="@style/ZillitButton.Toolbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bs_set_default"
+                    android:textSize="@dimen/text_xs"
+                    android:layout_marginStart="@dimen/spacing_sm" />
+            </LinearLayout>
+
+            <!-- Legend -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="@dimen/spacing_xs">
+
+                <LinearLayout
+                    android:id="@+id/legendContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical" />
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <View style="@style/ZillitDivider" />
+
+        <!-- Fragment container -->
+        <FrameLayout
+            android:id="@+id/fragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Loading overlay -->
+        <FrameLayout
+            android:id="@+id/loadingOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:elevation="10dp">
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/primaryAccent" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- ═══ Navigation Drawer ═══ -->
+    <LinearLayout
+        android:id="@+id/navDrawer"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:orientation="vertical"
+        android:background="@color/surface"
+        android:fitsSystemWindows="true">
+
+        <!-- Drawer header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="@dimen/spacing_base"
+            android:background="@color/surfaceAlt">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Menu"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary" />
+
+            <ImageButton
+                android:id="@+id/btnCloseDrawer"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="Close"
+                app:tint="@color/textMuted" />
+        </LinearLayout>
+
+        <View style="@style/ZillitDivider" />
+
+        <!-- Drawer items -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="@dimen/spacing_sm">
+
+                <TextView android:id="@+id/drawerCreateSchedule"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/bs_create_schedule" android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textPrimary" android:drawableStart="@android:drawable/ic_menu_add"
+                    android:drawablePadding="@dimen/spacing_md" android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground" app:drawableTint="@color/primaryAccent" />
+
+                <TextView android:id="@+id/drawerCreateEvent"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/bs_create_event" android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textPrimary" android:drawableStart="@android:drawable/ic_menu_recent_history"
+                    android:drawablePadding="@dimen/spacing_md" android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground" app:drawableTint="@color/actionChanged" />
+
+                <TextView android:id="@+id/drawerCreateNote"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/bs_create_note" android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textPrimary" android:drawableStart="@android:drawable/ic_menu_edit"
+                    android:drawablePadding="@dimen/spacing_md" android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground" app:drawableTint="@color/actionCopied" />
+
+                <View style="@style/ZillitDivider" android:layout_marginVertical="@dimen/spacing_xs"
+                    android:layout_marginHorizontal="@dimen/spacing_base" />
+
+                <TextView android:id="@+id/drawerEditTypes"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/bs_edit_types" android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textPrimary" android:drawableStart="@android:drawable/ic_menu_manage"
+                    android:drawablePadding="@dimen/spacing_md" android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground" app:drawableTint="@color/textSecondary" />
+
+                <TextView android:id="@+id/drawerHistory"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/bs_history" android:textSize="@dimen/text_lg"
+                    android:textColor="@color/textPrimary" android:drawableStart="@android:drawable/ic_menu_recent_history"
+                    android:drawablePadding="@dimen/spacing_md" android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground" app:drawableTint="@color/textSecondary" />
+
+                <View style="@style/ZillitDivider" android:layout_marginVertical="@dimen/spacing_xs"
+                    android:layout_marginHorizontal="@dimen/spacing_base" />
+
+                <!-- Dark/Light toggle -->
+                <LinearLayout
+                    android:id="@+id/drawerThemeToggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/spacing_base"
+                    android:background="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/drawerThemeIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_menu_day"
+                        app:tint="@color/primaryAccent" />
+
+                    <TextView
+                        android:id="@+id/drawerThemeLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Dark Mode"
+                        android:textSize="@dimen/text_lg"
+                        android:textColor="@color/textPrimary"
+                        android:layout_marginStart="@dimen/spacing_md" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/drawerThemeSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Drawer footer — user info -->
+        <View style="@style/ZillitDivider" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:padding="@dimen/spacing_base"
+            android:background="@color/surfaceAlt">
+
+            <TextView
+                android:id="@+id/drawerUserInitial"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:textSize="@dimen/text_md"
+                android:textStyle="bold"
+                android:textColor="@color/primaryAccent"
+                android:background="@color/surfaceAlt" />
+
+            <TextView
+                android:id="@+id/drawerUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/text_body"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary"
+                android:layout_marginStart="@dimen/spacing_sm" />
+
+            <ImageButton
+                android:id="@+id/drawerLogout"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="Logout"
+                app:tint="@color/dangerBg" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

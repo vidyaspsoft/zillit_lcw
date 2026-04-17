@@ -3,6 +3,7 @@ import { Drawer, Input, Select, DatePicker, TimePicker, Checkbox, Button, Segmen
 import { FiInfo } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import { useTheme } from '../../context/ThemeContext';
 import PlacePicker from '../location-tool/PlacePicker';
 
 const { TextArea } = Input;
@@ -59,6 +60,7 @@ const DISTRIBUTE_OPTIONS = [
 ];
 
 const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, scheduleDays = [], defaultTab = null, editingEvent = null }) => {
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState(defaultTab || 'Event');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -119,6 +121,8 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
   const [noteTitle, setNoteTitle] = useState(editingEvent?.title || '');
   const [noteText, setNoteText] = useState(editingEvent?.notes || '');
   const [noteColor, setNoteColor] = useState(editingEvent?.color || '#3498DB');
+
+  const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: colors.textSecondary, marginBottom: '4px', letterSpacing: '0.5px', textTransform: 'uppercase' };
 
   // ── Validation ──
   const validateEvent = useCallback(() => {
@@ -186,33 +190,33 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
         <button key={c.value} onClick={() => onChange(c.value)} title={c.label}
           style={{
             width: '28px', height: '28px', borderRadius: '6px', backgroundColor: c.value,
-            border: value === c.value ? '3px solid #1a1a1a' : '2px solid #ddd',
+            border: value === c.value ? `3px solid ${colors.solidDark}` : `2px solid ${colors.borderInput}`,
             cursor: 'pointer', transition: 'all 0.15s',
-            boxShadow: value === c.value ? '0 0 0 2px #fff, 0 0 0 4px #1a1a1a' : 'none',
+            boxShadow: value === c.value ? `0 0 0 2px ${colors.surface}, 0 0 0 4px ${colors.solidDark}` : 'none',
           }} />
       ))}
     </div>
   );
 
-  const FieldError = ({ field }) => errors[field] ? <p style={{ color: '#e74c3c', fontSize: '12px', margin: '4px 0 0' }}>{errors[field]}</p> : null;
+  const FieldError = ({ field }) => errors[field] ? <p style={{ color: colors.dangerBg, fontSize: '12px', margin: '4px 0 0' }}>{errors[field]}</p> : null;
 
   return (
     <Drawer open={open} onClose={onClose} placement="right" width={750}
-      styles={{ header: { borderBottom: '1px solid #e0ddd8', background: '#fafaf8' }, body: { padding: '20px 24px', background: '#fff' } }}
-      title={<span style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
+      styles={{ header: { borderBottom: `1px solid ${colors.border}`, background: colors.drawerHeaderBg }, body: { padding: '20px 24px', background: colors.drawerBodyBg } }}
+      title={<span style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: colors.textPrimary }}>
         {isEditing ? (activeTab === 'Event' ? 'Edit Event' : 'Edit Note') : (activeTab === 'Event' ? 'Add Event' : 'Add Note')}
       </span>}>
       <div>
         {/* Tab switcher */}
         {!defaultTab && (
           <Segmented options={['Event', 'Note']} value={activeTab} onChange={(v) => { setActiveTab(v); setErrors({}); }} block
-            style={{ marginBottom: '20px', background: '#f0efec', borderRadius: '8px' }} />
+            style={{ marginBottom: '20px', background: colors.typeBadgeBg, borderRadius: '8px' }} />
         )}
 
         {/* Schedule Day picker */}
         {!scheduleDayId && (
-          <div style={{ marginBottom: '16px', padding: '12px 14px', background: '#fafaf8', border: '1px solid #e0ddd8', borderRadius: '8px' }}>
-            <label style={labelStyle}>Link to a schedule day <span style={{ fontWeight: '400', color: '#aaa' }}>(optional)</span></label>
+          <div style={{ marginBottom: '16px', padding: '12px 14px', background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: '8px' }}>
+            <label style={labelStyle}>Link to a schedule day <span style={{ fontWeight: '400', color: colors.textFaint }}>(optional)</span></label>
             <Select placeholder="Select a schedule day..." showSearch allowClear value={selectedDayKey || undefined}
               onChange={(val) => {
                 setSelectedDayKey(val || null); setErrors((p) => ({ ...p, day: undefined }));
@@ -232,12 +236,12 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
             {/* Title + Full Day toggle on same row */}
             <div style={{ marginBottom: '14px' }}>
               <div className="flex items-center justify-between" style={{ marginBottom: '4px' }}>
-                <label style={{ ...labelStyle, marginBottom: 0 }}>Title <span style={{ color: '#e74c3c' }}>*</span></label>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>Title <span style={{ color: colors.dangerBg }}>*</span></label>
                 <div className="flex items-center gap-2">
-                  <span style={{ fontSize: '12px', color: '#666' }}>Full Day</span>
+                  <span style={{ fontSize: '12px', color: colors.textSecondary }}>Full Day</span>
                   <input type="checkbox" checked={fullDay}
                     onChange={(e) => { setFullDay(e.target.checked); setErrors((p) => ({ ...p, endTime: undefined, endDate: undefined })); }}
-                    style={{ width: '34px', height: '18px', cursor: 'pointer', accentColor: '#1a1a1a' }} />
+                    style={{ width: '34px', height: '18px', cursor: 'pointer', accentColor: colors.solidDark }} />
                 </div>
               </div>
               <Input placeholder="Add Title *" value={title}
@@ -286,7 +290,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               </div>
             </div>
 
-            {/* ═══ Repeat section ═══ */}
+            {/* Repeat section */}
             <div className="flex gap-3 mb-3">
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Repeat</label>
@@ -302,7 +306,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               </div>
             </div>
 
-            {/* ═══ Always visible fields ═══ */}
+            {/* Always visible fields */}
 
             {/* Timezone */}
             <div style={{ marginBottom: '14px' }}>
@@ -340,7 +344,7 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
             <div style={{ marginBottom: '6px' }}>
               <label style={labelStyle}>Distribute To</label>
               <Select value={distributeTo} onChange={setDistributeTo} options={DISTRIBUTE_OPTIONS} style={{ width: '100%' }} size="large" />
-              <p style={{ fontSize: '11px', color: '#999', margin: '4px 0 0', fontStyle: 'italic' }}>
+              <p style={{ fontSize: '11px', color: colors.textSubtle, margin: '4px 0 0', fontStyle: 'italic' }}>
                 Select the department which you want to send the notification
               </p>
             </div>
@@ -348,10 +352,10 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
             {/* Organizer excluded */}
             <div style={{
               marginBottom: '14px', padding: '10px 14px',
-              background: '#f8f8f6', border: '1px solid #e0ddd8', borderRadius: '8px',
+              background: colors.surfaceAlt, border: `1px solid ${colors.border}`, borderRadius: '8px',
             }}>
               <Checkbox checked={organizerExcluded} onChange={(e) => setOrganizerExcluded(e.target.checked)}>
-                <span style={{ fontSize: '13px', fontWeight: '500' }}>The organizer will not be a part of this event.</span>
+                <span style={{ fontSize: '13px', fontWeight: '500', color: colors.textBody }}>The organizer will not be a part of this event.</span>
               </Checkbox>
             </div>
 
@@ -362,19 +366,19 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2" style={{ borderTop: '1px solid #eee', paddingTop: '16px' }}>
+            <div className="flex justify-end gap-2" style={{ borderTop: `1px solid ${colors.borderLight}`, paddingTop: '16px' }}>
               <Button onClick={onClose} size="large" style={{ borderRadius: '6px' }}>Cancel</Button>
               <Button onClick={handleSubmit} loading={submitting} size="large"
-                style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff', borderRadius: '6px', fontWeight: '600' }}>
+                style={{ background: colors.solidDark, borderColor: colors.solidDark, color: colors.solidDarkText, borderRadius: '6px', fontWeight: '600' }}>
                 {isEditing ? 'Update Event' : 'Save Event'}
               </Button>
             </div>
           </div>
         ) : (
-          /* ═══════ NOTE FORM ═══════ */
+          /* NOTE FORM */
           <div>
             <div style={{ marginBottom: '14px' }}>
-              <label style={labelStyle}>Title <span style={{ color: '#e74c3c' }}>*</span></label>
+              <label style={labelStyle}>Title <span style={{ color: colors.dangerBg }}>*</span></label>
               <Input placeholder="e.g., Rain backup plan needed" value={noteTitle}
                 onChange={(e) => { setNoteTitle(e.target.value); setErrors((p) => ({ ...p, noteTitle: undefined })); }}
                 size="large" status={errors.noteTitle ? 'error' : undefined} />
@@ -388,10 +392,10 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               <label style={labelStyle}>Color</label>
               <BgColorPalette value={noteColor} onChange={setNoteColor} />
             </div>
-            <div className="flex justify-end gap-2" style={{ borderTop: '1px solid #eee', paddingTop: '16px' }}>
+            <div className="flex justify-end gap-2" style={{ borderTop: `1px solid ${colors.borderLight}`, paddingTop: '16px' }}>
               <Button onClick={onClose} size="large" style={{ borderRadius: '6px' }}>Cancel</Button>
               <Button onClick={handleSubmit} loading={submitting} size="large"
-                style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff', borderRadius: '6px', fontWeight: '600' }}>
+                style={{ background: colors.solidDark, borderColor: colors.solidDark, color: colors.solidDarkText, borderRadius: '6px', fontWeight: '600' }}>
                 {isEditing ? 'Update Note' : 'Save Note'}
               </Button>
             </div>
@@ -401,7 +405,5 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
     </Drawer>
   );
 };
-
-const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: '#555', marginBottom: '4px', letterSpacing: '0.5px', textTransform: 'uppercase' };
 
 export default CreateEventModal;

@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import { useTheme } from './context/ThemeContext';
 
 import LoginPage from './components/auth/LoginPage';
 import Navbar from './components/common/Navbar';
@@ -15,6 +16,24 @@ import WardrobeToolPage from './components/wardrobe-tool/WardrobeToolPage';
 import BoxSchedulePage from './components/box-schedule/BoxSchedulePage';
 
 import './App.css';
+
+const ToastContainerThemed = () => {
+  const { isDark } = useTheme();
+  return (
+    <ToastContainer
+      position="bottom-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme={isDark ? 'dark' : 'light'}
+    />
+  );
+};
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -31,12 +50,13 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AuthenticatedApp = () => {
+  const { colors } = useTheme();
   return (
     <AppProvider>
       <div className="flex flex-col h-screen overflow-hidden">
         <Navbar />
         <div className="flex flex-1 overflow-hidden mt-[var(--navbar-height)]">
-          <main className="flex-1 overflow-y-auto bg-slate-100">
+          <main className="flex-1 overflow-y-auto" style={{ backgroundColor: colors.pageBg }}>
             <Routes>
               <Route path="/" element={<ToolsPage />} />
               <Route path="/location-tool" element={<LocationToolPage />} />
@@ -83,18 +103,7 @@ function App() {
             }
           />
         </Routes>
-        <ToastContainer
-          position="bottom-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
+        <ToastContainerThemed />
       </AuthProvider>
     </Router>
   );

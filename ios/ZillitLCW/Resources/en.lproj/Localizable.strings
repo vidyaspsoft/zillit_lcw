@@ -1,0 +1,235 @@
+/* Login */
+"login_title" = "Welcome to Zillit";
+"login_email_hint" = "Email address";
+"login_password_hint" = "Password";
+"login_sign_in" = "Sign In";
+"login_error_email" = "Please enter a valid email";
+"login_error_password" = "Password is required";
+"login_error_failed" = "Login failed. Please try again.";
+
+/* Box Schedule */
+"bs_title" = "Production Schedule";
+"bs_prepared" = "Prepared: %@";
+"bs_calendar_view" = "Calendar View";
+"bs_list_view" = "List View";
+"bs_set_default" = "Set as Default";
+"bs_month" = "Month";
+"bs_week" = "Week";
+"bs_day" = "Day";
+"bs_today" = "Today";
+"bs_by_date" = "By Date";
+"bs_by_schedule" = "By Schedule";
+"bs_create_schedule" = "Create Schedule";
+"bs_create_event" = "Create Event";
+"bs_create_note" = "Create Note";
+"bs_history" = "History";
+"bs_share" = "Share";
+"bs_edit_types" = "Edit Types";
+"bs_print" = "Print";
+"bs_back_to_tools" = "Back to Tools";
+"bs_select" = "Select";
+"bs_delete_selected" = "Delete Selected";
+
+/* Create Schedule */
+"cs_type" = "Type";
+"cs_title_hint" = "Schedule title (optional)";
+"cs_how_to_set_dates" = "How to Set Dates";
+"cs_date_range" = "Date Range";
+"cs_calendar" = "Calendar";
+"cs_day_wise" = "Day Wise";
+"cs_start_date" = "Start Date";
+"cs_end_date" = "End Date";
+"cs_number_of_days" = "Number of Days";
+"cs_set_by_days" = "Set by Days";
+"cs_set_by_end_date" = "Set by End Date";
+"cs_save" = "Save Schedule";
+"cs_cancel" = "Cancel";
+"cs_days_summary" = "%d day(s): %@ – %@";
+"cs_select_type" = "Select a type";
+"cs_date_range_desc" = "Set a start date and specify the number of consecutive days, or choose a start and end date.";
+"cs_calendar_desc" = "Pick individual dates on the calendar.";
+"cs_day_wise_desc" = "Select specific days of the week within a date range.";
+
+/* Conflict */
+"conflict_title" = "Schedule Conflict";
+"conflict_message" = "%d date(s) overlap with existing schedules. How would you like to resolve this?";
+"conflict_replace" = "Replace";
+"conflict_replace_desc" = "Remove existing schedule on these dates and use your new schedule instead";
+"conflict_extend" = "Extend";
+"conflict_extend_desc" = "Keep existing schedule, extend it at the end to make room";
+"conflict_overlap" = "Overlap";
+"conflict_overlap_desc" = "Keep existing schedule and also add the new one on the same dates";
+"conflict_back" = "Back to Edit Dates";
+
+/* Create Event */
+"ce_add_event" = "Add Event";
+"ce_add_note" = "Add Note";
+"ce_edit_event" = "Edit Event";
+"ce_edit_note" = "Edit Note";
+"ce_title_hint" = "Add Title *";
+"ce_description_hint" = "Event Description";
+"ce_start_time" = "Start Time";
+"ce_end_time" = "End Time";
+"ce_full_day" = "Full Day";
+"ce_repeat" = "Repeat";
+"ce_repeat_end_date" = "Repeat End Date";
+"ce_no_repeat" = "No repeat";
+"ce_daily" = "Daily";
+"ce_weekly" = "Weekly";
+"ce_monthly" = "Monthly";
+"ce_timezone" = "Select Timezone";
+"ce_reminder" = "Add Reminder/Alert";
+"ce_no_reminder" = "No reminder";
+"ce_at_time" = "At time of event";
+"ce_5min" = "5 minutes before";
+"ce_15min" = "15 minutes before";
+"ce_30min" = "30 minutes before";
+"ce_1hr" = "1 hour before";
+"ce_1day" = "1 day before";
+"ce_call_type" = "Call Type";
+"ce_select_call_type" = "Select Call Type";
+"ce_meet_in_person" = "Meet in Person";
+"ce_audio" = "Audio Call";
+"ce_video" = "Video Call";
+"ce_text_color" = "Select Text Color";
+"ce_location" = "Add Location";
+"ce_location_hint" = "Search location on Google Maps…";
+"ce_my_location" = "My Location";
+"ce_pick_on_map" = "Pick on Map";
+"ce_distribute_to" = "Distribute To";
+"ce_distribute_hint" = "Select the department which you want to send the notification";
+"ce_save_event" = "Save Event";
+"ce_save_note" = "Save Note";
+"ce_update_event" = "Update Event";
+"ce_update_note" = "Update Note";
+"ce_note_title_hint" = "Note Title *";
+"ce_note_text_hint" = "Write your note…";
+"ce_event_tab" = "Event";
+"ce_note_tab" = "Note";
+"ce_bg_color" = "Select Background Color";
+
+/* History */
+"history_title" = "History";
+"history_subtitle" = "Everything that changed in the Production Schedule";
+"history_all_actions" = "All Actions";
+"history_added" = "Added";
+"history_changed" = "Changed";
+"history_removed" = "Removed";
+"history_copied" = "Copied";
+"history_shared" = "Shared";
+"history_pick_date" = "Pick a date";
+"history_no_history" = "No history yet";
+"history_no_history_desc" = "Changes to schedules, events, and notes will appear here automatically.";
+"history_no_match" = "No matching changes";
+"history_no_match_desc" = "Try a different filter.";
+"history_by_name" = "by %@";
+"history_someone" = "Someone";
+"history_label_added" = "ADDED";
+"history_label_changed" = "CHANGED";
+"history_label_removed" = "REMOVED";
+"history_label_copied" = "COPIED";
+"history_label_shared" = "SHARED";
+"history_target_schedule" = "Schedule";
+"history_target_schedule_type" = "Schedule Type";
+"history_target_event" = "Event";
+"history_target_note" = "Note";
+
+/* Type Manager */
+"tm_title" = "Schedule Types";
+"tm_system" = "SYSTEM";
+"tm_add_custom" = "Add Custom Type";
+"tm_type_name_hint" = "Type name";
+"tm_add" = "Add";
+"tm_done" = "Done";
+"tm_save" = "Save";
+"tm_color_used" = "That color is already used by \"%@\". Please pick a different color.";
+"tm_name_exists" = "A type with this name already exists";
+
+/* Share */
+"share_title" = "Share Schedule";
+"share_via_link" = "Share via Link";
+"share_link_desc" = "Generate a read-only link that anyone can use to view the schedule.";
+"share_generate" = "Generate Link";
+"share_copy" = "Copy";
+"share_copied" = "Copied";
+"share_as_text" = "Copy as Text (for Email)";
+"share_text_desc" = "Copy the schedule as plain text — paste into any email or message.";
+"share_copy_text" = "Copy Schedule as Text";
+"share_close" = "Close";
+
+/* Day Detail */
+"dd_schedules" = "Schedules on this day";
+"dd_events" = "Events";
+"dd_notes" = "Notes";
+"dd_standalone_events" = "Standalone Events";
+"dd_empty" = "Nothing scheduled on this day";
+"dd_past" = "This date is in the past.";
+"dd_add_prompt" = "Add a schedule or event to get started.";
+"dd_add_schedule" = "Add Schedule";
+"dd_add_event" = "Add Event";
+"dd_view_details" = "View Full Details";
+"dd_add_to_day" = "Add to this day";
+
+/* Legend */
+"legend_more" = "+%d more";
+
+/* Common */
+"action_edit" = "Edit";
+"action_delete" = "Delete";
+"action_view" = "View";
+"action_duplicate" = "Duplicate";
+"action_cancel" = "Cancel";
+"action_confirm" = "Confirm";
+"full_day_label" = "Full Day";
+"no_schedule_title" = "No schedule days yet";
+"no_schedule_desc" = "Click \"Add Schedule\" to create your production schedule.";
+"days_count" = "%d day(s)";
+"notes_count" = "%d note(s)";
+"untitled" = "(untitled)";
+"loading" = "Loading…";
+"refreshing" = "Refreshing…";
+"error_generic" = "Something went wrong. Please try again.";
+"rev_label" = "REV %d";
+
+/* Duplicate */
+"duplicate_title" = "Duplicate Schedule";
+"duplicate_new_start" = "New Start Date";
+"duplicate_hint" = "Select new start date";
+"duplicate_desc" = "All %d day(s) will be shifted to start from this date. Events will be copied too.";
+"duplicate_button" = "Duplicate";
+
+/* Delete Confirm */
+"delete_confirm_title" = "Delete Schedule";
+"delete_confirm_message" = "Are you sure you want to delete this schedule? This action cannot be undone.";
+
+/* Quick Action */
+"qa_title" = "What would you like to create?";
+"qa_schedule_desc" = "Add a Prep, Shoot, Wrap, Day Off, or Travel day";
+"qa_event_desc" = "Add a meeting, call, or activity with time and location";
+"qa_note_desc" = "Add a quick note or reminder for this day";
+
+/* Default View */
+"dv_choose_title" = "Choose your default view";
+"dv_calendar_desc" = "This view will load first every time you open the Calendar.";
+"dv_list_desc" = "This view will load first every time you open the List view.";
+"dv_month_desc" = "Full month grid with all weeks";
+"dv_week_desc" = "One week at a time with bigger cells";
+"dv_day_desc" = "Single day focused view with full details";
+"dv_by_date_desc" = "One row per calendar day in order";
+"dv_by_schedule_desc" = "Grouped by each schedule block";
+"dv_current" = "Current";
+"dv_default_set" = "%@ is now your default view.";
+
+/* Error / Validation */
+"bs_error_title" = "Error";
+"bs_ok" = "OK";
+"bs_loading" = "Loading…";
+"cs_error_select_type" = "Please select a schedule type";
+"cs_error_select_dates" = "Please select at least one date";
+"ce_error_title_required" = "Event title is required";
+"ce_error_end_before_start" = "End time must be after start time";
+"ce_error_note_title_required" = "Note title is required";
+"tm_delete_title" = "Delete Type";
+"tm_delete_message" = "Are you sure you want to delete this type? This action cannot be undone.";
+"tm_delete_confirm" = "Delete";
+"history_empty" = "No activity found";

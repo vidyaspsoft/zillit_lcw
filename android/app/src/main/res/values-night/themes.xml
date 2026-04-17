@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ZillitLCW" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/primaryAccent</item>
+        <item name="colorPrimaryDark">@color/primaryAccentDark</item>
+        <item name="colorOnPrimary">@color/solidDarkText</item>
+        <item name="android:colorBackground">@color/pageBg</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorSurfaceVariant">@color/surfaceAlt</item>
+        <item name="colorOutline">@color/border</item>
+        <item name="android:statusBarColor">@color/surfaceAlt</item>
+        <item name="android:navigationBarColor">@color/pageBg</item>
+        <item name="android:windowBackground">@color/pageBg</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="bottomSheetDialogTheme">@style/ZillitBottomSheet</item>
+    </style>
+</resources>

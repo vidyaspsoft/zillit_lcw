@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Share dialog — matches web's ShareScheduleModal.
+     Share via Link card + Copy as Text card. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="@dimen/spacing_xl">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/share_title"
+        style="@style/ZillitTitle"
+        android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- ═══ Share via Link card ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        android:padding="@dimen/spacing_base"
+        android:layout_marginBottom="@dimen/spacing_md">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_via_link"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_link_desc"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textMuted"
+            android:layout_marginBottom="@dimen/spacing_md" />
+
+        <!-- Generate Link button (shown before link is generated) -->
+        <Button
+            android:id="@+id/btnGenerateLink"
+            style="@style/ZillitButton.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_generate" />
+
+        <!-- URL display + Copy button (shown after link is generated) -->
+        <LinearLayout
+            android:id="@+id/linkContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvShareLink"
+                style="@style/ZillitInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/text_sm"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:ellipsize="middle"
+                android:singleLine="true" />
+
+            <Button
+                android:id="@+id/btnCopyLink"
+                style="@style/ZillitButton.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/share_copy" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ═══ Copy as Text card ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        android:padding="@dimen/spacing_base"
+        android:layout_marginBottom="@dimen/spacing_lg">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_as_text"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_text_desc"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textMuted"
+            android:layout_marginBottom="@dimen/spacing_md" />
+
+        <Button
+            android:id="@+id/btnCopyText"
+            style="@style/ZillitButton.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_copy_text" />
+    </LinearLayout>
+
+    <!-- Close button -->
+    <Button
+        android:id="@+id/btnClose"
+        style="@style/ZillitButton.Secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/share_close" />
+</LinearLayout>

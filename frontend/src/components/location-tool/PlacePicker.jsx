@@ -205,22 +205,23 @@ const PlacePicker = ({ onPlaceSelect, initialLat, initialLng, initialSearch = ''
             defaultValue={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search location on Google Maps..."
+            className="place-autocomplete-input"
             style={{
               width: '100%',
               height: 40,
               paddingLeft: 34,
               paddingRight: 32,
-              border: '1px solid #d9d9d9',
+              border: '1px solid var(--color-border, #d9d9d9)',
               borderRadius: 10,
               fontSize: 14,
-              color: '#1E293B',
+              color: 'var(--color-text, #1E293B)',
               outline: 'none',
-              background: '#fff',
+              background: 'var(--color-surface, #fff)',
               fontFamily: 'inherit',
               transition: 'all 0.2s',
             }}
             onFocus={(e) => { e.target.style.borderColor = '#E8930C'; e.target.style.boxShadow = '0 0 0 2px rgba(232,147,12,0.1)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#d9d9d9'; e.target.style.boxShadow = 'none'; }}
+            onBlur={(e) => { e.target.style.borderColor = 'var(--color-border, #d9d9d9)'; e.target.style.boxShadow = 'none'; }}
           />
           {(searchText || selectedPlace) && (
             <button

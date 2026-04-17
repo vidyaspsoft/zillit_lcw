@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Conflict resolution dialog — matches web's ConflictDialog.
+     Title, message, three option cards (Replace/Extend/Overlap), Back button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="@dimen/spacing_xl">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/conflict_title"
+        style="@style/ZillitTitle"
+        android:layout_marginBottom="@dimen/spacing_sm" />
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/tvConflictMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_body"
+        android:textColor="@color/textSecondary"
+        android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- Option: Replace -->
+    <LinearLayout
+        android:id="@+id/optionReplace"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        android:padding="@dimen/spacing_base"
+        android:layout_marginBottom="@dimen/spacing_sm">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_replace"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_replace_desc"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textMuted" />
+    </LinearLayout>
+
+    <!-- Option: Extend -->
+    <LinearLayout
+        android:id="@+id/optionExtend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        android:padding="@dimen/spacing_base"
+        android:layout_marginBottom="@dimen/spacing_sm">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_extend"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_extend_desc"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textMuted" />
+    </LinearLayout>
+
+    <!-- Option: Overlap -->
+    <LinearLayout
+        android:id="@+id/optionOverlap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_rounded"
+        android:padding="@dimen/spacing_base"
+        android:layout_marginBottom="@dimen/spacing_lg">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_overlap"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/conflict_overlap_desc"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textMuted" />
+    </LinearLayout>
+
+    <!-- Back button -->
+    <Button
+        android:id="@+id/btnBack"
+        style="@style/ZillitButton.Secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/conflict_back" />
+</LinearLayout>

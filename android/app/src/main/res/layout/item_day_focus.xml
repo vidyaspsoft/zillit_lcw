@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day Focus Card — matches web's DayFocusCard component.
+     Big date number, day name, schedule pills, events, notes, action buttons. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_xl"
+    android:background="@color/surface">
+
+    <!-- Big date header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top"
+        android:layout_marginBottom="@dimen/spacing_lg">
+
+        <!-- Date number (big) -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/spacing_lg">
+
+            <View
+                android:id="@+id/dayFocusTodayCircle"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_today_circle"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvDayFocusNumber"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:gravity="center"
+                android:textSize="@dimen/text_hero"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/textSecondary" />
+        </FrameLayout>
+
+        <!-- Day name + month + TODAY badge -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDayFocusDayName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_title"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary" />
+
+            <TextView
+                android:id="@+id/tvDayFocusMonthYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_body"
+                android:textColor="@color/textMuted"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:layout_marginTop="@dimen/spacing_xs" />
+
+            <TextView
+                android:id="@+id/tvDayFocusTodayBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bs_today"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/successText"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:paddingHorizontal="@dimen/spacing_sm"
+                android:paddingVertical="@dimen/spacing_xxs" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- Schedules on this day -->
+    <TextView
+        android:id="@+id/tvDayFocusSchedulesLabel"
+        style="@style/ZillitLabel.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dd_schedules"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/dayFocusScheduleContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- Events -->
+    <TextView
+        android:id="@+id/tvDayFocusEventsLabel"
+        style="@style/ZillitLabel.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dd_events"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/dayFocusEventContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- Notes -->
+    <TextView
+        android:id="@+id/tvDayFocusNotesLabel"
+        style="@style/ZillitLabel.Section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dd_notes"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/dayFocusNoteContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="@dimen/spacing_lg" />
+
+    <!-- Empty state -->
+    <LinearLayout
+        android:id="@+id/dayFocusEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingVertical="@dimen/spacing_xxxl"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📅"
+            android:textSize="48sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dd_empty"
+            android:textSize="@dimen/text_lg"
+            android:textColor="@color/textSubtle"
+            android:textStyle="bold"
+            android:layout_marginTop="@dimen/spacing_md" />
+
+        <TextView
+            android:id="@+id/tvDayFocusEmptyDesc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dd_add_prompt"
+            android:textSize="@dimen/text_body"
+            android:textColor="@color/textDisabled"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <!-- Action buttons -->
+    <View
+        style="@style/ZillitDivider"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginBottom="@dimen/spacing_md" />
+
+    <LinearLayout
+        android:id="@+id/dayFocusActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/btnDayFocusViewDetails"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dd_view_details"
+            android:visibility="gone"
+            android:layout_marginEnd="@dimen/spacing_sm" />
+
+        <Button
+            android:id="@+id/btnDayFocusAddSchedule"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dd_add_schedule"
+            android:layout_marginEnd="@dimen/spacing_sm" />
+
+        <Button
+            android:id="@+id/btnDayFocusAddEvent"
+            style="@style/ZillitButton.Toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dd_add_event" />
+    </LinearLayout>
+</LinearLayout>

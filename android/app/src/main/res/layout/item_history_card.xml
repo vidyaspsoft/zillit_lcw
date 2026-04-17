@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- History card — matches web ActivityLogDrawer card.
+     4dp colored left border, action dot + label, target type,
+     title in serif quotes, details, footer with date+time + "by Name" + REV pill. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginHorizontal="@dimen/spacing_base"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    android:background="@drawable/bg_card_rounded">
+
+    <!-- Colored left border -->
+    <View
+        android:id="@+id/borderStrip"
+        android:layout_width="@dimen/history_border_width"
+        android:layout_height="match_parent"
+        android:background="@color/actionAdded" />
+
+    <!-- Card content -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="@dimen/history_card_padding"
+        android:background="@color/historyCardBg">
+
+        <!-- Header row: action dot + ADDED label + target type -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_xs">
+
+            <!-- Action dot -->
+            <View
+                android:id="@+id/actionDot"
+                android:layout_width="@dimen/history_dot_size"
+                android:layout_height="@dimen/history_dot_size"
+                android:background="@drawable/bg_today_circle"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <!-- Action label (ADDED, CHANGED, etc.) -->
+            <TextView
+                android:id="@+id/tvActionLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_xs"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <!-- Target type (Schedule, Event, Note) -->
+            <TextView
+                android:id="@+id/tvTargetType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/textMuted"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05" />
+        </LinearLayout>
+
+        <!-- Title in serif quotes -->
+        <TextView
+            android:id="@+id/tvHistoryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:fontFamily="serif"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <!-- Details line -->
+        <TextView
+            android:id="@+id/tvDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textSubtle"
+            android:visibility="gone"
+            android:layout_marginBottom="@dimen/spacing_xs" />
+
+        <!-- Divider before footer -->
+        <View
+            style="@style/ZillitDivider"
+            android:background="@color/historyCardBorder"
+            android:layout_marginVertical="@dimen/spacing_xs" />
+
+        <!-- Footer: date+time  |  by Name  |  REV pill -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Date + Time -->
+            <TextView
+                android:id="@+id/tvDateTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/textFaint" />
+
+            <!-- By Name -->
+            <TextView
+                android:id="@+id/tvByName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/textFaint"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <!-- REV pill -->
+            <TextView
+                android:id="@+id/tvRevPill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/textMuted"
+                android:textStyle="bold"
+                android:background="@drawable/bg_button_secondary"
+                android:paddingHorizontal="@dimen/spacing_sm"
+                android:paddingVertical="@dimen/spacing_xxs" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

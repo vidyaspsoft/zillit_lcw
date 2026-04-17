@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiMap, FiChevronRight, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Navbar -- top navigation bar with breadcrumbs and a logout button.
@@ -62,7 +63,8 @@ const Navbar = () => {
         ))}
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
         {user && (
           <button
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-300 bg-white/10 border border-white/20 rounded-lg cursor-pointer hover:bg-white/20 hover:text-white transition-all"

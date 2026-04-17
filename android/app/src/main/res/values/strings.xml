@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zillit LCW</string>
+
+    <!-- Login -->
+    <string name="login_title">Welcome to Zillit</string>
+    <string name="login_email_hint">Email address</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_sign_in">Sign In</string>
+    <string name="login_error_email">Please enter a valid email</string>
+    <string name="login_error_password">Password is required</string>
+    <string name="login_error_failed">Login failed. Please try again.</string>
+
+    <!-- Box Schedule -->
+    <string name="bs_title">Production Schedule</string>
+    <string name="bs_prepared">Prepared: %s</string>
+    <string name="bs_calendar_view">Calendar View</string>
+    <string name="bs_list_view">List View</string>
+    <string name="bs_set_default">Set as Default</string>
+    <string name="bs_month">Month</string>
+    <string name="bs_week">Week</string>
+    <string name="bs_day">Day</string>
+    <string name="bs_today">Today</string>
+    <string name="bs_by_date">By Date</string>
+    <string name="bs_by_schedule">By Schedule</string>
+    <string name="bs_create_schedule">Create Schedule</string>
+    <string name="bs_create_event">Create Event</string>
+    <string name="bs_create_note">Create Note</string>
+    <string name="bs_history">History</string>
+    <string name="bs_share">Share</string>
+    <string name="bs_edit_types">Edit Types</string>
+    <string name="bs_print">Print</string>
+    <string name="bs_back_to_tools">Back to Tools</string>
+    <string name="bs_select">Select</string>
+    <string name="bs_delete_selected">Delete Selected</string>
+
+    <!-- Create Schedule -->
+    <string name="cs_type">Type</string>
+    <string name="cs_title_hint">Schedule title (optional)</string>
+    <string name="cs_how_to_set_dates">How to Set Dates</string>
+    <string name="cs_date_range">Date Range</string>
+    <string name="cs_calendar">Calendar</string>
+    <string name="cs_day_wise">Day Wise</string>
+    <string name="cs_start_date">Start Date</string>
+    <string name="cs_end_date">End Date</string>
+    <string name="cs_number_of_days">Number of Days</string>
+    <string name="cs_set_by_days">Set by Days</string>
+    <string name="cs_set_by_end_date">Set by End Date</string>
+    <string name="cs_save">Save Schedule</string>
+    <string name="cs_cancel">Cancel</string>
+    <string name="cs_days_summary">%1$d day(s): %2$s – %3$s</string>
+    <string name="cs_select_type">Select a type</string>
+    <string name="cs_pick_dates">Pick dates on the calendar</string>
+    <string name="cs_date_range_desc">Set a start date and specify the number of consecutive days, or choose a start and end date.</string>
+    <string name="cs_calendar_desc">Pick individual dates on the calendar.</string>
+    <string name="cs_day_wise_desc">Select specific days of the week within a date range.</string>
+
+    <!-- Conflict -->
+    <string name="conflict_title">Schedule Conflict</string>
+    <string name="conflict_message">%d date(s) overlap with existing schedules. How would you like to resolve this?</string>
+    <string name="conflict_replace">Replace</string>
+    <string name="conflict_replace_desc">Remove existing schedule on these dates and use your new schedule instead</string>
+    <string name="conflict_extend">Extend</string>
+    <string name="conflict_extend_desc">Keep existing schedule, extend it at the end to make room</string>
+    <string name="conflict_overlap">Overlap</string>
+    <string name="conflict_overlap_desc">Keep existing schedule and also add the new one on the same dates</string>
+    <string name="conflict_back">Back to Edit Dates</string>
+
+    <!-- Create Event -->
+    <string name="ce_add_event">Add Event</string>
+    <string name="ce_add_note">Add Note</string>
+    <string name="ce_edit_event">Edit Event</string>
+    <string name="ce_edit_note">Edit Note</string>
+    <string name="ce_title_hint">Add Title *</string>
+    <string name="ce_description_hint">Event Description</string>
+    <string name="ce_start_time">Start Time</string>
+    <string name="ce_end_time">End Time</string>
+    <string name="ce_full_day">Full Day</string>
+    <string name="ce_repeat">Repeat</string>
+    <string name="ce_repeat_end_date">Repeat End Date</string>
+    <string name="ce_no_repeat">No repeat</string>
+    <string name="ce_daily">Daily</string>
+    <string name="ce_weekly">Weekly</string>
+    <string name="ce_monthly">Monthly</string>
+    <string name="ce_timezone">Select Timezone</string>
+    <string name="ce_reminder">Add Reminder/Alert</string>
+    <string name="ce_no_reminder">No reminder</string>
+    <string name="ce_at_time">At time of event</string>
+    <string name="ce_5min">5 minutes before</string>
+    <string name="ce_15min">15 minutes before</string>
+    <string name="ce_30min">30 minutes before</string>
+    <string name="ce_1hr">1 hour before</string>
+    <string name="ce_1day">1 day before</string>
+    <string name="ce_call_type">Call Type</string>
+    <string name="ce_select_call_type">Select Call Type</string>
+    <string name="ce_meet_in_person">Meet in Person</string>
+    <string name="ce_audio">Audio Call</string>
+    <string name="ce_video">Video Call</string>
+    <string name="ce_text_color">Select Text Color</string>
+    <string name="ce_location">Add Location</string>
+    <string name="ce_location_hint">Search location on Google Maps…</string>
+    <string name="ce_my_location">My Location</string>
+    <string name="ce_pick_on_map">Pick on Map</string>
+    <string name="ce_distribute_to">Distribute To</string>
+    <string name="ce_distribute_hint">Select the department which you want to send the notification</string>
+    <string name="ce_save_event">Save Event</string>
+    <string name="ce_save_note">Save Note</string>
+    <string name="ce_update_event">Update Event</string>
+    <string name="ce_update_note">Update Note</string>
+    <string name="ce_note_title_hint">Note Title *</string>
+    <string name="ce_note_text_hint">Write your note…</string>
+    <string name="ce_event_tab">Event</string>
+    <string name="ce_note_tab">Note</string>
+    <string name="ce_bg_color">Select Background Color</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_subtitle">Everything that changed in the Production Schedule</string>
+    <string name="history_all_actions">All Actions</string>
+    <string name="history_added">Added</string>
+    <string name="history_changed">Changed</string>
+    <string name="history_removed">Removed</string>
+    <string name="history_copied">Copied</string>
+    <string name="history_shared">Shared</string>
+    <string name="history_pick_date">Pick a date</string>
+    <string name="history_no_history">No history yet</string>
+    <string name="history_no_history_desc">Changes to schedules, events, and notes will appear here automatically.</string>
+    <string name="history_no_match">No matching changes</string>
+    <string name="history_no_match_desc">Try a different filter.</string>
+    <string name="history_by_name">by %s</string>
+    <string name="history_someone">Someone</string>
+    <string name="history_label_added">ADDED</string>
+    <string name="history_label_changed">CHANGED</string>
+    <string name="history_label_removed">REMOVED</string>
+    <string name="history_label_copied">COPIED</string>
+    <string name="history_label_shared">SHARED</string>
+    <string name="history_target_schedule">Schedule</string>
+    <string name="history_target_schedule_type">Schedule Type</string>
+    <string name="history_target_event">Event</string>
+    <string name="history_target_note">Note</string>
+
+    <!-- Type Manager -->
+    <string name="tm_title">Schedule Types</string>
+    <string name="tm_system">SYSTEM</string>
+    <string name="tm_add_custom">Add Custom Type</string>
+    <string name="tm_type_name_hint">Type name</string>
+    <string name="tm_add">Add</string>
+    <string name="tm_done">Done</string>
+    <string name="tm_save">Save</string>
+    <string name="tm_color_used">That color is already used by \"%s\". Please pick a different color.</string>
+    <string name="tm_name_exists">A type with this name already exists</string>
+
+    <!-- Share -->
+    <string name="share_title">Share Schedule</string>
+    <string name="share_via_link">Share via Link</string>
+    <string name="share_link_desc">Generate a read-only link that anyone can use to view the schedule.</string>
+    <string name="share_generate">Generate Link</string>
+    <string name="share_copy">Copy</string>
+    <string name="share_copied">Copied</string>
+    <string name="share_as_text">Copy as Text (for Email)</string>
+    <string name="share_text_desc">Copy the schedule as plain text — paste into any email or message.</string>
+    <string name="share_copy_text">Copy Schedule as Text</string>
+    <string name="share_close">Close</string>
+
+    <!-- Day Detail -->
+    <string name="dd_schedules">Schedules on this day</string>
+    <string name="dd_events">Events</string>
+    <string name="dd_notes">Notes</string>
+    <string name="dd_standalone_events">Standalone Events</string>
+    <string name="dd_empty">Nothing scheduled on this day</string>
+    <string name="dd_past">This date is in the past.</string>
+    <string name="dd_add_prompt">Add a schedule or event to get started.</string>
+    <string name="dd_add_schedule">Add Schedule</string>
+    <string name="dd_add_event">Add Event</string>
+    <string name="dd_view_details">View Full Details</string>
+    <string name="dd_add_to_day">Add to this day</string>
+
+    <!-- Legend -->
+    <string name="legend_more">+%d more</string>
+
+    <!-- Common -->
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_view">View</string>
+    <string name="action_duplicate">Duplicate</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="full_day_label">Full Day</string>
+    <string name="no_schedule_title">No schedule days yet</string>
+    <string name="no_schedule_desc">Click \"Add Schedule\" to create your production schedule.</string>
+    <string name="days_count">%d day(s)</string>
+    <string name="notes_count">%d note(s)</string>
+    <string name="untitled">(untitled)</string>
+    <string name="loading">Loading…</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="rev_label">REV %d</string>
+
+    <!-- Duplicate -->
+    <string name="duplicate_title">Duplicate Schedule</string>
+    <string name="duplicate_new_start">New Start Date</string>
+    <string name="duplicate_hint">Select new start date</string>
+    <string name="duplicate_desc">All %d day(s) will be shifted to start from this date. Events will be copied too.</string>
+    <string name="duplicate_button">Duplicate</string>
+
+    <!-- Delete Confirm -->
+    <string name="delete_confirm_title">Delete Schedule</string>
+    <string name="delete_confirm_message">Are you sure you want to delete this schedule? This action cannot be undone.</string>
+
+    <!-- Quick Action -->
+    <string name="qa_title">What would you like to create?</string>
+    <string name="qa_schedule_desc">Add a Prep, Shoot, Wrap, Day Off, or Travel day</string>
+    <string name="qa_event_desc">Add a meeting, call, or activity with time and location</string>
+    <string name="qa_note_desc">Add a quick note or reminder for this day</string>
+
+    <!-- Default View -->
+    <string name="dv_choose_title">Choose your default view</string>
+    <string name="dv_calendar_desc">This view will load first every time you open the Calendar.</string>
+    <string name="dv_list_desc">This view will load first every time you open the List view.</string>
+    <string name="dv_month_desc">Full month grid with all weeks</string>
+    <string name="dv_week_desc">One week at a time with bigger cells</string>
+    <string name="dv_day_desc">Single day focused view with full details</string>
+    <string name="dv_by_date_desc">One row per calendar day in order</string>
+    <string name="dv_by_schedule_desc">Grouped by each schedule block</string>
+    <string name="dv_current">Current</string>
+    <string name="dv_default_set">%s is now your default view.</string>
+</resources>

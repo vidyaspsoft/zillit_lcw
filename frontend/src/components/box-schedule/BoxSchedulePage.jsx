@@ -5,6 +5,7 @@ import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, Fi
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import useBoxSchedule from '../../hooks/useBoxSchedule';
 import boxScheduleService from '../../services/boxScheduleService';
 import ScheduleLegend from './ScheduleLegend';
@@ -23,6 +24,8 @@ import './boxSchedulePrint.css';
 const BoxSchedulePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
+  const toolbarBtnStyle = { borderColor: colors.borderButton, color: colors.textSecondary, borderRadius: '6px', fontSize: '13px' };
   const {
     scheduleTypes, scheduleDays, calendarData, loading,
     fetchTypes, fetchDays, fetchCalendar,
@@ -271,19 +274,19 @@ const BoxSchedulePage = () => {
   const printRows = isSelectMode && selectedRowKeys.length > 0 ? selectedRows : filteredSchedule;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--navbar-height))]" style={{ background: '#f8f7f4' }}>
+    <div className="flex flex-col h-[calc(100vh-var(--navbar-height))]" style={{ background: colors.pageBg }}>
 
       {/* ══════════ SCREEN HEADER ══════════ */}
       <div className="box-schedule-no-print">
         <div style={{
-          background: 'linear-gradient(180deg, #ffffff 0%, #fafaf8 100%)',
-          borderBottom: '1px solid #e0ddd8', padding: '18px 28px 14px',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          background: `linear-gradient(180deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`,
+          borderBottom: `1px solid ${colors.border}`, padding: '18px 28px 14px',
+          boxShadow: `0 1px 4px ${colors.shadow}`,
         }}>
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => navigate('/')} className="flex items-center gap-1.5 transition-all duration-200"
-              style={{ fontSize: '13px', color: '#888', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#333'} onMouseLeave={(e) => e.currentTarget.style.color = '#888'}>
+              style={{ fontSize: '13px', color: colors.textMuted, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = colors.textBody} onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}>
               <FiArrowLeft size={14} /> Back to Tools
             </button>
             <div className="flex items-center gap-2 flex-wrap">
@@ -313,16 +316,16 @@ const BoxSchedulePage = () => {
               </Button>
               <Button type="primary" icon={<FiPlus size={14} />}
                 onClick={() => { setEditingDay(null); setShowCreateModal(true); }} size="middle"
-                style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: '#fff', borderRadius: '6px', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+                style={{ background: colors.solidDark, borderColor: colors.solidDark, color: colors.solidDarkText, borderRadius: '6px', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
                 Create Schedule
               </Button>
             </div>
           </div>
           <div className="text-center" style={{ padding: '4px 0 2px' }}>
-            <h1 style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 3px 0', color: '#1a1a1a', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+            <h1 style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 3px 0', color: colors.textPrimary, fontFamily: "'Georgia', 'Times New Roman', serif" }}>
               Production Schedule
             </h1>
-            <p style={{ fontSize: '12px', color: '#999', margin: 0, fontStyle: 'italic' }}>
+            <p style={{ fontSize: '12px', color: colors.textSubtle, margin: 0, fontStyle: 'italic' }}>
               Prepared: {dayjs().format('MMMM D, YYYY')}
             </p>
           </div>
@@ -330,37 +333,37 @@ const BoxSchedulePage = () => {
 
         {/* Selection bar */}
         {isSelectMode && (
-          <div style={{ padding: '10px 28px', background: '#1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '10px 28px', background: colors.solidDark, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="flex items-center gap-3">
-              <span style={{ color: '#fff', fontSize: '13px', fontWeight: '600' }}>{selectedRowKeys.length} of {allRowKeys.length} selected</span>
+              <span style={{ color: colors.solidDarkText, fontSize: '13px', fontWeight: '600' }}>{selectedRowKeys.length} of {allRowKeys.length} selected</span>
               <Button size="small" type="link" onClick={selectedRowKeys.length === allRowKeys.length ? deselectAll : selectAll}
-                style={{ color: '#aaa', fontSize: '12px', padding: '0 4px' }}>
+                style={{ color: colors.textFaint, fontSize: '12px', padding: '0 4px' }}>
                 {selectedRowKeys.length === allRowKeys.length ? 'Deselect All' : 'Select All'}
               </Button>
             </div>
             <div className="flex items-center gap-2">
               <Button size="small" icon={<FiPrinter size={12} />} onClick={handlePrintSelected} loading={isPrintMode}
                 disabled={selectedRowKeys.length === 0}
-                style={{ borderColor: '#555', color: '#fff', background: 'transparent', borderRadius: '6px', fontSize: '12px' }}>
+                style={{ borderColor: colors.textSecondary, color: colors.solidDarkText, background: 'transparent', borderRadius: '6px', fontSize: '12px' }}>
                 {isPrintMode ? 'Preparing...' : 'Print Selected'}
               </Button>
               <Button size="small" icon={<FiTrash2 size={12} />} onClick={handleBulkDelete} loading={bulkDeleting}
                 disabled={selectedRowKeys.length === 0}
-                style={{ borderRadius: '6px', fontSize: '12px', background: '#e74c3c', borderColor: '#e74c3c', color: '#fff' }}>
+                style={{ borderRadius: '6px', fontSize: '12px', background: colors.dangerBg, borderColor: colors.dangerBg, color: colors.solidDarkText }}>
                 Delete Selected
               </Button>
               <Button size="small" icon={<FiX size={12} />} onClick={exitSelectMode}
-                style={{ borderColor: '#555', color: '#fff', background: 'transparent', borderRadius: '6px', fontSize: '12px' }}>Cancel</Button>
+                style={{ borderColor: colors.textSecondary, color: colors.solidDarkText, background: 'transparent', borderRadius: '6px', fontSize: '12px' }}>Cancel</Button>
             </div>
           </div>
         )}
 
         {/* View Switcher + Search/Filter */}
         {!isSelectMode && (
-          <div style={{ borderBottom: '1px solid #e0ddd8', padding: '10px 28px', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ borderBottom: `1px solid ${colors.border}`, padding: '10px 28px', background: colors.surface, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div className="flex items-center gap-3 flex-wrap">
               <Segmented options={['Calendar View', 'List View']} value={activeView} onChange={(val) => { setActiveView(val); }}
-                style={{ background: '#f0efec', borderRadius: '8px', padding: '2px' }} />
+                style={{ background: colors.segmentedBg, borderRadius: '8px', padding: '2px' }} />
               <Popover
                 open={showDefaultViewPopover}
                 onOpenChange={setShowDefaultViewPopover}
@@ -368,10 +371,10 @@ const BoxSchedulePage = () => {
                 placement="bottomLeft"
                 content={
                   <div style={{ width: '240px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#1a1a1a', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: colors.textPrimary, marginBottom: '10px' }}>
                       Choose your default view
                     </div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', lineHeight: '1.4' }}>
+                    <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '12px', lineHeight: '1.4' }}>
                       This view will load first every time you open the Production Schedule.
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -388,26 +391,26 @@ const BoxSchedulePage = () => {
                             style={{
                               display: 'flex', alignItems: 'center', gap: '10px',
                               padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                              border: isSelected ? '2px solid #1a1a1a' : '1px solid #e0ddd8',
-                              background: isSelected ? '#f8f8f4' : '#fff',
+                              border: isSelected ? `2px solid ${colors.solidDark}` : `1px solid ${colors.border}`,
+                              background: isSelected ? colors.pageBg : colors.surface,
                               transition: 'all 0.15s', textAlign: 'left', width: '100%',
                             }}
                           >
                             <span style={{
                               width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
-                              border: isSelected ? '5px solid #1a1a1a' : '2px solid #ccc',
-                              background: '#fff',
+                              border: isSelected ? `5px solid ${colors.solidDark}` : `2px solid ${colors.textDisabled}`,
+                              background: colors.surface,
                             }} />
                             <div>
-                              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>
+                              <div style={{ fontSize: '13px', fontWeight: '600', color: colors.textPrimary }}>
                                 {view === 'Calendar View' ? 'Calendar View' : 'List View'}
                               </div>
-                              <div style={{ fontSize: '10px', color: '#999' }}>
+                              <div style={{ fontSize: '10px', color: colors.textSubtle }}>
                                 {view === 'Calendar View' ? 'Monthly calendar grid' : 'Table with expandable rows'}
                               </div>
                             </div>
                             {isSelected && (
-                              <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#27ae60', fontWeight: '600' }}>Current</span>
+                              <span style={{ marginLeft: 'auto', fontSize: '10px', color: colors.successText, fontWeight: '600' }}>Current</span>
                             )}
                           </button>
                         );
@@ -417,13 +420,13 @@ const BoxSchedulePage = () => {
                 }
               >
                 <Button size="middle" icon={<FiGrid size={13} />}
-                  style={{ borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '13px' }}>
+                  style={{ borderColor: colors.borderButton, color: colors.textSecondary, borderRadius: '6px', fontSize: '13px' }}>
                   Set Default View
                 </Button>
               </Popover>
               {activeView === 'List View' && (
                 <>
-                  <Input placeholder="Search by title, type, date..." prefix={<FiSearch size={13} style={{ color: '#bbb' }} />}
+                  <Input placeholder="Search by title, type, date..." prefix={<FiSearch size={13} style={{ color: colors.textPlaceholder }} />}
                     value={searchText} onChange={(e) => setSearchText(e.target.value)} allowClear
                     style={{ width: '180px', borderRadius: '6px' }} size="middle" />
                   <Select value={filterType || undefined} onChange={(v) => setFilterType(v || '')} allowClear
@@ -448,12 +451,12 @@ const BoxSchedulePage = () => {
             {loading && (
               <div style={{
                 position: 'absolute', top: '12px', right: '16px', zIndex: 20,
-                background: 'rgba(255, 255, 255, 0.95)', border: '1px solid #e0ddd8',
+                background: isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)', border: `1px solid ${colors.border}`,
                 borderRadius: '20px', padding: '4px 12px', display: 'flex',
                 alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               }}>
                 <Spin size="small" />
-                <span style={{ fontSize: '11px', color: '#888', fontWeight: '600' }}>Refreshing…</span>
+                <span style={{ fontSize: '11px', color: colors.textMuted, fontWeight: '600' }}>Refreshing…</span>
               </div>
             )}
             {activeView === 'List View' && (
@@ -549,10 +552,10 @@ const BoxSchedulePage = () => {
         footer={
           <div className="flex justify-end gap-2">
             <Button onClick={() => setDeleteConfirm(null)} style={{ borderRadius: '6px' }}>Cancel</Button>
-            <Button onClick={confirmDelete} style={{ borderRadius: '6px', background: '#e74c3c', borderColor: '#e74c3c', color: '#fff' }}>Delete</Button>
+            <Button onClick={confirmDelete} style={{ borderRadius: '6px', background: colors.dangerBg, borderColor: colors.dangerBg, color: colors.solidDarkText }}>Delete</Button>
           </div>
         }>
-        <p style={{ fontSize: '14px', color: '#555', margin: '8px 0' }}>Are you sure you want to delete this schedule day? This action cannot be undone.</p>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: '8px 0' }}>Are you sure you want to delete this schedule day? This action cannot be undone.</p>
       </Modal>
 
       {/* View Event Detail Drawer */}
@@ -572,7 +575,5 @@ const BoxSchedulePage = () => {
     </div>
   );
 };
-
-const toolbarBtnStyle = { borderColor: '#d0ccc5', color: '#555', borderRadius: '6px', fontSize: '13px' };
 
 export default BoxSchedulePage;

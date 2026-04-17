@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, ColorPicker } from 'antd';
 import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * ScheduleTypeManager — Manage schedule types (add/edit/delete custom types).
@@ -14,6 +15,7 @@ const ScheduleTypeManager = ({
   onUpdateType,
   onDeleteType,
 }) => {
+  const { colors } = useTheme();
   const [newTitle, setNewTitle] = useState('');
   const [newColor, setNewColor] = useState('#9B59B6');
   const [creating, setCreating] = useState(false);
@@ -124,7 +126,7 @@ const ScheduleTypeManager = ({
                 className="flex items-center justify-between"
                 style={{
                   padding: '8px 0',
-                  borderBottom: '1px solid #eee',
+                  borderBottom: `1px solid ${colors.borderLight}`,
                   gap: '8px',
                 }}
               >
@@ -155,7 +157,7 @@ const ScheduleTypeManager = ({
                           background: 'none',
                           border: 'none',
                           cursor: savingEdit ? 'default' : 'pointer',
-                          color: '#27ae60',
+                          color: colors.successText,
                           padding: '4px',
                           opacity: !editTitle.trim() ? 0.4 : 1,
                         }}
@@ -169,7 +171,7 @@ const ScheduleTypeManager = ({
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: '#999',
+                          color: colors.textSubtle,
                           padding: '4px',
                         }}
                         title="Cancel"
@@ -192,8 +194,8 @@ const ScheduleTypeManager = ({
                       {type.systemDefined && (
                         <span style={{
                           fontSize: '10px',
-                          color: '#999',
-                          border: '1px solid #ddd',
+                          color: colors.textSubtle,
+                          border: `1px solid ${colors.borderInput}`,
                           padding: '1px 4px',
                           borderRadius: '2px',
                         }}>
@@ -209,7 +211,7 @@ const ScheduleTypeManager = ({
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#3498db',
+                            color: colors.textLink,
                             padding: '4px',
                           }}
                           title="Edit type"
@@ -224,7 +226,7 @@ const ScheduleTypeManager = ({
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#999',
+                            color: colors.textSubtle,
                             padding: '4px',
                           }}
                           title="Delete type"
@@ -242,15 +244,15 @@ const ScheduleTypeManager = ({
 
         {/* Add new type — stays pinned at the bottom, does NOT scroll */}
         <div style={{
-          borderTop: '1px solid #e0ddd8',
+          borderTop: `1px solid ${colors.border}`,
           padding: '14px 24px 16px',
-          background: '#fafaf8',
+          background: colors.surfaceAlt,
           flexShrink: 0,
         }}>
           <label style={{
             fontSize: '11px',
             fontWeight: '600',
-            color: '#555',
+            color: colors.textSecondary,
             letterSpacing: '0.5px',
             textTransform: 'uppercase',
             marginBottom: '6px',
@@ -276,7 +278,7 @@ const ScheduleTypeManager = ({
               onClick={handleCreate}
               loading={creating}
               disabled={!newTitle.trim()}
-              style={{ borderColor: '#000' }}
+              style={{ borderColor: colors.solidDark }}
             >
               Add
             </Button>

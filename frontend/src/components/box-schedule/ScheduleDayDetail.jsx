@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Spin } from 'antd';
 import { FiPlus, FiTrash2, FiEdit2, FiClock, FiMapPin } from 'react-icons/fi';
 import dayjs from 'dayjs';
+import { useTheme } from '../../context/ThemeContext';
 import CreateEventModal from './CreateEventModal';
 
 const ScheduleDayDetail = ({
@@ -9,6 +10,7 @@ const ScheduleDayDetail = ({
   onDelete, onEdit, onEditSchedule, scheduleTypes = [],
   readOnly = false,
 }) => {
+  const { colors } = useTheme();
   const [dayEvents, setDayEvents] = useState([]);
   const [dayNotes, setDayNotes] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -71,16 +73,28 @@ const ScheduleDayDetail = ({
     setShowCreateEvent(true);
   };
 
+  const badgeStyle = {
+    fontSize: '10px', color: colors.textMuted, background: colors.surfaceMuted,
+    padding: '1px 6px', borderRadius: '3px', border: `1px solid ${colors.borderLight}`,
+  };
+
+  const actionBtnStyle = {
+    display: 'inline-flex', alignItems: 'center', gap: '3px',
+    background: colors.surface, border: `1px solid ${colors.borderInput}`, borderRadius: '5px',
+    cursor: 'pointer', color: colors.textMuted, fontSize: '11px', fontWeight: '500',
+    padding: '3px 8px', transition: 'all 0.15s',
+  };
+
   return (
     <div style={{ padding: '20px 28px 24px', borderLeft: `3px solid ${day.color}` }}>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: '#1a1a1a', fontFamily: "'Georgia', serif" }}>
+          <h3 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: colors.textPrimary, fontFamily: "'Georgia', serif" }}>
             {day.typeName === 'Day Off' ? 'Day Off' : `${day.typeName} Day ${day.dayNumber}`}
           </h3>
-          <p style={{ fontSize: '13px', color: '#999', margin: '2px 0 0', fontStyle: 'italic' }}>
+          <p style={{ fontSize: '13px', color: colors.textSubtle, margin: '2px 0 0', fontStyle: 'italic' }}>
             {dateStr}{day.title ? ` — ${day.title}` : ''}
           </p>
         </div>
@@ -88,7 +102,7 @@ const ScheduleDayDetail = ({
           {!readOnly && onEditSchedule && (
             <Button size="small" icon={<FiEdit2 size={12} />}
               onClick={(e) => { e.stopPropagation(); onEditSchedule({ ...day, _singleDayEdit: true }); }}
-              style={{ borderRadius: '6px', fontSize: '12px', borderColor: '#d0ccc5', color: '#555' }}>
+              style={{ borderRadius: '6px', fontSize: '12px', borderColor: colors.borderButton, color: colors.textSecondary }}>
               Edit
             </Button>
           )}
@@ -105,12 +119,12 @@ const ScheduleDayDetail = ({
         <div className="flex justify-center py-4"><Spin size="small" /></div>
       ) : (
         <>
-          {/* ══════════ EVENTS ══════════ */}
+          {/* EVENTS */}
           <div style={{ marginBottom: '16px' }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', color: '#888',
-              textTransform: 'uppercase', margin: '0 0 8px', paddingBottom: '4px', borderBottom: '1px solid #eee',
+              fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', color: colors.textMuted,
+              textTransform: 'uppercase', margin: '0 0 8px', paddingBottom: '4px', borderBottom: `1px solid ${colors.borderLight}`,
             }}>
               <div className="flex items-center gap-1.5">
                 <FiClock size={13} style={{ opacity: 0.6 }} /> EVENTS
@@ -118,7 +132,7 @@ const ScheduleDayDetail = ({
               {!readOnly && (
                 <Button size="small" type="link" icon={<FiPlus size={11} />}
                   onClick={() => { setEditingEvent(null); setCreateEventTab('Event'); setShowCreateEvent(true); }}
-                  style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
+                  style={{ fontSize: '11px', color: colors.textMuted, padding: '0 4px', height: 'auto' }}>
                   Create Event
                 </Button>
               )}
@@ -128,18 +142,18 @@ const ScheduleDayDetail = ({
               <div className="flex flex-col gap-1.5">
                 {dayEvents.map((evt) => (
                   <div key={evt._id} style={{
-                    padding: '10px 12px', background: '#fff',
-                    border: '1px solid #e8e5e0', borderRadius: '6px',
+                    padding: '10px 12px', background: colors.surface,
+                    border: `1px solid ${colors.borderDashed}`, borderRadius: '6px',
                     borderLeft: `3px solid ${evt.color || '#3498DB'}`,
                   }}>
                     <div className="flex items-start justify-between gap-2">
                       <div style={{ flex: 1 }}>
                         {/* Time */}
-                        <div style={{ fontSize: '12px', color: '#888', fontWeight: '500', marginBottom: '2px' }}>
+                        <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: '500', marginBottom: '2px' }}>
                           {formatTimeRange(evt)}
                         </div>
                         {/* Title */}
-                        <div style={{ fontSize: '14px', fontWeight: '600', color: evt.textColor || '#333' }}>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: evt.textColor || colors.textBody }}>
                           {evt.title}
                         </div>
                         {/* Location — clickable to open map */}
@@ -147,7 +161,7 @@ const ScheduleDayDetail = ({
                           <div
                             onClick={() => openLocationMap(evt)}
                             style={{
-                              fontSize: '12px', color: '#1a73e8', marginTop: '3px',
+                              fontSize: '12px', color: colors.textLink, marginTop: '3px',
                               display: 'flex', alignItems: 'flex-start', gap: '4px',
                               cursor: 'pointer', textDecoration: 'underline',
                             }}
@@ -159,7 +173,7 @@ const ScheduleDayDetail = ({
                         )}
                         {/* Description */}
                         {evt.description && (
-                          <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>{evt.description}</div>
+                          <div style={{ fontSize: '12px', color: colors.textSubtle, marginTop: '3px' }}>{evt.description}</div>
                         )}
                         {/* Badges: call type, reminder, timezone */}
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '5px' }}>
@@ -184,13 +198,13 @@ const ScheduleDayDetail = ({
                       {!readOnly && (
                         <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
                           <button onClick={() => handleEditEvent(evt)} style={actionBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverBlue; e.currentTarget.style.borderColor = colors.textLink; e.currentTarget.style.color = colors.textLink; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
                             <FiEdit2 size={11} /> Edit
                           </button>
                           <button onClick={() => handleDeleteEvent(evt._id)} style={actionBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverRed; e.currentTarget.style.borderColor = colors.dangerBg; e.currentTarget.style.color = colors.dangerBg; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
                             <FiTrash2 size={11} /> Remove
                           </button>
                         </div>
@@ -200,16 +214,16 @@ const ScheduleDayDetail = ({
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: '#ccc', margin: '0', fontStyle: 'italic' }}>No events yet.</p>
+              <p style={{ fontSize: '13px', color: colors.textDisabled, margin: '0', fontStyle: 'italic' }}>No events yet.</p>
             )}
           </div>
 
-          {/* ══════════ NOTES ══════════ */}
+          {/* NOTES */}
           <div>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', color: '#888',
-              textTransform: 'uppercase', margin: '0 0 8px', paddingBottom: '4px', borderBottom: '1px solid #eee',
+              fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', color: colors.textMuted,
+              textTransform: 'uppercase', margin: '0 0 8px', paddingBottom: '4px', borderBottom: `1px solid ${colors.borderLight}`,
             }}>
               <div className="flex items-center gap-1.5">
                 <FiEdit2 size={12} style={{ opacity: 0.6 }} /> NOTES
@@ -217,7 +231,7 @@ const ScheduleDayDetail = ({
               {!readOnly && (
                 <Button size="small" type="link" icon={<FiPlus size={11} />}
                   onClick={() => { setEditingEvent(null); setCreateEventTab('Note'); setShowCreateEvent(true); }}
-                  style={{ fontSize: '11px', color: '#888', padding: '0 4px', height: 'auto' }}>
+                  style={{ fontSize: '11px', color: colors.textMuted, padding: '0 4px', height: 'auto' }}>
                   Create Note
                 </Button>
               )}
@@ -227,27 +241,27 @@ const ScheduleDayDetail = ({
               <div className="flex flex-col gap-1.5">
                 {dayNotes.map((note) => (
                   <div key={note._id} style={{
-                    padding: '8px 12px', background: '#fff',
-                    border: '1px solid #e8e5e0', borderRadius: '6px',
+                    padding: '8px 12px', background: colors.surface,
+                    border: `1px solid ${colors.borderDashed}`, borderRadius: '6px',
                     borderLeft: `3px solid ${note.color || '#95A5A6'}`,
                   }}>
                     <div className="flex items-start justify-between gap-2">
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>{note.title}</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: colors.textBody }}>{note.title}</div>
                         {(note.notes || note.description) && (
-                          <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>{note.notes || note.description}</div>
+                          <div style={{ fontSize: '12px', color: colors.textMuted, marginTop: '2px' }}>{note.notes || note.description}</div>
                         )}
                       </div>
                       {!readOnly && (
                         <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
                           <button onClick={() => handleEditEvent(note)} style={actionBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eef3ff'; e.currentTarget.style.borderColor = '#1a73e8'; e.currentTarget.style.color = '#1a73e8'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverBlue; e.currentTarget.style.borderColor = colors.textLink; e.currentTarget.style.color = colors.textLink; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
                             <FiEdit2 size={11} /> Edit
                           </button>
                           <button onClick={() => handleDeleteEvent(note._id)} style={actionBtnStyle}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e74c3c'; e.currentTarget.style.color = '#e74c3c'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.color = '#888'; }}>
+                            onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverRed; e.currentTarget.style.borderColor = colors.dangerBg; e.currentTarget.style.color = colors.dangerBg; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
                             <FiTrash2 size={11} /> Remove
                           </button>
                         </div>
@@ -257,7 +271,7 @@ const ScheduleDayDetail = ({
                 ))}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: '#ccc', margin: '0', fontStyle: 'italic' }}>No notes yet.</p>
+              <p style={{ fontSize: '13px', color: colors.textDisabled, margin: '0', fontStyle: 'italic' }}>No notes yet.</p>
             )}
           </div>
         </>
@@ -278,18 +292,6 @@ const ScheduleDayDetail = ({
 
     </div>
   );
-};
-
-const badgeStyle = {
-  fontSize: '10px', color: '#888', background: '#f5f5f5',
-  padding: '1px 6px', borderRadius: '3px', border: '1px solid #eee',
-};
-
-const actionBtnStyle = {
-  display: 'inline-flex', alignItems: 'center', gap: '3px',
-  background: '#fff', border: '1px solid #ddd', borderRadius: '5px',
-  cursor: 'pointer', color: '#888', fontSize: '11px', fontWeight: '500',
-  padding: '3px 8px', transition: 'all 0.15s',
 };
 
 export default ScheduleDayDetail;

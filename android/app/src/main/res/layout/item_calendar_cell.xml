@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calendar cell — one day in the month/week grid.
+     Matches web's CalendarView cell: date number + schedule type pills -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:minHeight="@dimen/cal_cell_min_height"
+    android:padding="@dimen/spacing_sm"
+    android:background="@color/surface">
+
+    <!-- Date number (circled if today) -->
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacing_xxs">
+
+        <!-- Today circle background -->
+        <View
+            android:id="@+id/todayCircle"
+            android:layout_width="@dimen/cal_today_circle"
+            android:layout_height="@dimen/cal_today_circle"
+            android:background="@drawable/bg_today_circle"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvDayNumber"
+            android:layout_width="@dimen/cal_today_circle"
+            android:layout_height="@dimen/cal_today_circle"
+            android:gravity="center"
+            android:textSize="@dimen/text_md"
+            android:fontFamily="serif"
+            android:textColor="@color/textSecondary" />
+    </FrameLayout>
+
+    <!-- Schedule type pills container -->
+    <LinearLayout
+        android:id="@+id/pillContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <!-- Event indicators container -->
+    <LinearLayout
+        android:id="@+id/eventContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/spacing_xxs" />
+
+</LinearLayout>

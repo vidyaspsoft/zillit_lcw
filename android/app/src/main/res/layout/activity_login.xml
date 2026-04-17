@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pageBg">
+
+    <!-- Logo Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="48dp"
+        android:paddingBottom="24dp">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_dialog_map"
+            android:contentDescription="@string/app_name"
+            app:tint="@color/primaryAccent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Zillit"
+            android:textSize="24sp"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginTop="@dimen/spacing_sm" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/login_title"
+            android:textSize="@dimen/text_body"
+            android:textColor="@color/textMuted"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <!-- Step title -->
+    <TextView
+        android:id="@+id/tvStepTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SELECT PROJECT"
+        android:textSize="@dimen/text_md"
+        android:textColor="@color/textPrimary"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_sm" />
+
+    <!-- Back button (hidden on step 1) -->
+    <TextView
+        android:id="@+id/btnBackToProjects"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Back to Projects"
+        android:textSize="@dimen/text_body"
+        android:textColor="@color/primaryAccent"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_xs"
+        android:visibility="gone"
+        android:background="?attr/selectableItemBackground" />
+
+    <!-- List (projects or users) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingTop="@dimen/spacing_sm"
+        android:clipToPadding="false" />
+
+    <!-- Loading -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:indeterminateTint="@color/primaryAccent" />
+
+    <!-- Error -->
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/dangerBg"
+        android:textSize="@dimen/text_body"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:visibility="gone" />
+
+    <!-- Theme toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingVertical="@dimen/spacing_lg">
+
+        <ImageButton
+            android:id="@+id/btnThemeToggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_button_secondary"
+            android:src="@android:drawable/ic_menu_day"
+            android:contentDescription="Toggle theme"
+            app:tint="@color/textMuted" />
+    </LinearLayout>
+
+</LinearLayout>

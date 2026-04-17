@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ══════════ Buttons ══════════ -->
+    <style name="ZillitButton.Primary">
+        <item name="android:background">@drawable/bg_button_primary</item>
+        <item name="android:textColor">@color/solidDarkText</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingLeft">@dimen/spacing_base</item>
+        <item name="android:paddingRight">@dimen/spacing_base</item>
+        <item name="android:paddingTop">@dimen/spacing_md</item>
+        <item name="android:paddingBottom">@dimen/spacing_md</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/input_height</item>
+    </style>
+
+    <style name="ZillitButton.Secondary">
+        <item name="android:background">@drawable/bg_button_secondary</item>
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingLeft">@dimen/spacing_md</item>
+        <item name="android:paddingRight">@dimen/spacing_md</item>
+        <item name="android:paddingTop">@dimen/spacing_sm</item>
+        <item name="android:paddingBottom">@dimen/spacing_sm</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="ZillitButton.Danger">
+        <item name="android:background">@drawable/bg_button_danger</item>
+        <item name="android:textColor">@color/dangerText</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingLeft">@dimen/spacing_base</item>
+        <item name="android:paddingRight">@dimen/spacing_base</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/input_height</item>
+    </style>
+
+    <style name="ZillitButton.Toolbar">
+        <item name="android:background">@drawable/bg_button_secondary</item>
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingLeft">@dimen/toolbar_btn_padding_h</item>
+        <item name="android:paddingRight">@dimen/toolbar_btn_padding_h</item>
+        <item name="android:paddingTop">@dimen/toolbar_btn_padding_v</item>
+        <item name="android:paddingBottom">@dimen/toolbar_btn_padding_v</item>
+        <item name="android:gravity">center</item>
+        <item name="android:drawablePadding">@dimen/spacing_xs</item>
+    </style>
+
+    <!-- ══════════ Input ══════════ -->
+    <style name="ZillitInput">
+        <item name="android:background">@drawable/bg_input_field</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:textColorHint">@color/textPlaceholder</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:paddingLeft">@dimen/input_padding_h</item>
+        <item name="android:paddingRight">@dimen/input_padding_h</item>
+        <item name="android:minHeight">@dimen/input_height</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="ZillitInput.MultiLine">
+        <item name="android:singleLine">false</item>
+        <item name="android:minLines">3</item>
+        <item name="android:gravity">top|start</item>
+    </style>
+
+    <!-- ══════════ Labels ══════════ -->
+    <style name="ZillitLabel">
+        <item name="android:textSize">@dimen/text_xs</item>
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:paddingBottom">@dimen/spacing_xs</item>
+    </style>
+
+    <style name="ZillitLabel.Section">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:textColor">@color/textMuted</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:paddingBottom">@dimen/spacing_sm</item>
+    </style>
+
+    <!-- ══════════ Title ══════════ -->
+    <style name="ZillitTitle">
+        <item name="android:textSize">@dimen/text_lg</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="ZillitTitle.Hero">
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:letterSpacing">0.15</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- ══════════ Card ══════════ -->
+    <style name="ZillitCard">
+        <item name="android:background">@drawable/bg_card_rounded</item>
+        <item name="android:padding">@dimen/card_padding</item>
+    </style>
+
+    <!-- ══════════ Schedule Pill ══════════ -->
+    <style name="ZillitPill">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/textBody</item>
+        <item name="android:paddingLeft">@dimen/pill_padding_h</item>
+        <item name="android:paddingRight">@dimen/pill_padding_h</item>
+        <item name="android:paddingTop">@dimen/pill_padding_v</item>
+        <item name="android:paddingBottom">@dimen/pill_padding_v</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">@dimen/spacing_xs</item>
+    </style>
+
+    <!-- ══════════ Segmented Control ══════════ -->
+    <style name="ZillitSegmented">
+        <item name="android:background">@color/segmentedBg</item>
+        <item name="android:padding">@dimen/spacing_xxs</item>
+    </style>
+
+    <!-- ══════════ Divider ══════════ -->
+    <style name="ZillitDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/border</item>
+    </style>
+
+</resources>

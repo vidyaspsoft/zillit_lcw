@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 const MAX_VISIBLE = 5;
 
 const ScheduleLegend = ({ types = [], onManageTypes }) => {
+  const { colors } = useTheme();
   if (types.length === 0) return null;
 
   const visibleTypes = types.slice(0, MAX_VISIBLE);
@@ -22,12 +24,7 @@ const ScheduleLegend = ({ types = [], onManageTypes }) => {
               boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
             }}
           />
-          <span style={{
-            fontSize: '12px',
-            color: '#666',
-            fontWeight: '500',
-            letterSpacing: '0.3px',
-          }}>
+          <span style={{ fontSize: '12px', color: colors.textSecondary, fontWeight: '500', letterSpacing: '0.3px' }}>
             {type.title}
           </span>
         </div>
@@ -39,29 +36,21 @@ const ScheduleLegend = ({ types = [], onManageTypes }) => {
           onClick={onManageTypes}
           title="Manage all schedule types"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '3px 10px',
-            borderRadius: '12px',
-            border: '1px solid #d0ccc5',
-            background: '#fafaf8',
-            color: '#555',
-            fontSize: '11px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            letterSpacing: '0.3px',
-            transition: 'all 0.15s ease',
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '3px 10px', borderRadius: '12px',
+            border: `1px solid ${colors.borderButton}`, background: colors.surfaceAlt,
+            color: colors.textSecondary, fontSize: '11px', fontWeight: '700',
+            cursor: 'pointer', letterSpacing: '0.3px', transition: 'all 0.15s ease',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#1a1a1a';
-            e.currentTarget.style.color = '#fff';
-            e.currentTarget.style.borderColor = '#1a1a1a';
+            e.currentTarget.style.background = colors.solidDark;
+            e.currentTarget.style.color = colors.solidDarkText;
+            e.currentTarget.style.borderColor = colors.solidDark;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#fafaf8';
-            e.currentTarget.style.color = '#555';
-            e.currentTarget.style.borderColor = '#d0ccc5';
+            e.currentTarget.style.background = colors.surfaceAlt;
+            e.currentTarget.style.color = colors.textSecondary;
+            e.currentTarget.style.borderColor = colors.borderButton;
           }}
         >
           +{hiddenCount} more

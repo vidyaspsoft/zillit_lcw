@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Schedule day row — matches web ScheduleTable row.
+     Date (left), type pill with color dot + name (center), title (right),
+     today badge, expandable chevron. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+    <!-- Main row -->
+    <LinearLayout
+        android:id="@+id/rowContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="@dimen/spacing_base"
+        android:paddingVertical="@dimen/spacing_md"
+        android:background="?attr/selectableItemBackground">
+
+        <!-- Checkbox (hidden by default, shown in select mode) -->
+        <CheckBox
+            android:id="@+id/cbSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginEnd="@dimen/spacing_sm" />
+
+        <!-- Date text -->
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textPrimary"
+            android:fontFamily="serif" />
+
+        <!-- Type pill: color dot + type name -->
+        <LinearLayout
+            android:id="@+id/typePill"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/dotColor"
+                android:layout_width="@dimen/pill_dot_size"
+                android:layout_height="@dimen/pill_dot_size"
+                android:background="@drawable/bg_schedule_pill"
+                android:layout_marginEnd="@dimen/spacing_xs" />
+
+            <TextView
+                android:id="@+id/tvTypeName"
+                style="@style/ZillitPill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textBody"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <!-- Today badge -->
+        <TextView
+            android:id="@+id/tvTodayBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_today"
+            android:textSize="@dimen/text_xs"
+            android:textColor="@color/successText"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:visibility="gone"
+            android:paddingHorizontal="@dimen/spacing_sm"
+            android:paddingVertical="@dimen/spacing_xxs"
+            android:layout_marginStart="@dimen/spacing_sm" />
+
+        <!-- Expand chevron -->
+        <ImageView
+            android:id="@+id/ivChevron"
+            android:layout_width="@dimen/toolbar_icon_size"
+            android:layout_height="@dimen/toolbar_icon_size"
+            android:src="@android:drawable/arrow_down_float"
+            android:contentDescription="Expand"
+            android:layout_marginStart="@dimen/spacing_sm" />
+    </LinearLayout>
+
+    <!-- Bottom divider -->
+    <View
+        style="@style/ZillitDivider"
+        android:background="@color/borderLight" />
+</LinearLayout>

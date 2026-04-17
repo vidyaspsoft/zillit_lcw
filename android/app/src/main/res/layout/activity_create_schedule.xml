@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pageBg">
+
+    <!-- Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_base"
+        android:background="@color/surfaceAlt">
+
+        <TextView
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cs_cancel"
+            android:textColor="@color/textMuted"
+            android:textSize="@dimen/text_md"
+            android:padding="@dimen/spacing_xs"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/bs_create_schedule"
+            android:textSize="@dimen/text_lg"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnSave"
+            style="@style/ZillitButton.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="@string/cs_save"
+            android:textSize="@dimen/text_body"
+            android:paddingHorizontal="@dimen/spacing_base" />
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- TYPE -->
+            <TextView style="@style/ZillitLabel"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/cs_type" />
+
+            <LinearLayout android:id="@+id/selectedTypeContainer"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:visibility="gone" android:gravity="center_vertical"
+                android:padding="@dimen/spacing_md" android:layout_marginBottom="@dimen/spacing_base"
+                android:background="@drawable/bg_card_rounded">
+                <View android:id="@+id/selectedTypeDot" android:layout_width="14dp" android:layout_height="14dp" />
+                <TextView android:id="@+id/selectedTypeName" android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:textSize="@dimen/text_md" android:textStyle="bold"
+                    android:textColor="@color/textPrimary" android:layout_marginStart="@dimen/spacing_sm" />
+                <TextView android:id="@+id/btnChangeType" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Change" android:textSize="@dimen/text_body" android:textColor="@color/textLink"
+                    android:background="?attr/selectableItemBackground" />
+            </LinearLayout>
+
+            <EditText android:id="@+id/etTypeSearch" style="@style/ZillitInput"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="Search types..." android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/typeList"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <TextView android:id="@+id/btnAddNewType" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="+ Add New Type" android:textSize="@dimen/text_body"
+                android:textColor="@color/primaryAccent" android:textStyle="bold"
+                android:padding="@dimen/spacing_sm" android:background="?attr/selectableItemBackground"
+                android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <LinearLayout android:id="@+id/newTypeForm" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:visibility="gone"
+                android:padding="@dimen/spacing_md" android:layout_marginBottom="@dimen/spacing_base"
+                android:background="@drawable/bg_card_rounded">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                    <View android:id="@+id/newTypeColorDot" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginEnd="@dimen/spacing_sm" />
+                    <EditText android:id="@+id/etNewTypeName" style="@style/ZillitInput" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/tm_type_name_hint" />
+                    <Button android:id="@+id/btnCreateType" style="@style/ZillitButton.Toolbar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tm_add" android:layout_marginStart="@dimen/spacing_sm" />
+                </LinearLayout>
+                <TextView android:id="@+id/btnCancelNewType" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/cs_cancel" android:textSize="@dimen/text_body" android:textColor="@color/textMuted"
+                    android:layout_marginTop="@dimen/spacing_xs" android:background="?attr/selectableItemBackground" />
+            </LinearLayout>
+
+            <!-- HOW TO SET DATES -->
+            <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/cs_how_to_set_dates" android:layout_marginTop="@dimen/spacing_base" />
+
+            <com.google.android.material.tabs.TabLayout android:id="@+id/dateModeTabs"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                app:tabMode="fixed" app:tabGravity="fill"
+                app:tabIndicatorColor="@color/primaryAccent" app:tabTextColor="@color/textMuted"
+                app:tabSelectedTextColor="@color/textPrimary" android:layout_marginBottom="@dimen/spacing_md" />
+
+            <!-- Date Range -->
+            <LinearLayout android:id="@+id/dateRangeContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/cs_date_range_desc" android:textSize="@dimen/text_body"
+                    android:textColor="@color/textSubtle" android:padding="@dimen/spacing_sm"
+                    android:background="@color/surfaceAlt" android:layout_marginBottom="@dimen/spacing_md" />
+
+                <com.google.android.material.button.MaterialButtonToggleGroup android:id="@+id/rangeSubModeToggle"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    app:singleSelection="true" app:selectionRequired="true" android:layout_marginBottom="@dimen/spacing_md">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btnByDays" style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/cs_set_by_days" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btnByEndDate" style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/cs_set_by_end_date" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cs_start_date" />
+                <TextView android:id="@+id/tvStartDate" style="@style/ZillitInput" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Select date" android:drawableEnd="@android:drawable/ic_menu_today" android:layout_marginBottom="@dimen/spacing_md" />
+
+                <LinearLayout android:id="@+id/numberOfDaysContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="@dimen/spacing_md">
+                    <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cs_number_of_days" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:background="@drawable/bg_input_field">
+                        <EditText android:id="@+id/etNumberOfDays" android:layout_width="0dp" android:layout_height="@dimen/input_height" android:layout_weight="1"
+                            android:text="5" android:inputType="number" android:textSize="@dimen/text_lg" android:textStyle="bold"
+                            android:textColor="@color/textPrimary" android:gravity="center" android:background="@android:color/transparent" android:paddingHorizontal="@dimen/spacing_md" />
+                        <View android:layout_width="1dp" android:layout_height="@dimen/spacing_xxl" android:background="@color/borderInput" />
+                        <TextView android:id="@+id/btnMinus" android:layout_width="44dp" android:layout_height="@dimen/input_height" android:text="–"
+                            android:textSize="20sp" android:textColor="@color/textMuted" android:gravity="center" android:background="?attr/selectableItemBackground" />
+                        <View android:layout_width="1dp" android:layout_height="@dimen/spacing_xxl" android:background="@color/borderInput" />
+                        <TextView android:id="@+id/btnPlus" android:layout_width="44dp" android:layout_height="@dimen/input_height" android:text="+"
+                            android:textSize="20sp" android:textColor="@color/textPrimary" android:gravity="center" android:background="?attr/selectableItemBackground" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/endDateContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone" android:layout_marginBottom="@dimen/spacing_md">
+                    <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cs_end_date" />
+                    <TextView android:id="@+id/tvEndDate" style="@style/ZillitInput" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:hint="Select end date" android:drawableEnd="@android:drawable/ic_menu_today" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Calendar picker -->
+            <LinearLayout android:id="@+id/calendarContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/cs_calendar_desc" android:textSize="@dimen/text_body" android:textColor="@color/textSubtle"
+                    android:padding="@dimen/spacing_sm" android:background="@color/surfaceAlt" android:layout_marginBottom="@dimen/spacing_md" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="@dimen/spacing_sm">
+                    <ImageButton android:id="@+id/btnCalPrev" android:layout_width="32dp" android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_media_previous" app:tint="@color/textSecondary" android:contentDescription="Previous" />
+                    <TextView android:id="@+id/tvCalMonth" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:gravity="center" android:textSize="@dimen/text_md" android:textStyle="bold" android:textColor="@color/textPrimary" />
+                    <ImageButton android:id="@+id/btnCalNext" android:layout_width="32dp" android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_media_next" app:tint="@color/textSecondary" android:contentDescription="Next" />
+                </LinearLayout>
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/calendarPickerGrid"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" />
+                <TextView android:id="@+id/tvCalSelectedCount" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="@dimen/text_body" android:textColor="@color/successText" android:layout_marginTop="@dimen/spacing_sm" />
+            </LinearLayout>
+
+            <!-- Day Wise -->
+            <LinearLayout android:id="@+id/dayWiseContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/cs_day_wise_desc" android:textSize="@dimen/text_body" android:textColor="@color/textSubtle"
+                    android:padding="@dimen/spacing_sm" android:background="@color/surfaceAlt" android:layout_marginBottom="@dimen/spacing_md" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/spacing_md">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="@dimen/spacing_sm">
+                        <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cs_start_date" />
+                        <TextView android:id="@+id/tvDayWiseStart" style="@style/ZillitInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Start" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cs_end_date" />
+                        <TextView android:id="@+id/tvDayWiseEnd" style="@style/ZillitInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="End" />
+                    </LinearLayout>
+                </LinearLayout>
+                <TextView style="@style/ZillitLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Select days of the week" android:layout_marginBottom="@dimen/spacing_sm" />
+                <com.google.android.material.chip.ChipGroup android:id="@+id/weekdayChips"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/spacing_sm" />
+                <TextView android:id="@+id/tvDayWiseCount" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="@dimen/text_body" android:textColor="@color/successText" />
+            </LinearLayout>
+
+            <!-- Summary -->
+            <TextView android:id="@+id/tvSummary" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textSize="@dimen/text_body" android:textColor="@color/textBody"
+                android:padding="@dimen/spacing_sm" android:background="@color/surfaceWarning"
+                android:visibility="gone" android:layout_marginTop="@dimen/spacing_base" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
