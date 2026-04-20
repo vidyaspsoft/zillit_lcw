@@ -51,6 +51,8 @@
     <string name="cs_days_summary">%1$d day(s): %2$s – %3$s</string>
     <string name="cs_select_type">Select a type</string>
     <string name="cs_pick_dates">Pick dates on the calendar</string>
+    <string name="cs_error_select_type">Please select a schedule type</string>
+    <string name="cs_error_select_dates">Please select at least one date</string>
     <string name="cs_date_range_desc">Set a start date and specify the number of consecutive days, or choose a start and end date.</string>
     <string name="cs_calendar_desc">Pick individual dates on the calendar.</string>
     <string name="cs_day_wise_desc">Select specific days of the week within a date range.</string>

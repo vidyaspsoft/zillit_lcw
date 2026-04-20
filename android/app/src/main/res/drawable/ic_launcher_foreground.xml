@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- "Z" letter for Zillit, centered in the safe zone (24dp padding) -->
+    <path
+        android:fillColor="#F39C12"
+        android:pathData="M36,36 L72,36 L72,46 L52,62 L72,62 L72,72 L36,72 L36,62 L56,46 L36,46 Z" />
+
+    <!-- Small calendar icon below -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,78 L60,78 L60,80 L48,80 Z" />
+</vector>

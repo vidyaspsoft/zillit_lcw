@@ -2,6 +2,12 @@
 <resources>
 
     <!-- ══════════ Buttons ══════════ -->
+
+    <!-- Base button parent (required for dot-notation children) -->
+    <style name="ZillitButton" parent="android:Widget.Button">
+        <item name="android:textAllCaps">false</item>
+    </style>
+
     <style name="ZillitButton.Primary">
         <item name="android:background">@drawable/bg_button_primary</item>
         <item name="android:textColor">@color/solidDarkText</item>

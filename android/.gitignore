@@ -1,0 +1,66 @@
+# ──────────── Android Studio / IntelliJ ────────────
+*.iml
+.idea/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches/
+.idea/modules.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.xml
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+.idea/**/gradle.xml
+.idea/**/libraries
+.idea/**/mongoSettings.xml
+.idea/**/contentModel.xml
+.idea/**/encodings.xml
+.idea/**/markdown-navigator.xml
+.idea/**/markdown-navigator-enh.xml
+.idea/**/vcs.xml
+.idea/**/inspectionProfiles/
+
+# ──────────── Gradle ────────────
+.gradle/
+build/
+**/build/
+out/
+**/out/
+
+# ──────────── Local config ────────────
+local.properties
+
+# ──────────── Captures + APK + AAB ────────────
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ──────────── Native ────────────
+*.so
+
+# ──────────── Java ────────────
+*.class
+hs_err_pid*
+
+# ──────────── Logs / Crashes ────────────
+*.log
+
+# ──────────── Keystore ────────────
+*.jks
+*.keystore
+
+# ──────────── Misc ────────────
+.cxx/
+.externalNativeBuild/
+.kotlin/
+**/.kotlin/
+
+# ──────────── OS ────────────
+.DS_Store

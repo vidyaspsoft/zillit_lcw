@@ -15,15 +15,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
 import com.zillit.lcw.data.api.KtorClient
+import com.zillit.lcw.data.model.ApiListResponse
+import com.zillit.lcw.data.model.ProjectItem
+import com.zillit.lcw.data.model.UserItem
 import com.zillit.lcw.databinding.ActivityLoginBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleActivity
 import com.zillit.lcw.ui.common.ThemeManager
 import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.*
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 /**
  * LoginActivity — Select Project → Select User → Auto-login.
@@ -41,20 +43,6 @@ class LoginActivity : AppCompatActivity() {
     private var currentStep = "projects" // "projects" or "users"
     private var selectedProjectId = ""
     private var selectedProjectName = ""
-
-    @Serializable
-    data class ProjectItem(@SerialName("_id") val id: String, val name: String)
-
-    @Serializable
-    data class UserItem(
-        @SerialName("_id") val id: String,
-        val name: String,
-        val role: String = "member",
-        val projectId: String = ""
-    )
-
-    @Serializable
-    data class ApiListResponse<T>(val status: Int, val message: String, val data: List<T>? = null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,8 +79,8 @@ class LoginActivity : AppCompatActivity() {
         scope.launch {
             try {
                 val client = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android) {
-                    install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                        io.ktor.serialization.kotlinx.json.json(KtorClient.json)
+                    install(ContentNegotiation) {
+                        json(KtorClient.json)
                     }
                 }
                 val response: ApiListResponse<ProjectItem> = client.get("$authBaseUrl/projects").body()
@@ -124,8 +112,8 @@ class LoginActivity : AppCompatActivity() {
         scope.launch {
             try {
                 val client = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android) {
-                    install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                        io.ktor.serialization.kotlinx.json.json(KtorClient.json)
+                    install(ContentNegotiation) {
+                        json(KtorClient.json)
                     }
                 }
                 val response: ApiListResponse<UserItem> = client.get("$authBaseUrl/projects/$projectId/users").body()
