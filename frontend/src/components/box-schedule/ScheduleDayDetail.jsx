@@ -25,8 +25,11 @@ const ScheduleDayDetail = ({
     try {
       const result = await fetchEvents({ scheduleDayId: day._id });
       const all = Array.isArray(result) ? result : result?.data || [];
-      setDayEvents(all.filter((e) => e.eventType === 'event'));
-      setDayNotes(all.filter((e) => e.eventType === 'note' || !e.eventType));
+      // Only the events/notes whose `date` matches the single day being viewed.
+      // Without this filter, an event attached to a multi-day block shows on every day of the block.
+      const forThisDay = all.filter((e) => Number(e.date) === Number(day.singleDate));
+      setDayEvents(forThisDay.filter((e) => e.eventType === 'event'));
+      setDayNotes(forThisDay.filter((e) => e.eventType === 'note' || !e.eventType));
     } catch {} finally { setLoadingEvents(false); }
   }, [day._id, fetchEvents]);
 
@@ -92,7 +95,11 @@ const ScheduleDayDetail = ({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: colors.textPrimary, fontFamily: "'Georgia', serif" }}>
-            {day.typeName === 'Day Off' ? 'Day Off' : `${day.typeName} Day ${day.dayNumber}`}
+            {day.typeName === 'Day Off'
+              ? 'Day Off'
+              : day.dayNumber != null
+                ? `${day.typeName} Day ${day.dayNumber}`
+                : day.typeName}
           </h3>
           <p style={{ fontSize: '13px', color: colors.textSubtle, margin: '2px 0 0', fontStyle: 'italic' }}>
             {dateStr}{day.title ? ` — ${day.title}` : ''}

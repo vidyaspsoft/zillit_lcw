@@ -34,6 +34,14 @@ struct BoxScheduleView: View {
                     contentSection
                 }
 
+                // Refreshing indicator (non-blocking) — top-right
+                VStack {
+                    HStack { Spacer(); refreshingIndicator }
+                    Spacer()
+                }
+                .zIndex(50)
+                .allowsHitTesting(false)
+
                 // Hidden NavigationLinks (triggered by state)
                 hiddenNavigationLinks
 
@@ -145,7 +153,7 @@ struct BoxScheduleView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Header (Back + hamburger only — all actions live in the drawer)
     private var headerSection: some View {
         VStack(spacing: 4) {
             HStack {
@@ -157,9 +165,6 @@ struct BoxScheduleView: View {
                     .foregroundColor(.textMuted)
                 }
                 Spacer()
-                Button(action: { navToShare = true }) {
-                    Image(systemName: "square.and.arrow.up").font(.system(size: 16)).foregroundColor(.textMuted)
-                }
                 Button(action: { withAnimation(.easeInOut(duration: 0.25)) { viewModel.showDrawer = true } }) {
                     Image(systemName: "line.3.horizontal").font(.system(size: 20, weight: .medium)).foregroundColor(.textPrimary).frame(width: 36, height: 36)
                 }
@@ -173,6 +178,27 @@ struct BoxScheduleView: View {
         }
         .background(LinearGradient(colors: [Color.surface, Color.surfaceAlt], startPoint: .top, endPoint: .bottom))
         .overlay(Rectangle().frame(height: 1).foregroundColor(.appBorder), alignment: .bottom)
+    }
+
+
+    // MARK: - Refreshing indicator (web parity: BoxSchedulePage.jsx:451-461)
+    private var refreshingIndicator: some View {
+        Group {
+            if viewModel.isLoading && !viewModel.scheduleDays.isEmpty {
+                HStack(spacing: 6) {
+                    ProgressView().scaleEffect(0.7)
+                    Text("Refreshing…")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.textMuted)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 4)
+                .background(Color.surface.opacity(0.95))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+                .cornerRadius(20)
+                .shadow(color: Color.black.opacity(0.08), radius: 4)
+                .padding(.top, 12).padding(.trailing, 16)
+            }
+        }
     }
 
     // MARK: - View Toggle + Set Default + Legend

@@ -28,6 +28,8 @@ const CalendarView = ({
   onDeleteDay, onEditDay, onEditSchedule,
   standaloneEvents = [], onEditStandaloneEvent,
   onQuickCreateSchedule, onQuickCreateEvent, onQuickCreateNote,
+  // Shared filters from BoxSchedulePage — same as List view uses.
+  searchText = '', filterType = '', contentFilter = 'all',
 }) => {
   const { colors } = useTheme();
 
@@ -56,10 +58,49 @@ const CalendarView = ({
   const [selectedCell, setSelectedCell] = useState(null);
   const [quickActionCell, setQuickActionCell] = useState(null);
 
-  // Build standalone event lookup by date
+  // ── Apply shared filters (Show / Schedule Type / Search) ──
+  const showSchedules = contentFilter === 'all' || contentFilter === 'schedules';
+  const showEvents    = contentFilter === 'all' || contentFilter === 'events';
+  const showNotes     = contentFilter === 'all' || contentFilter === 'notes';
+  const q = searchText.trim().toLowerCase();
+
+  const filteredCalendarData = useMemo(() => {
+    if (!showSchedules) return [];
+    return calendarData
+      .filter((day) => {
+        if (filterType && day.typeName !== filterType) return false;
+        if (!q) return true;
+        const hay = [day.title, day.typeName].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(q);
+      })
+      // Strip nested events/notes when Show excludes them, so schedule cells don't leak them.
+      .map((day) => ({
+        ...day,
+        events: showEvents ? (day.events || []) : [],
+        notes:  showNotes  ? (day.notes  || []) : [],
+      }));
+  }, [calendarData, showSchedules, showEvents, showNotes, filterType, q]);
+
+  const filteredStandaloneEvents = useMemo(() => {
+    return standaloneEvents.filter((evt) => {
+      const kind = evt.eventType === 'note' ? 'notes' : 'events';
+      if (kind === 'events' && !showEvents) return false;
+      if (kind === 'notes' && !showNotes) return false;
+      if (!q) return true;
+      const hay = [evt.title, evt.description, evt.notes].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }, [standaloneEvents, showEvents, showNotes, q]);
+
+  // Build standalone event lookup by date (from filtered set).
+  // De-dup against nested rendering: if a linked event's parent schedule is currently
+  // visible in the calendar, its cell already renders the event under the schedule pill —
+  // skip it here to avoid showing the same event twice.
   const standaloneByDate = useMemo(() => {
+    const visibleScheduleIds = new Set(filteredCalendarData.map((d) => d._id));
     const map = {};
-    standaloneEvents.forEach((evt) => {
+    filteredStandaloneEvents.forEach((evt) => {
+      if (evt.scheduleDayId && visibleScheduleIds.has(evt.scheduleDayId)) return;
       // Use startDateTime date or creation date
       const evtDate = evt.startDateTime
         ? dayjs(evt.startDateTime).startOf('day').valueOf()
@@ -70,11 +111,11 @@ const CalendarView = ({
       }
     });
     return map;
-  }, [standaloneEvents]);
+  }, [filteredStandaloneEvents, filteredCalendarData]);
 
   const dayLookup = useMemo(() => {
     const lookup = {};
-    calendarData.forEach((day) => {
+    filteredCalendarData.forEach((day) => {
       (day.calendarDays || []).forEach((cd) => {
         const key = dayjs(cd).startOf('day').valueOf();
         if (!lookup[key]) lookup[key] = [];
@@ -82,7 +123,7 @@ const CalendarView = ({
       });
     });
     return lookup;
-  }, [calendarData]);
+  }, [filteredCalendarData]);
 
   const calendarGrid = useMemo(() => {
     const startOfMonth = currentMonth.startOf('month');
@@ -299,7 +340,11 @@ const CalendarView = ({
               const standalone = standaloneByDate[dayKey] || [];
               const hasStandalone = standalone.length > 0;
               const isPastClickable = isPast && (hasSchedule || hasStandalone);
-              const noteCount = schedulesOnDay.reduce((sum, s) => sum + (s.notes?.length || 0), 0);
+              // Only count notes whose `date` matches this cell's dayKey (not every note on the block).
+              const noteCount = schedulesOnDay.reduce(
+                (sum, s) => sum + ((s.notes || []).filter((n) => Number(n.date) === Number(dayKey)).length),
+                0
+              );
               const baseBackground = hasSchedule ? `${primary.color}0C` : isWeekend ? colors.calWeekendBg : colors.surface;
 
               return (
@@ -369,7 +414,9 @@ const CalendarView = ({
                     </div>
                   ))}
 
-                  {schedulesOnDay.map((s) => (s.events || []).map((evt, ei) => (
+                  {schedulesOnDay.map((s) => (s.events || [])
+                    .filter((evt) => Number(evt.date) === Number(dayKey))
+                    .map((evt, ei) => (
                     <div key={`${s._id || 'day'}-evt-${evt._id || ei}`} style={{
                       display: 'flex',
                       alignItems: 'center',

@@ -2,6 +2,7 @@
 <!-- Day Focus Card — matches web's DayFocusCard component.
      Big date number, day name, schedule pills, events, notes, action buttons. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -71,12 +72,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/bs_today"
-                android:textSize="@dimen/text_xs"
+                android:textSize="@dimen/text_sm"
                 android:textColor="@color/successText"
                 android:textStyle="bold"
+                android:background="@drawable/bg_today_badge"
                 android:visibility="gone"
                 android:layout_marginTop="@dimen/spacing_sm"
-                android:paddingHorizontal="@dimen/spacing_sm"
+                android:paddingHorizontal="@dimen/spacing_md"
                 android:paddingVertical="@dimen/spacing_xxs" />
         </LinearLayout>
     </LinearLayout>
@@ -96,7 +98,7 @@
         android:id="@+id/dayFocusScheduleContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_marginBottom="@dimen/spacing_lg" />
 
     <!-- Events -->
@@ -166,41 +168,55 @@
             android:layout_marginTop="@dimen/spacing_xs" />
     </LinearLayout>
 
-    <!-- Action buttons -->
-    <View
-        style="@style/ZillitDivider"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:layout_marginBottom="@dimen/spacing_md" />
-
+    <!-- Action buttons — iOS parity: dashed divider + "Add to this day" section label -->
     <LinearLayout
         android:id="@+id/dayFocusActions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/spacing_sm">
 
-        <Button
-            android:id="@+id/btnDayFocusViewDetails"
-            style="@style/ZillitButton.Toolbar"
+        <View style="@style/ZillitDivider"
+            android:layout_marginBottom="@dimen/spacing_md" />
+
+        <TextView
+            style="@style/ZillitLabel.Section"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dd_view_details"
-            android:visibility="gone"
-            android:layout_marginEnd="@dimen/spacing_sm" />
+            android:text="@string/dd_add_to_day"
+            android:layout_marginBottom="@dimen/spacing_sm" />
 
-        <Button
-            android:id="@+id/btnDayFocusAddSchedule"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/dd_add_schedule"
-            android:layout_marginEnd="@dimen/spacing_sm" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <Button
-            android:id="@+id/btnDayFocusAddEvent"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dd_add_event" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDayFocusViewDetails"
+                style="@style/ZillitToolbarChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_view_details"
+                android:visibility="gone"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDayFocusAddSchedule"
+                style="@style/ZillitToolbarChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_add_schedule"
+                app:icon="@drawable/ic_calendar_add"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDayFocusAddEvent"
+                style="@style/ZillitToolbarChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_add_event"
+                app:icon="@drawable/ic_clock" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

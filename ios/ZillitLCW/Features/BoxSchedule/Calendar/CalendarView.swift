@@ -11,6 +11,15 @@ struct ScheduleCalendarView: View {
     private let calendarModeKey = "box-schedule-calendar-mode"
     @State private var showSetDefaultToast = false
     @State private var showCalModePopover = false
+    @State private var showFiltersSheet = false
+
+    private var activeFilterCount: Int {
+        var n = 0
+        if !viewModel.filterSearchText.trimmingCharacters(in: .whitespaces).isEmpty { n += 1 }
+        if !viewModel.filterTypeName.isEmpty { n += 1 }
+        if viewModel.filterContentKind != "all" { n += 1 }
+        return n
+    }
 
     init(viewModel: BoxScheduleViewModel, onDayTap: ((Int64) -> Void)? = nil) {
         self._viewModel = ObservedObject(wrappedValue: viewModel)
@@ -18,6 +27,23 @@ struct ScheduleCalendarView: View {
     }
 
     var body: some View {
+        rootBody
+            .sheet(isPresented: $showFiltersSheet) {
+                ListFiltersSheet(
+                    initialType: viewModel.filterTypeName,
+                    initialContent: viewModel.filterContentKind,
+                    types: viewModel.scheduleTypes,
+                    onApply: { t, c in
+                        viewModel.filterTypeName = t
+                        viewModel.filterContentKind = c
+                        showFiltersSheet = false
+                    },
+                    onClose: { showFiltersSheet = false }
+                )
+            }
+    }
+
+    private var rootBody: some View {
         ZStack {
             VStack(spacing: 0) {
                 calendarToolbar
@@ -118,6 +144,56 @@ struct ScheduleCalendarView: View {
             }
             .padding(.horizontal, 12)
 
+            // Row 1.5: Inline Search + Filter button (matches List view, shared filter state).
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 12))
+                        .foregroundColor(.textPlaceholder)
+                    TextField(
+                        "Search by title, type, date…",
+                        text: Binding(
+                            get: { viewModel.filterSearchText },
+                            set: { viewModel.filterSearchText = $0 }
+                        )
+                    )
+                    .font(.system(size: 13))
+                    .autocapitalization(.none)
+                    if !viewModel.filterSearchText.isEmpty {
+                        Button(action: { viewModel.filterSearchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.textSubtle)
+                        }
+                    }
+                }
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(Color.surface)
+                .cornerRadius(6)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.borderInput, lineWidth: 1))
+
+                Button(action: { showFiltersSheet = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "line.3.horizontal.decrease.circle").font(.system(size: 12))
+                        Text("Filter").font(.system(size: 12, weight: .medium))
+                        if activeFilterCount > 0 {
+                            Text("\(activeFilterCount)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(Color.primaryAccent)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .foregroundColor(.textSecondary)
+                    .padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(Color.surface)
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.borderInput, lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, 12)
+
             // Row 2: Nav arrows + title + Today
             HStack {
                 Button(action: { navigatePrev() }) {
@@ -193,6 +269,7 @@ struct ScheduleCalendarView: View {
                                     schedules: schedules,
                                     isCurrentMonth: Calendar.current.component(.month, from: date) == Calendar.current.component(.month, from: viewModel.currentMonth),
                                     isSelected: viewModel.selectedDayKey == dayKey,
+                                    hideSchedulePills: !viewModel.showSchedulesInView,
                                     onTap: {
                                         onDayTap?(dayKey)
                                     }
@@ -284,11 +361,43 @@ struct CalendarCellView: View {
     let schedules: [ScheduleDay]
     let isCurrentMonth: Bool
     let isSelected: Bool
+    var hideSchedulePills: Bool = false
     let onTap: () -> Void
 
     private var isToday: Bool { Calendar.current.isDateInToday(date) }
     private var isPast: Bool { date < Calendar.current.startOfDay(for: Date()) }
     private var isWeekend: Bool { Calendar.current.isDateInWeekend(date) }
+
+    // Each event/note has its own `date` — only show it on the cell whose date matches.
+    // Without this filter, an event attached to a multi-day block would render on all days of the block.
+    private var cellDayMs: Int64 {
+        DateUtils.toEpoch(Calendar.current.startOfDay(for: date))
+    }
+    private var allEvents: [ScheduleEvent] {
+        schedules.flatMap { ($0.events ?? []).filter { $0.date == cellDayMs } }
+    }
+    private var allNotes: [ScheduleEvent] {
+        schedules.flatMap { ($0.notes ?? []).filter { $0.date == cellDayMs } }
+    }
+
+    // Combined total: each schedule, each event, notes as a single slot.
+    private var totalItems: Int {
+        (hideSchedulePills ? 0 : schedules.count) + allEvents.count + (allNotes.isEmpty ? 0 : 1)
+    }
+    private let maxVisible = 2
+
+    private var visibleSchedules: [ScheduleDay] {
+        hideSchedulePills ? [] : Array(schedules.prefix(maxVisible))
+    }
+    private var remainingAfterSchedules: Int { max(0, maxVisible - visibleSchedules.count) }
+    private var visibleEvents: [ScheduleEvent] { Array(allEvents.prefix(remainingAfterSchedules)) }
+    private var showNoteSlot: Bool {
+        !allNotes.isEmpty && (visibleSchedules.count + visibleEvents.count) < maxVisible
+    }
+    private var shownCount: Int {
+        visibleSchedules.count + visibleEvents.count + (showNoteSlot ? 1 : 0)
+    }
+    private var hiddenCount: Int { max(0, totalItems - shownCount) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -309,8 +418,8 @@ struct CalendarCellView: View {
                 Spacer()
             }
 
-            // Schedule pills (max 2 visible on mobile)
-            ForEach(schedules.prefix(2), id: \.id) { schedule in
+            // Schedule pills
+            ForEach(visibleSchedules, id: \.id) { schedule in
                 HStack(spacing: 2) {
                     Circle()
                         .fill(Color(hex: schedule.color))
@@ -327,10 +436,32 @@ struct CalendarCellView: View {
                 .cornerRadius(3)
             }
 
-            if schedules.count > 2 {
-                Text("+\(schedules.count - 2)")
-                    .font(.system(size: 7, weight: .bold))
-                    .foregroundColor(.textMuted)
+            // Events
+            ForEach(visibleEvents, id: \.id) { evt in
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(Color(hex: evt.color.isEmpty ? "#3498DB" : evt.color))
+                        .frame(width: 5, height: 5)
+                    Text(evt.title)
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundColor(.textBody)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+
+            // Notes as a single slot
+            if showNoteSlot {
+                Text(allNotes.count == 1 ? "1 note" : "\(allNotes.count) notes")
+                    .font(.system(size: 8))
+                    .foregroundColor(.textSubtle)
+            }
+
+            // "+N More" if anything was hidden
+            if hiddenCount > 0 {
+                Text("+\(hiddenCount) More")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundColor(.textSubtle)
             }
 
             Spacer(minLength: 0)

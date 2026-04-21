@@ -150,14 +150,16 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
   };
 
   // ── Single Day Edit Logic ──
+  // Atomic: one PUT /days/:id/single-date call. Backend handles the split,
+  // logging, revision bump, and socket broadcasts for both affected docs.
   const executeSingleDayEdit = async () => {
     setSubmitting(true);
     try {
       const boxScheduleService = (await import('../../services/boxScheduleService')).default;
       const singleDate = Number(editingDay.singleDate);
-      const originalBlockDates = (editingDay.calendarDays || []).map(Number).sort((a, b) => a - b);
       const isSameType = typeId === String(editingDay.typeId?._id || editingDay.typeId);
 
+      // Same type → just save the title change (no split needed).
       if (isSameType) {
         await onEdit(editingDay._id, { title });
         toast.success('Schedule updated successfully');
@@ -167,64 +169,18 @@ const CreateScheduleModal = ({ open, onClose, onSubmit, scheduleTypes = [], edit
       }
 
       const action = singleDayConflictAction;
-      const newTypeName = scheduleTypes.find(t => t._id === typeId)?.title || 'new type';
+      const newTypeName = scheduleTypes.find((t) => t._id === typeId)?.title || 'new type';
 
-      if (action === 'replace') {
-        await boxScheduleService.removeDates([{ id: editingDay._id, dates: [singleDate] }]);
-        await boxScheduleService.createDay({
-          title, typeId, dateRangeType: 'by_dates',
-          startDate: singleDate, endDate: singleDate,
-          numberOfDays: 1, calendarDays: [singleDate],
-          conflictAction: 'replace',
-        });
-        toast.success(`${dayjs(singleDate).format('MMM D')} changed from ${editingDay.typeName} to ${newTypeName}`);
+      await boxScheduleService.updateSingleDay(editingDay._id, {
+        date: singleDate, typeId, action,
+      });
 
-      } else if (action === 'extend') {
-        await boxScheduleService.removeDates([{ id: editingDay._id, dates: [singleDate] }]);
-
-        let updatedBlock = null;
-        try {
-          const daysResp = await boxScheduleService.getDays();
-          const allDays = daysResp.data || daysResp || [];
-          updatedBlock = allDays.find(d => String(d._id) === String(editingDay._id));
-        } catch (e) { console.error('Failed to fetch updated block:', e); }
-
-        if (updatedBlock && updatedBlock.calendarDays && updatedBlock.calendarDays.length > 0) {
-          const currentDates = updatedBlock.calendarDays.map(Number).sort((a, b) => a - b);
-          const lastDate = Math.max(...currentDates);
-          const extendedDate = dayjs(lastDate).add(1, 'day').startOf('day').valueOf();
-          const newDates = [...currentDates, extendedDate].sort((a, b) => a - b);
-
-          await boxScheduleService.updateDay(editingDay._id, {
-            calendarDays: newDates,
-            startDate: Math.min(...newDates),
-            endDate: Math.max(...newDates),
-            numberOfDays: newDates.length,
-          });
-
-          toast.success(
-            `${dayjs(singleDate).format('MMM D')} changed to ${newTypeName}. ${editingDay.typeName} extended to ${dayjs(extendedDate).format('MMM D')} to keep the same number of days.`
-          );
-        } else {
-          toast.success(`${dayjs(singleDate).format('MMM D')} changed to ${newTypeName}`);
-        }
-
-        await boxScheduleService.createDay({
-          title, typeId, dateRangeType: 'by_dates',
-          startDate: singleDate, endDate: singleDate,
-          numberOfDays: 1, calendarDays: [singleDate],
-          conflictAction: 'overlap',
-        });
-
-      } else if (action === 'overlap') {
-        await boxScheduleService.createDay({
-          title, typeId, dateRangeType: 'by_dates',
-          startDate: singleDate, endDate: singleDate,
-          numberOfDays: 1, calendarDays: [singleDate],
-          conflictAction: 'overlap',
-        });
-        toast.success(`${newTypeName} added on ${dayjs(singleDate).format('MMM D')} (overlapping with ${editingDay.typeName})`);
-      }
+      const messages = {
+        replace: `${dayjs(singleDate).format('MMM D')} changed from ${editingDay.typeName} to ${newTypeName}`,
+        extend: `${dayjs(singleDate).format('MMM D')} changed to ${newTypeName}. ${editingDay.typeName} extended by 1 day to keep the same total.`,
+        overlap: `${newTypeName} added on ${dayjs(singleDate).format('MMM D')} (overlapping with ${editingDay.typeName})`,
+      };
+      toast.success(messages[action] || 'Schedule updated');
 
       onClose();
       if (window.__boxScheduleRefreshDays) window.__boxScheduleRefreshDays();

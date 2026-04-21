@@ -19,6 +19,34 @@ class BoxScheduleViewModel: ObservableObject {
     @Published var calendarMode: String = "month"
     @Published var listMode: String = "by_date"
 
+    // ── Shared filters (applied to both List + Calendar views) ──
+    @Published var filterSearchText: String = ""
+    @Published var filterTypeName: String = ""      // "" = All Types
+    @Published var filterContentKind: String = "all" // "all" | "schedules" | "events" | "notes"
+
+    /// Apply filters to a ScheduleDay list — reused by List view + Calendar cells.
+    func matchesFilters(_ day: ScheduleDay) -> Bool {
+        if !filterTypeName.isEmpty && day.typeName != filterTypeName { return false }
+        let q = filterSearchText.trimmingCharacters(in: .whitespaces).lowercased()
+        if q.isEmpty { return true }
+        let hay = "\(day.title) \(day.typeName)".lowercased()
+        return hay.contains(q)
+    }
+
+    /// Apply content-kind + search filters to a single event/note.
+    func matchesFilters(_ evt: ScheduleEvent) -> Bool {
+        let kind: String = (evt.eventType == "note") ? "notes" : "events"
+        if filterContentKind != "all" && filterContentKind != kind { return false }
+        let q = filterSearchText.trimmingCharacters(in: .whitespaces).lowercased()
+        if q.isEmpty { return true }
+        let hay = "\(evt.title) \(evt.description ?? "") \(evt.notes ?? "")".lowercased()
+        return hay.contains(q)
+    }
+
+    var showSchedulesInView: Bool { filterContentKind == "all" || filterContentKind == "schedules" }
+    var showEventsInView:    Bool { filterContentKind == "all" || filterContentKind == "events" }
+    var showNotesInView:     Bool { filterContentKind == "all" || filterContentKind == "notes" }
+
     // Sheet/Drawer states
     @Published var showDrawer = false
     @Published var showDayDetail = false
@@ -34,14 +62,24 @@ class BoxScheduleViewModel: ObservableObject {
     @Published var currentDay = Date()
     @Published var selectedDayKey: Int64? = nil
 
-    // Day lookup for calendar
+    // Day lookup for calendar — respects the shared filters (Type / Search always;
+    // Show controls whether the cell renders schedule pills, not whether the ScheduleDay
+    // appears here — we still need it so nested events/notes can render even when pills are hidden).
     var dayLookup: [Int64: [ScheduleDay]] {
         var lookup: [Int64: [ScheduleDay]] = [:]
         for day in calendarData {
+            guard matchesFilters(day) else { continue }
+            // Strip nested events/notes the user chose to hide, so cells don't leak them.
+            var filtered = day
+            if !showEventsInView { filtered.events = nil }
+            if !showNotesInView  { filtered.notes  = nil }
+            // When Show excludes schedules, only keep days that still have visible nested content.
+            let hasVisibleContent = (filtered.events?.isEmpty == false) || (filtered.notes?.isEmpty == false)
+            if !showSchedulesInView && !hasVisibleContent { continue }
             for cd in day.calendarDays {
                 let key = DateUtils.toEpoch(Calendar.current.startOfDay(for: DateUtils.fromEpoch(cd)))
                 if lookup[key] == nil { lookup[key] = [] }
-                lookup[key]?.append(day)
+                lookup[key]?.append(filtered)
             }
         }
         return lookup
@@ -142,11 +180,11 @@ class BoxScheduleViewModel: ObservableObject {
                 refreshAll()
                 onSuccess?()
             } catch {
-                let errMsg = error.localizedDescription
-                if errMsg.lowercased().contains("conflict") || errMsg.contains("409") {
+                // HTTP 409 only — routed by APIError.conflict (thrown in APIClient when statusCode == 409)
+                if case APIError.conflict = error {
                     onConflict?()
                 } else {
-                    self.errorMessage = errMsg
+                    self.errorMessage = error.localizedDescription
                 }
             }
         }
@@ -156,6 +194,83 @@ class BoxScheduleViewModel: ObservableObject {
         Task { @MainActor in
             do {
                 try await api.deleteDay(id: id)
+                refreshAll()
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// Update an existing schedule day (PUT /days/:id). Handles 409 via onConflict.
+    func updateDay(id: String, typeId: String, dateRangeType: String, calendarDays: [Int64], title: String = "", conflictAction: String = "", onConflict: (() -> Void)? = nil, onSuccess: (() -> Void)? = nil) {
+        Task { @MainActor in
+            do {
+                var body: [String: Any] = [
+                    "title": title,
+                    "typeId": typeId,
+                    "dateRangeType": dateRangeType,
+                    "calendarDays": calendarDays,
+                    "startDate": calendarDays.min() ?? 0,
+                    "endDate": calendarDays.max() ?? 0,
+                    "numberOfDays": calendarDays.count
+                ]
+                if !conflictAction.isEmpty { body["conflictAction"] = conflictAction }
+                _ = try await api.updateDay(id: id, data: body)
+                refreshAll()
+                onSuccess?()
+            } catch {
+                if case APIError.conflict = error {
+                    onConflict?()
+                } else {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    /// Update an existing event/note (PUT /events/:id).
+    func updateEvent(id: String, data: [String: Any]) {
+        Task { @MainActor in
+            do {
+                _ = try await api.updateEvent(id: id, data: data)
+                refreshAll()
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// Atomic single-day edit (PUT /days/:id/single-date). Backend handles the split.
+    func executeSingleDayEdit(oldDayId: String, singleDate: Int64, originalTypeId: String, newTypeId: String, action: String, onConflict: (() -> Void)? = nil, onSuccess: (() -> Void)? = nil) {
+        Task { @MainActor in
+            do {
+                // Same type — nothing to do (parity with web)
+                if originalTypeId == newTypeId {
+                    refreshAll()
+                    onSuccess?()
+                    return
+                }
+                try await api.updateSingleDay(id: oldDayId, date: singleDate, typeId: newTypeId, action: action)
+                refreshAll()
+                onSuccess?()
+            } catch {
+                if case APIError.conflict = error {
+                    onConflict?()
+                } else {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    /// Remove specific calendar dates from one or more schedule days (web /days/remove-dates).
+    func removeDates(entries: [(id: String, dates: [Int64])]) {
+        Task { @MainActor in
+            do {
+                let payload: [[String: Any]] = entries.map { e in
+                    ["id": e.id, "dates": e.dates]
+                }
+                try await api.removeDates(entries: payload)
                 refreshAll()
             } catch {
                 self.errorMessage = error.localizedDescription

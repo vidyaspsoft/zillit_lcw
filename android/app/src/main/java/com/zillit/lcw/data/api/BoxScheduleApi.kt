@@ -5,9 +5,15 @@ import com.zillit.lcw.data.model.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
+
+/** Thrown when /days returns 409 — UI uses this to decide whether to show the conflict dialog. */
+class ScheduleConflictException(
+    val conflicts: List<JsonObject>
+) : RuntimeException("schedule_day_conflict")
 
 /**
  * BoxScheduleApi — all 21 API endpoints.
@@ -18,11 +24,6 @@ class BoxScheduleApi(private val context: Context) {
 
     private val client: HttpClient by lazy { KtorClient.create(context) }
     private val baseUrl = KtorClient.BASE_URL
-
-    private fun getUserName(): String {
-        val prefs = context.getSharedPreferences("zillit_prefs", Context.MODE_PRIVATE)
-        return prefs.getString("user_name", "") ?: ""
-    }
 
     // ═══════════════════════ SCHEDULE TYPES ═══════════════════════
 
@@ -37,7 +38,6 @@ class BoxScheduleApi(private val context: Context) {
             setBody(buildJsonObject {
                 put("title", title)
                 put("color", color)
-                put("userName", getUserName())
             })
         }.body()
     }
@@ -48,16 +48,13 @@ class BoxScheduleApi(private val context: Context) {
             setBody(buildJsonObject {
                 title?.let { put("title", it) }
                 color?.let { put("color", it) }
-                put("userName", getUserName())
             })
         }.body()
     }
 
-    /** DELETE /types/:id */
+    /** DELETE /types/:id — no body; backend reads userId from moduledata. */
     suspend fun deleteType(id: String): ApiResponse<JsonObject> {
-        return client.delete("$baseUrl/types/$id") {
-            setBody(buildJsonObject { put("userName", getUserName()) })
-        }.body()
+        return client.delete("$baseUrl/types/$id").body()
     }
 
     // ═══════════════════════ SCHEDULE DAYS ═══════════════════════
@@ -77,7 +74,7 @@ class BoxScheduleApi(private val context: Context) {
         calendarDays: List<Long>, timezone: String = "UTC",
         conflictAction: String = ""
     ): ApiResponse<ScheduleDay> {
-        return client.post("$baseUrl/days") {
+        val response: HttpResponse = client.post("$baseUrl/days") {
             setBody(buildJsonObject {
                 put("title", title)
                 put("typeId", typeId)
@@ -88,26 +85,50 @@ class BoxScheduleApi(private val context: Context) {
                 put("numberOfDays", calendarDays.size)
                 put("timezone", timezone)
                 put("conflictAction", conflictAction)
-                put("userName", getUserName())
             })
-        }.body()
+        }
+        // 409 Conflict: body is {status:0, message:"schedule_day_conflict", data:{conflicts:[...]}}
+        if (response.status.value == 409) {
+            val raw = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+            val conflicts = raw["data"]?.jsonObject?.get("conflicts")?.jsonArray
+                ?.mapNotNull { it as? JsonObject }
+                ?: emptyList()
+            throw ScheduleConflictException(conflicts)
+        }
+        return response.body()
     }
 
     /** PUT /days/:id — update a schedule day */
     suspend fun updateDay(id: String, data: JsonObject): ApiResponse<ScheduleDay> {
-        return client.put("$baseUrl/days/$id") {
+        val response: HttpResponse = client.put("$baseUrl/days/$id") {
             setBody(buildJsonObject {
                 data.forEach { key, value -> put(key, value) }
-                put("userName", getUserName())
             })
-        }.body()
+        }
+        if (response.status.value == 409) {
+            val raw = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+            val conflicts = raw["data"]?.jsonObject?.get("conflicts")?.jsonArray
+                ?.mapNotNull { it as? JsonObject }
+                ?: emptyList()
+            throw ScheduleConflictException(conflicts)
+        }
+        return response.body()
     }
 
-    /** DELETE /days/:id */
+    /** Atomic single-day type change — PUT /days/:id/single-date. */
+    suspend fun updateSingleDay(id: String, date: Long, typeId: String, action: String) {
+        client.put("$baseUrl/days/$id/single-date") {
+            setBody(buildJsonObject {
+                put("date", date)
+                put("typeId", typeId)
+                put("action", action)
+            })
+        }.body<ApiResponse<JsonObject>>()
+    }
+
+    /** DELETE /days/:id — no body; userId comes from moduledata. */
     suspend fun deleteDay(id: String): ApiResponse<JsonObject> {
-        return client.delete("$baseUrl/days/$id") {
-            setBody(buildJsonObject { put("userName", getUserName()) })
-        }.body()
+        return client.delete("$baseUrl/days/$id").body()
     }
 
     /** POST /days/bulk — bulk update multiple days */
@@ -115,7 +136,6 @@ class BoxScheduleApi(private val context: Context) {
         return client.post("$baseUrl/days/bulk") {
             setBody(buildJsonObject {
                 put("updates", JsonArray(updates))
-                put("userName", getUserName())
             })
         }.body()
     }
@@ -125,7 +145,6 @@ class BoxScheduleApi(private val context: Context) {
         return client.post("$baseUrl/days/remove-dates") {
             setBody(buildJsonObject {
                 put("entries", JsonArray(entries))
-                put("userName", getUserName())
             })
         }.body()
     }
@@ -136,7 +155,6 @@ class BoxScheduleApi(private val context: Context) {
             setBody(buildJsonObject {
                 put("sourceDayId", sourceDayId)
                 put("newStartDate", newStartDate)
-                put("userName", getUserName())
             })
         }.body()
     }
@@ -161,7 +179,6 @@ class BoxScheduleApi(private val context: Context) {
         return client.post("$baseUrl/events") {
             setBody(buildJsonObject {
                 data.forEach { key, value -> put(key, value) }
-                put("userName", getUserName())
             })
         }.body()
     }
@@ -171,16 +188,13 @@ class BoxScheduleApi(private val context: Context) {
         return client.put("$baseUrl/events/$id") {
             setBody(buildJsonObject {
                 data.forEach { key, value -> put(key, value) }
-                put("userName", getUserName())
             })
         }.body()
     }
 
-    /** DELETE /events/:id */
+    /** DELETE /events/:id — no body; userId comes from moduledata. */
     suspend fun deleteEvent(id: String): ApiResponse<JsonObject> {
-        return client.delete("$baseUrl/events/$id") {
-            setBody(buildJsonObject { put("userName", getUserName()) })
-        }.body()
+        return client.delete("$baseUrl/events/$id").body()
     }
 
     // ═══════════════════════ CALENDAR ═══════════════════════
@@ -238,9 +252,7 @@ class BoxScheduleApi(private val context: Context) {
 
     /** POST /share/generate-link */
     suspend fun generateShareLink(): ApiResponse<ShareLinkResponse> {
-        return client.post("$baseUrl/share/generate-link") {
-            setBody(buildJsonObject { put("userName", getUserName()) })
-        }.body()
+        return client.post("$baseUrl/share/generate-link").body()
     }
 
     @Serializable

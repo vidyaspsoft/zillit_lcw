@@ -87,12 +87,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/bs_today"
-                        android:textSize="@dimen/text_xs"
+                        android:textSize="@dimen/text_sm"
                         android:textStyle="bold"
                         android:textColor="@color/successText"
+                        android:background="@drawable/bg_today_badge"
                         android:visibility="gone"
                         android:layout_marginTop="@dimen/spacing_xs"
-                        android:paddingHorizontal="@dimen/spacing_sm"
+                        android:paddingHorizontal="@dimen/spacing_md"
                         android:paddingVertical="@dimen/spacing_xxs" />
 
                     <TextView
@@ -121,8 +122,8 @@
                 android:id="@+id/schedulePillsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/spacing_lg" />
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/spacing_md" />
 
             <!-- Events section -->
             <TextView
@@ -138,7 +139,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="@dimen/spacing_lg" />
+                android:layout_marginBottom="@dimen/spacing_md" />
 
             <!-- Notes section -->
             <TextView
@@ -154,7 +155,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="@dimen/spacing_lg" />
+                android:layout_marginBottom="@dimen/spacing_md" />
 
             <!-- Empty state -->
             <LinearLayout
@@ -184,27 +185,43 @@
 
             <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_md" />
 
-            <!-- Action buttons -->
+            <!-- ADD TO THIS DAY label (matches iOS) -->
+            <TextView
+                style="@style/ZillitLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dd_add_to_this_day"
+                android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <!-- Action buttons — outlined chips (mirrors iOS) -->
             <LinearLayout
                 android:id="@+id/actionButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddSchedule"
-                    style="@style/ZillitButton.Toolbar"
+                    style="@style/ZillitToolbarChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/dd_add_schedule"
+                    android:textSize="@dimen/text_body"
+                    android:minHeight="36dp"
+                    android:paddingHorizontal="@dimen/spacing_md"
+                    app:icon="@drawable/ic_calendar_add"
                     android:layout_marginEnd="@dimen/spacing_sm" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddEvent"
-                    style="@style/ZillitButton.Toolbar"
+                    style="@style/ZillitToolbarChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dd_add_event" />
+                    android:text="@string/dd_add_event"
+                    android:textSize="@dimen/text_body"
+                    android:minHeight="36dp"
+                    android:paddingHorizontal="@dimen/spacing_md"
+                    app:icon="@drawable/ic_clock" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

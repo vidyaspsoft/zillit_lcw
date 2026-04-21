@@ -22,7 +22,7 @@ import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleType
 import com.zillit.lcw.databinding.ActivityCreateScheduleBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
-import com.zillit.lcw.ui.boxschedule.types.TypeManagerDialog
+import com.zillit.lcw.ui.boxschedule.types.TypeManagerActivity
 import com.zillit.lcw.util.DateUtils
 import com.zillit.lcw.util.toColorInt
 import java.util.*
@@ -104,6 +104,18 @@ class CreateScheduleActivity : AppCompatActivity() {
                 putExtra(EXTRA_EDITING_END_DATE, endDate)
             })
         }
+
+        /** Edit the ENTIRE schedule (from List View > By Schedule > Edit). Pre-fills type + dates. */
+        fun launchForEdit(context: Context, dayId: String, typeId: String, typeName: String, numDays: Int, startDate: Long, endDate: Long) {
+            context.startActivity(Intent(context, CreateScheduleActivity::class.java).apply {
+                putExtra(EXTRA_EDITING_DAY_ID, dayId)
+                putExtra(EXTRA_EDITING_TYPE_ID, typeId)
+                putExtra(EXTRA_EDITING_TYPE_NAME, typeName)
+                putExtra(EXTRA_EDITING_NUM_DAYS, numDays)
+                putExtra(EXTRA_EDITING_START_DATE, startDate)
+                putExtra(EXTRA_EDITING_END_DATE, endDate)
+            })
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,12 +128,21 @@ class CreateScheduleActivity : AppCompatActivity() {
         setupTypeSection()
         setupDateTabs()
         setupDateRange()
+        setupCalendarPicker()
         setupDayWise()
         setupSave()
         observeViewModel()
 
         viewModel.fetchTypes()
         updateSummary()
+        renderPickedDateChips()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-fetch types so a newly created type from TypeManagerActivity appears
+        // (and auto-selects via the typeCountBefore delta in observeViewModel)
+        viewModel.fetchTypes()
     }
 
     private fun readIntentExtras() {
@@ -155,47 +176,51 @@ class CreateScheduleActivity : AppCompatActivity() {
     }
 
     private fun setupToolbar() {
-        binding.btnCancel.visibility = View.GONE  // Back button handles navigation
         val title = when {
             isSingleDayEdit -> "Edit Day"
             isEditing -> "Edit Schedule"
             else -> getString(R.string.bs_create_schedule)
         }
-        // Find title TextView and update
-        val titleView = binding.root.findViewById<TextView>(android.R.id.title)
-            ?: (binding.root as ViewGroup).getChildAt(0)?.let {
-                (it as? ViewGroup)?.let { toolbar ->
-                    for (i in 0 until toolbar.childCount) {
-                        val child = toolbar.getChildAt(i)
-                        if (child is TextView && child.text.toString().contains("Schedule")) {
-                            child.text = title
-                            return@let child
-                        }
-                    }
-                    null
-                }
-            }
-
+        binding.tvToolbarTitle.text = title
+        binding.btnCancel.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
         binding.btnSave.text = if (isEditing) "Save Changes" else getString(R.string.cs_save)
     }
 
     private fun setupTypeSection() {
-        // Type search
+        // Autocomplete dropdown: closed by default, opens on focus/tap
+        binding.typeList.visibility = View.GONE
+
+        binding.etTypeSearch.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) openTypeDropdown()
+        }
+        binding.etTypeSearch.setOnClickListener { openTypeDropdown() }
+
         binding.etTypeSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                openTypeDropdown() // re-open on typing (in case it was dismissed)
                 filterTypes(s?.toString() ?: "")
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Add New Type button
+        // Add New Type button → launch Activity
         binding.btnAddNewType.setOnClickListener {
-            TypeManagerDialog().show(supportFragmentManager, "types")
+            startActivity(Intent(this, TypeManagerActivity::class.java))
         }
 
         // Handle new type form
         binding.newTypeForm.visibility = View.GONE
+    }
+
+    private fun openTypeDropdown() {
+        if (selectedTypeId.isEmpty()) {
+            binding.typeList.visibility = View.VISIBLE
+        }
+    }
+
+    private fun closeTypeDropdown() {
+        binding.typeList.visibility = View.GONE
     }
 
     private fun filterTypes(query: String) {
@@ -217,6 +242,7 @@ class CreateScheduleActivity : AppCompatActivity() {
                 setOnClickListener {
                     selectedTypeId = type.id
                     showSelectedType(type)
+                    updateSingleDayConflictVisibility()
                 }
             }
 
@@ -246,13 +272,9 @@ class CreateScheduleActivity : AppCompatActivity() {
 
             binding.typeList.addView(row)
         }
-
-        // Show/hide selected type vs dropdown
-        val isTypeSelected = selectedTypeId.isNotEmpty() && apiTypes.any { it.id == selectedTypeId }
-        if (isTypeSelected) {
-            val type = apiTypes.first { it.id == selectedTypeId }
-            showSelectedType(type)
-        }
+        // NOTE: don't call showSelectedType here — it clears etTypeSearch.text, which
+        // re-triggers the TextWatcher → filterTypes → updateTypeList → infinite loop.
+        // Selected-state is already handled by the row click handler + observer.
     }
 
     private fun showSelectedType(type: ScheduleType) {
@@ -260,6 +282,14 @@ class CreateScheduleActivity : AppCompatActivity() {
         binding.etTypeSearch.visibility = View.GONE
         binding.typeList.visibility = View.GONE
         binding.btnAddNewType.visibility = View.GONE
+
+        // Dismiss keyboard and clear search text (guard against re-triggering TextWatcher)
+        binding.etTypeSearch.clearFocus()
+        if (!binding.etTypeSearch.text.isNullOrEmpty()) {
+            binding.etTypeSearch.text = null
+        }
+        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(binding.etTypeSearch.windowToken, 0)
 
         binding.selectedTypeName.text = type.title
         val dotBg = GradientDrawable().apply {
@@ -280,11 +310,17 @@ class CreateScheduleActivity : AppCompatActivity() {
             binding.typeList.visibility = View.VISIBLE
             binding.btnAddNewType.visibility = View.VISIBLE
             updateTypeList(apiTypes)
+            updateSingleDayConflictVisibility()
         }
+        // Show/hide the Replace/Extend/Overlap chooser whenever type selection changes.
+        updateSingleDayConflictVisibility()
     }
+
+    private var typeCountBefore = -1
 
     private fun observeViewModel() {
         viewModel.scheduleTypes.observe(this) { types ->
+            val previousCount = typeCountBefore
             apiTypes = types
             updateTypeList(types)
 
@@ -292,16 +328,37 @@ class CreateScheduleActivity : AppCompatActivity() {
             if (selectedTypeId.isNotEmpty()) {
                 val type = types.find { it.id == selectedTypeId }
                 if (type != null) showSelectedType(type)
+            } else if (previousCount > 0 && types.size > previousCount) {
+                // iOS parity: auto-select the newly created type on return from Type Manager
+                val newType = types.last()
+                selectedTypeId = newType.id
+                showSelectedType(newType)
+            }
+            updateSingleDayConflictVisibility()
+            typeCountBefore = types.size
+        }
+
+        // Plain errors only — conflict is routed through conflictDetected, not here.
+        viewModel.errorMessage.observe(this) { message ->
+            if (!message.isNullOrEmpty()) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                viewModel.clearErrorMessage()
             }
         }
 
-        viewModel.errorMessage.observe(this) { message ->
-            if (!message.isNullOrEmpty()) {
-                if (message.contains("409") || message.contains("conflict", ignoreCase = true)) {
-                    showConflictDialog()
-                } else {
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                }
+        // HTTP 409 conflict — show dialog driven by the dedicated signal (no string matching)
+        viewModel.conflictDetected.observe(this) { conflicts ->
+            if (conflicts != null) {
+                showConflictDialog(conflicts.size)
+                viewModel.clearConflictDetected()
+            }
+        }
+
+        // One-shot save success → close screen
+        viewModel.scheduleSaved.observe(this) { saved ->
+            if (saved == true) {
+                viewModel.clearScheduleSaved()
+                finish()
             }
         }
     }
@@ -335,37 +392,220 @@ class CreateScheduleActivity : AppCompatActivity() {
         })
     }
 
-    // Feature 2: Single Day Edit UI
-    private fun setupSingleDayEditUI() {
-        // Show locked date info
-        if (singleDate > 0) {
-            val dateInfo = TextView(this).apply {
-                text = DateUtils.formatFullDay(singleDate)
-                textSize = 15f; typeface = android.graphics.Typeface.DEFAULT_BOLD
-                setTextColor(ContextCompat.getColor(context, R.color.textPrimary))
-            }
-            val dateNote = TextView(this).apply {
-                text = "Date cannot be changed when editing a single day"
+    // Calendar picker — month grid + chips (mirrors iOS CreateScheduleView)
+    private lateinit var pickerAdapter: CalendarPickerAdapter
+    private val pickerMonth = Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, 1)
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+    }
+
+    private fun setupCalendarPicker() {
+        // Weekday headers (S M T W T F S)
+        binding.calPickerWeekdays.removeAllViews()
+        for (label in arrayOf("S", "M", "T", "W", "T", "F", "S")) {
+            binding.calPickerWeekdays.addView(TextView(this).apply {
+                text = label
                 textSize = 11f
                 setTextColor(ContextCompat.getColor(context, R.color.textSubtle))
-            }
+                gravity = Gravity.CENTER
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
+                )
+            })
+        }
 
-            val container = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
-                background = ContextCompat.getDrawable(context, R.drawable.bg_card_rounded)
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                    bottomMargin = dpToPx(16)
+        pickerAdapter = CalendarPickerAdapter { epochMs ->
+            if (!pickedDates.add(epochMs)) pickedDates.remove(epochMs)
+            renderPickerGrid()
+            renderPickedDateChips()
+            updateSummary()
+        }
+        binding.calendarPickerGrid.layoutManager =
+            androidx.recyclerview.widget.GridLayoutManager(this, 7)
+        binding.calendarPickerGrid.adapter = pickerAdapter
+
+        binding.btnCalPrev.setOnClickListener {
+            pickerMonth.add(Calendar.MONTH, -1); renderPickerGrid()
+        }
+        binding.btnCalNext.setOnClickListener {
+            pickerMonth.add(Calendar.MONTH, 1); renderPickerGrid()
+        }
+
+        renderPickerGrid()
+    }
+
+    private fun renderPickerGrid() {
+        binding.tvCalMonth.text = java.text.SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+            .format(pickerMonth.time)
+
+        val firstOfMonth = (pickerMonth.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+        // iOS shows Sun-first grid. Back up to the Sunday on-or-before the 1st.
+        val gridStart = (firstOfMonth.clone() as Calendar).apply {
+            val weekday = get(Calendar.DAY_OF_WEEK) // 1=Sunday
+            add(Calendar.DAY_OF_MONTH, -(weekday - 1))
+        }
+
+        val todayStart = DateUtils.startOfDayMs(System.currentTimeMillis())
+        val currentMonthNum = pickerMonth.get(Calendar.MONTH)
+
+        val cells = (0 until 42).map { i ->
+            val cellCal = (gridStart.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_MONTH, i)
+            }
+            val epoch = DateUtils.startOfDayMs(cellCal.timeInMillis)
+            CalendarPickerAdapter.Cell(
+                epochMs = epoch,
+                dayNumber = cellCal.get(Calendar.DAY_OF_MONTH),
+                isCurrentMonth = cellCal.get(Calendar.MONTH) == currentMonthNum,
+                isPast = epoch < todayStart,
+                isSelected = pickedDates.contains(epoch),
+                isLocked = isStartDateLocked && epoch == DateUtils.startOfDayMs(lockedDate),
+            )
+        }
+        pickerAdapter.submit(cells)
+    }
+
+    private fun renderPickedDateChips() {
+        binding.pickedDatesChips.removeAllViews()
+        val sorted = pickedDates.sorted()
+        for (ms in sorted) {
+            val chip = Chip(this).apply {
+                text = DateUtils.formatDate(ms)
+                isCloseIconVisible = !(isStartDateLocked && ms == startDateMs)
+                if (isStartDateLocked && ms == startDateMs) {
+                    // Locked date — cannot remove
+                    text = "${DateUtils.formatDate(ms)} (fixed)"
+                    chipBackgroundColor = ContextCompat.getColorStateList(context, R.color.primaryAccentLight)
+                }
+                setOnCloseIconClickListener {
+                    pickedDates.remove(ms)
+                    renderPickedDateChips()
+                    updateSummary()
                 }
             }
-            container.addView(dateInfo)
-            container.addView(dateNote)
-
-            // Add after type section
-            val parent = binding.dateModeTabs.parent as? ViewGroup
-            val tabIndex = parent?.indexOfChild(binding.dateModeTabs) ?: -1
-            if (tabIndex >= 0) parent?.addView(container, tabIndex)
+            binding.pickedDatesChips.addView(chip)
         }
+        binding.tvCalSelectedCount.text = if (sorted.isEmpty()) "" else "${sorted.size} day(s) selected"
+    }
+
+    // Feature 2: Single Day Edit UI — mirrors web "Edit Day" (CreateScheduleModal.jsx)
+    // Shows locked DATE card + (when type changes) inline Replace / Extend / Overlap chooser.
+    private var singleDayConflictContainer: LinearLayout? = null
+
+    private fun setupSingleDayEditUI() {
+        if (singleDate <= 0) return
+
+        // ── Locked DATE card
+        val dateLabel = TextView(this).apply {
+            text = "DATE"; textSize = 11f
+            setTextColor(ContextCompat.getColor(context, R.color.textSubtle))
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            letterSpacing = 0.05f
+            setPadding(0, 0, 0, dpToPx(4))
+        }
+        val dateInfo = TextView(this).apply {
+            text = DateUtils.formatFullDay(singleDate)
+            textSize = 15f; typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setTextColor(ContextCompat.getColor(context, R.color.textPrimary))
+        }
+        val dateNote = TextView(this).apply {
+            text = "Date cannot be changed when editing a single day"
+            textSize = 11f
+            setTextColor(ContextCompat.getColor(context, R.color.textSubtle))
+            setPadding(0, dpToPx(2), 0, 0)
+        }
+        val dateCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
+            background = ContextCompat.getDrawable(context, R.drawable.bg_card_rounded)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dpToPx(16) }
+            addView(dateLabel); addView(dateInfo); addView(dateNote)
+        }
+
+        // ── Inline conflict chooser (shown when type changes)
+        val conflictContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dpToPx(16) }
+        }
+        conflictContainer.addView(TextView(this).apply {
+            text = "HOW SHOULD THIS CHANGE BE APPLIED?"
+            textSize = 11f
+            setTextColor(ContextCompat.getColor(context, R.color.textSubtle))
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            letterSpacing = 0.05f
+            setPadding(0, 0, 0, dpToPx(8))
+        })
+
+        val actionOptions = listOf(
+            Triple("replace", "Replace", "Remove this date from the current block and assign it to the new type. The block will shrink by 1 day."),
+            Triple("extend", "Extend", "Remove this date from the current block and assign it to the new type. The block will extend by 1 day at the end to keep the same total."),
+            Triple("overlap", "Overlap", "Keep the existing block on this date and also add the new type. Both will appear.")
+        )
+        val optionViews = mutableMapOf<String, LinearLayout>()
+        for ((action, title, desc) in actionOptions) {
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
+                background = ContextCompat.getDrawable(context, R.drawable.bg_card_rounded)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dpToPx(8) }
+            }
+            val radio = android.widget.RadioButton(this).apply {
+                isChecked = (action == singleDayConflictAction)
+                isClickable = false
+            }
+            val textCol = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            textCol.addView(TextView(this).apply {
+                text = title; textSize = 14f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setTextColor(ContextCompat.getColor(this@CreateScheduleActivity, R.color.textPrimary))
+            })
+            textCol.addView(TextView(this).apply {
+                text = desc; textSize = 12f
+                setTextColor(ContextCompat.getColor(this@CreateScheduleActivity, R.color.textMuted))
+                setPadding(0, dpToPx(2), 0, 0)
+            })
+            card.addView(radio)
+            card.addView(textCol)
+            card.setOnClickListener {
+                singleDayConflictAction = action
+                for ((k, v) in optionViews) {
+                    (v.getChildAt(0) as? android.widget.RadioButton)?.isChecked = (k == action)
+                }
+            }
+            optionViews[action] = card
+            conflictContainer.addView(card)
+        }
+        singleDayConflictContainer = conflictContainer
+
+        // Inject both cards after the type section (before the now-hidden date tabs)
+        val parent = binding.dateModeTabs.parent as? ViewGroup
+        val tabIndex = parent?.indexOfChild(binding.dateModeTabs) ?: -1
+        if (tabIndex >= 0) {
+            parent?.addView(dateCard, tabIndex)
+            parent?.addView(conflictContainer, tabIndex + 1)
+        }
+    }
+
+    /** Show/hide the single-day conflict chooser based on whether type has changed. */
+    private fun updateSingleDayConflictVisibility() {
+        if (!isSingleDayEdit) return
+        val changed = selectedTypeId.isNotEmpty() && selectedTypeId != editingTypeId
+        singleDayConflictContainer?.visibility = if (changed) View.VISIBLE else View.GONE
     }
 
     private fun setupDateRange() {
@@ -488,10 +728,27 @@ class CreateScheduleActivity : AppCompatActivity() {
             else -> "by_days"
         }
 
-        viewModel.createDay("", selectedTypeId, drt, calendarDays, action)
-
-        // Close on success
-        viewModel.scheduleDays.observe(this) { finish() }
+        when {
+            // Single-day edit → orchestrated Replace/Extend/Overlap (web parity)
+            isSingleDayEdit -> {
+                viewModel.executeSingleDayEdit(
+                    oldDayId = editingDayId,
+                    singleDate = singleDate,
+                    originalTypeId = editingTypeId,
+                    newTypeId = selectedTypeId,
+                    action = singleDayConflictAction
+                )
+            }
+            // Full-schedule edit → PUT /days/:id
+            isEditing -> {
+                viewModel.updateDay(editingDayId, selectedTypeId, drt, calendarDays, title = "", conflictAction = action)
+            }
+            // Create new schedule
+            else -> {
+                viewModel.createDay("", selectedTypeId, drt, calendarDays, action)
+            }
+        }
+        // Success/failure handled by the scheduleSaved + errorMessage observers in observeViewModel()
     }
 
     private fun collectCalendarDays(): List<Long> {
@@ -524,8 +781,8 @@ class CreateScheduleActivity : AppCompatActivity() {
         }
     }
 
-    private fun showConflictDialog() {
-        ConflictDialog.newInstance(1) { resolution -> saveSchedule(resolution) }
+    private fun showConflictDialog(conflictCount: Int = 1) {
+        ConflictDialog.newInstance(conflictCount) { resolution -> saveSchedule(resolution) }
             .show(supportFragmentManager, "conflict")
     }
 

@@ -91,7 +91,7 @@ struct HistoryView: View {
                     } else {
                         LazyVStack(spacing: 10) {
                             ForEach(filteredLogs) { log in
-                                HistoryCardView(log: log)
+                                HistoryCardView(log: log, revisions: viewModel.revisions)
                             }
                         }
                         .padding(16)
@@ -104,6 +104,7 @@ struct HistoryView: View {
         .navigationBarHidden(false)
             .onAppear {
                 viewModel.fetchActivityLog()
+                viewModel.fetchRevisions()
             }
     }
 
@@ -120,6 +121,26 @@ struct HistoryView: View {
 // MARK: - History Card
 struct HistoryCardView: View {
     let log: ActivityLog
+    var revisions: [Revision] = []
+
+    // Match log to revision by ±10s timestamp window (web parity: ActivityLogDrawer.jsx)
+    private var matchedRevision: Revision? {
+        revisions
+            .min(by: { abs($0.createdAt - log.createdAt) < abs($1.createdAt - log.createdAt) })
+            .flatMap { abs($0.createdAt - log.createdAt) <= 10_000 ? $0 : nil }
+    }
+
+    /// Resolve a performer's display name. API no longer returns `name` — it must be
+    /// looked up from a local user DB. For now we only know the current user via
+    /// AuthManager; other users fall back to "Someone" (populate a proper users cache later).
+    func resolvedPerformerName(_ p: PerformedBy) -> String {
+        if let n = p.name, !n.isEmpty { return n }
+        let auth = AuthManager.shared
+        if !p.userId.isEmpty && p.userId == auth.userId, !auth.userName.isEmpty {
+            return auth.userName
+        }
+        return "history_someone".localized
+    }
 
     private var actionColor: Color {
         switch log.action {
@@ -191,10 +212,19 @@ struct HistoryCardView: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.textSecondary)
                 Text("·").foregroundColor(.textDisabled)
-                Text("history_by_name".localized.localized(with: log.performedBy.name.isEmpty ? "history_someone".localized : log.performedBy.name))
+                Text("history_by_name".localized.localized(with: resolvedPerformerName(log.performedBy)))
                     .font(.system(size: 11))
                     .foregroundColor(.textMuted)
                 Spacer()
+                if let rev = matchedRevision {
+                    Text("REV \(rev.revisionNumber)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.textMuted)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
+                        .background(Color.surfaceAlt)
+                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.borderButton, lineWidth: 1))
+                        .cornerRadius(4)
+                }
             }
         }
         .padding(14)

@@ -38,27 +38,19 @@
                     android:textColor="@color/textMuted"
                     android:padding="@dimen/spacing_xs"
                     android:background="?attr/selectableItemBackground"
-                    android:drawableStart="@android:drawable/ic_media_previous"
-                    android:drawablePadding="@dimen/spacing_xxs" />
+                    android:drawableStart="@drawable/ic_chevron_left"
+                    android:drawablePadding="@dimen/spacing_xxs"
+                    android:gravity="center_vertical"
+                    app:drawableTint="@color/textMuted" />
 
                 <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
-
-                <ImageButton
-                    android:id="@+id/btnShare"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_share"
-                    android:contentDescription="@string/bs_share"
-                    app:tint="@color/textMuted"
-                    android:layout_marginEnd="@dimen/spacing_sm" />
 
                 <ImageButton
                     android:id="@+id/btnMenu"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_more"
+                    android:src="@drawable/ic_menu_hamburger"
                     android:contentDescription="Menu"
                     app:tint="@color/textPrimary" />
             </LinearLayout>
@@ -101,35 +93,33 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:background="@drawable/bg_segmented_track"
+                    android:padding="2dp"
                     app:singleSelection="true"
                     app:selectionRequired="true">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnCalendarView"
-                        style="?attr/materialButtonOutlinedStyle"
+                        style="@style/ZillitSegmentedButton"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="@string/bs_calendar_view"
-                        android:textSize="@dimen/text_sm" />
+                        android:text="@string/bs_calendar_view" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnListView"
-                        style="?attr/materialButtonOutlinedStyle"
+                        style="@style/ZillitSegmentedButton"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:text="@string/bs_list_view"
-                        android:textSize="@dimen/text_sm" />
+                        android:text="@string/bs_list_view" />
                 </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSetDefaultView"
-                    style="@style/ZillitButton.Toolbar"
+                    style="@style/ZillitToolbarChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/bs_set_default"
-                    android:textSize="@dimen/text_xs"
+                    app:icon="@drawable/ic_grid_2x2"
                     android:layout_marginStart="@dimen/spacing_sm" />
             </LinearLayout>
 
@@ -151,12 +141,43 @@
 
         <View style="@style/ZillitDivider" />
 
-        <!-- Fragment container -->
+        <!-- Fragment container + non-blocking refreshing pill -->
         <FrameLayout
             android:id="@+id/fragmentContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/refreshingIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:layout_marginEnd="@dimen/spacing_base"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_refreshing_pill"
+                android:paddingHorizontal="@dimen/spacing_md"
+                android:paddingVertical="@dimen/spacing_xs"
+                android:elevation="6dp"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:indeterminateTint="@color/textMuted" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:text="@string/bs_refreshing"
+                    android:textSize="@dimen/text_sm"
+                    android:textColor="@color/textMuted"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </FrameLayout>
 
         <!-- Loading overlay -->
         <FrameLayout

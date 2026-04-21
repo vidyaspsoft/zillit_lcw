@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Spin, Segmented, Modal, Input, Select, Popover } from 'antd';
-import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid } from 'react-icons/fi';
+import { Button, Spin, Segmented, Modal, Input, Select, Popover, Badge } from 'antd';
+import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid, FiFilter } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
@@ -56,9 +56,33 @@ const BoxSchedulePage = () => {
   // Standalone events (not linked to any schedule day)
   const [standaloneEvents, setStandaloneEvents] = useState([]);
 
-  // Search & Filter
+  // Search is inline (toolbar); Type + Content-kind live in the Filter modal.
   const [searchText, setSearchText] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [contentFilter, setContentFilter] = useState('all'); // 'all' | 'schedules' | 'events' | 'notes'
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  // Draft state inside the modal — only commits on Apply.
+  const [draftType, setDraftType] = useState('');
+  const [draftContent, setDraftContent] = useState('all');
+
+  // Badge count — only counts filters shown inside the modal (not search).
+  const activeFilterCount = (filterType ? 1 : 0) + (contentFilter !== 'all' ? 1 : 0);
+
+  const openFilterModal = () => {
+    setDraftType(filterType);
+    setDraftContent(contentFilter);
+    setShowFilterModal(true);
+  };
+  const applyFilters = () => {
+    setFilterType(draftType);
+    setContentFilter(draftContent);
+    setShowFilterModal(false);
+  };
+  const clearAllFilters = () => {
+    setDraftType('');
+    setDraftContent('all');
+  };
+  const draftHasActive = !!draftType || draftContent !== 'all';
 
   // New feature drawers/modals
   const [showActivityLog, setShowActivityLog] = useState(false);
@@ -70,11 +94,14 @@ const BoxSchedulePage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
+  // Loads ALL events/notes (linked + unlinked). The List view needs the full set
+  // so events/notes linked to a schedule are visible at list-level (matches iOS/Android).
+  // The per-day expand panel fetches its own scoped list, so there's no duplication concern.
   const loadStandaloneEvents = useCallback(async () => {
     try {
       const result = await fetchEvents({});
       const all = Array.isArray(result) ? result : result?.data || [];
-      setStandaloneEvents(all.filter((e) => !e.scheduleDayId));
+      setStandaloneEvents(all);
     } catch { setStandaloneEvents([]); }
   }, [fetchEvents]);
 
@@ -424,14 +451,17 @@ const BoxSchedulePage = () => {
                   Set Default View
                 </Button>
               </Popover>
-              {activeView === 'List View' && (
+              {(activeView === 'List View' || activeView === 'Calendar View') && (
                 <>
                   <Input placeholder="Search by title, type, date..." prefix={<FiSearch size={13} style={{ color: colors.textPlaceholder }} />}
                     value={searchText} onChange={(e) => setSearchText(e.target.value)} allowClear
-                    style={{ width: '180px', borderRadius: '6px' }} size="middle" />
-                  <Select value={filterType || undefined} onChange={(v) => setFilterType(v || '')} allowClear
-                    placeholder="All Types" style={{ width: '130px' }} size="middle"
-                    options={[{ value: '', label: 'All Types' }, ...scheduleTypes.map((t) => ({ value: t.title, label: t.title }))]} />
+                    style={{ width: '220px', borderRadius: '6px' }} size="middle" />
+                  <Badge count={activeFilterCount} size="small" offset={[-4, 4]}>
+                    <Button size="middle" icon={<FiFilter size={13} />} onClick={openFilterModal}
+                      style={{ borderColor: colors.borderButton, color: colors.textSecondary, borderRadius: '6px', fontSize: '13px' }}>
+                      Filter
+                    </Button>
+                  </Badge>
                 </>
               )}
             </div>
@@ -464,7 +494,8 @@ const BoxSchedulePage = () => {
                 <ScheduleTable rows={filteredSchedule} expandedDayId={expandedDayId} onToggleExpand={toggleDayExpand}
                   onDeleteDay={handleDeleteDay} onEditDay={handleEditDay} onEditSchedule={handleEditSchedule}
                   fetchEvents={fetchEvents} createEvent={createEvent} updateEvent={updateEvent} deleteEvent={deleteEvent}
-                  scheduleTypes={scheduleTypes} isSelectMode={isSelectMode} selectedRowKeys={selectedRowKeys}
+                  scheduleTypes={scheduleTypes} contentFilter={contentFilter}
+                  isSelectMode={isSelectMode} selectedRowKeys={selectedRowKeys}
                   onToggleSelect={toggleSelectRow} onSelectAll={selectAll} onDeselectAll={deselectAll}
                   standaloneEvents={standaloneEvents} onDeleteEvent={async (id) => { await deleteEvent(id); loadStandaloneEvents(); }}
                   onEditStandaloneEvent={handleEditStandaloneEvent}
@@ -481,6 +512,7 @@ const BoxSchedulePage = () => {
                   fetchEvents={fetchEvents} createEvent={createEvent} updateEvent={updateEvent} deleteEvent={deleteEvent}
                   onDeleteDay={handleDeleteDay} onEditDay={handleEditDay} onEditSchedule={handleEditSchedule}
                   standaloneEvents={standaloneEvents} onEditStandaloneEvent={handleEditStandaloneEvent}
+                  searchText={searchText} filterType={filterType} contentFilter={contentFilter}
                   onQuickCreateSchedule={(dateVal) => {
                     setEditingDay({ startDate: dateVal, calendarDays: [dateVal], numberOfDays: 1, _lockedStartDate: true });
                     setShowCreateModal(true);
@@ -556,6 +588,82 @@ const BoxSchedulePage = () => {
           </div>
         }>
         <p style={{ fontSize: '14px', color: colors.textSecondary, margin: '8px 0' }}>Are you sure you want to delete this schedule day? This action cannot be undone.</p>
+      </Modal>
+
+      {/* Consolidated Filter Modal — Show (content kind) + Schedule Type.
+          Chip-based pickers, big primary Apply, subtle "Clear all" when anything is set. */}
+      <Modal open={showFilterModal} onCancel={() => setShowFilterModal(false)} centered width={460}
+        title={<span style={{ fontSize: '16px', fontWeight: '700' }}>Filters</span>}
+        footer={
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Button type="primary" block size="large" onClick={applyFilters}
+              style={{ borderRadius: '8px', background: colors.solidDark, borderColor: colors.solidDark, fontWeight: '600', height: '44px' }}>
+              Apply Filters
+            </Button>
+            {draftHasActive && (
+              <Button type="link" block onClick={clearAllFilters}
+                style={{ fontSize: '13px', color: colors.textLink }}>
+                Clear all filters
+              </Button>
+            )}
+          </div>
+        }>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '4px 0' }}>
+          <div>
+            <label style={{ fontSize: '13px', fontWeight: '700', color: colors.textMuted, display: 'block', marginBottom: '10px' }}>Show</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'schedules', label: 'Schedules' },
+                { value: 'events', label: 'Events' },
+                { value: 'notes', label: 'Notes' },
+              ].map((opt) => {
+                const selected = draftContent === opt.value;
+                return (
+                  <button key={opt.value} onClick={() => {
+                    setDraftContent(opt.value);
+                    // Drop a hidden type when switching to Events/Notes — it would silently stick.
+                    if (opt.value === 'events' || opt.value === 'notes') setDraftType('');
+                  }}
+                    style={{
+                      padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                      border: `1px solid ${selected ? colors.solidDark : colors.borderInput}`,
+                      background: selected ? colors.solidDark : colors.surface,
+                      color: selected ? colors.surface : colors.textSecondary,
+                      fontSize: '13px', fontWeight: selected ? '600' : '500',
+                      transition: 'all 0.15s',
+                    }}>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Schedule Type only applies when Schedules are visible. */}
+          {(draftContent === 'all' || draftContent === 'schedules') && (
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: '700', color: colors.textMuted, display: 'block', marginBottom: '10px' }}>Schedule Type</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[{ value: '', label: 'All Types' }, ...scheduleTypes.map((t) => ({ value: t.title, label: t.title }))].map((opt) => {
+                  const selected = draftType === opt.value;
+                  return (
+                    <button key={opt.value || 'all'} onClick={() => setDraftType(opt.value)}
+                      style={{
+                        padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                        border: `1px solid ${selected ? colors.solidDark : colors.borderInput}`,
+                        background: selected ? colors.solidDark : colors.surface,
+                        color: selected ? colors.surface : colors.textSecondary,
+                        fontSize: '13px', fontWeight: selected ? '600' : '500',
+                        transition: 'all 0.15s',
+                      }}>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </Modal>
 
       {/* View Event Detail Drawer */}

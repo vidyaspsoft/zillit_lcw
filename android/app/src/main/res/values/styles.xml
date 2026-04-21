@@ -57,6 +57,29 @@
         <item name="android:drawablePadding">@dimen/spacing_xs</item>
     </style>
 
+    <!-- Small outlined toolbar button (mirrors iOS "Set as Default" / "Today") -->
+    <style name="ZillitToolbarChip" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textSize">@dimen/text_xs</item>
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:minHeight">28dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingLeft">@dimen/spacing_sm</item>
+        <item name="android:paddingRight">@dimen/spacing_sm</item>
+        <item name="android:paddingTop">@dimen/spacing_xxs</item>
+        <item name="android:paddingBottom">@dimen/spacing_xxs</item>
+        <item name="strokeColor">@color/borderButton</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">@dimen/radius_sm</item>
+        <item name="rippleColor">@color/borderButton</item>
+        <item name="iconSize">12dp</item>
+        <item name="iconPadding">4dp</item>
+        <item name="iconTint">@color/textSecondary</item>
+    </style>
+
     <!-- ══════════ Input ══════════ -->
     <style name="ZillitInput">
         <item name="android:background">@drawable/bg_input_field</item>
@@ -65,8 +88,13 @@
         <item name="android:textSize">@dimen/text_md</item>
         <item name="android:paddingLeft">@dimen/input_padding_h</item>
         <item name="android:paddingRight">@dimen/input_padding_h</item>
+        <item name="android:paddingTop">@dimen/spacing_md</item>
+        <item name="android:paddingBottom">@dimen/spacing_md</item>
         <item name="android:minHeight">@dimen/input_height</item>
         <item name="android:singleLine">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">@dimen/spacing_sm</item>
+        <item name="android:drawableTint">@color/textSubtle</item>
     </style>
 
     <style name="ZillitInput.MultiLine">
@@ -102,14 +130,45 @@
     <style name="ZillitTitle.Hero">
         <item name="android:textSize">@dimen/text_title</item>
         <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.15</item>
         <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/textPrimary</item>
     </style>
 
     <!-- ══════════ Card ══════════ -->
     <style name="ZillitCard">
         <item name="android:background">@drawable/bg_card_rounded</item>
         <item name="android:padding">@dimen/card_padding</item>
+    </style>
+
+    <!-- iOS-like date/time pill — filled gray bg, rounded -->
+    <style name="ZillitInputPill">
+        <item name="android:background">@drawable/bg_input_pill</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingLeft">@dimen/spacing_md</item>
+        <item name="android:paddingRight">@dimen/spacing_md</item>
+        <item name="android:paddingTop">@dimen/spacing_sm</item>
+        <item name="android:paddingBottom">@dimen/spacing_sm</item>
+        <item name="android:minHeight">40dp</item>
+    </style>
+
+    <!-- iOS-like full-width dark Save button — bypasses Material3 orange tint -->
+    <style name="ZillitSaveButton" parent="Widget.Material3.Button">
+        <item name="android:layout_height">52dp</item>
+        <item name="android:textSize">@dimen/text_md</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/solidDarkText</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="backgroundTint">@color/solidDark</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="rippleColor">@color/textMuted</item>
     </style>
 
     <!-- ══════════ Schedule Pill ══════════ -->
@@ -129,6 +188,27 @@
     <style name="ZillitSegmented">
         <item name="android:background">@color/segmentedBg</item>
         <item name="android:padding">@dimen/spacing_xxs</item>
+    </style>
+
+    <!-- iOS-like segmented button (white pill on gray track, no Material3 purple tint) -->
+    <style name="ZillitSegmentedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_height">34dp</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/segmented_text_tint</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">34dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">@dimen/spacing_sm</item>
+        <item name="android:paddingRight">@dimen/spacing_sm</item>
+        <item name="backgroundTint">@color/segmented_bg_tint</item>
+        <item name="strokeColor">@android:color/transparent</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cornerRadius">@dimen/radius_md</item>
+        <item name="rippleColor">@color/borderLight</item>
     </style>
 
     <!-- ══════════ Divider ══════════ -->

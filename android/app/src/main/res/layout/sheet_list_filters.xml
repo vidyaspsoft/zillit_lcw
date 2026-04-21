@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom-sheet for consolidated filters: content kind + schedule type.
+     Simplified layout — chips-style selectors, single primary Apply button,
+     subtle "Clear all" link when any filter is active. Search is NOT here;
+     it lives inline on the toolbar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="@dimen/spacing_lg">
+
+    <!-- Header: title + close -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="@dimen/spacing_lg">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/bs_filters_title"
+            android:textSize="@dimen/text_lg"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary" />
+
+        <ImageButton
+            android:id="@+id/btnCloseFilter"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/textMuted"
+            android:contentDescription="@string/action_cancel" />
+    </LinearLayout>
+
+    <!-- Show (content kind) — 4 chip buttons -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/bs_filter_kind_label"
+        android:textSize="@dimen/text_sm"
+        android:textStyle="bold"
+        android:textColor="@color/textMuted"
+        android:layout_marginBottom="@dimen/spacing_sm" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/contentFilterSheetToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSheetFilterAll"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/bs_filter_all"
+            android:textSize="@dimen/text_sm"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSheetFilterSchedules"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/bs_filter_schedules"
+            android:textSize="@dimen/text_sm"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSheetFilterEvents"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/bs_filter_events"
+            android:textSize="@dimen/text_sm"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSheetFilterNotes"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/bs_filter_notes"
+            android:textSize="@dimen/text_sm"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- Schedule Type section — only relevant when Schedules are visible.
+         Container toggles visibility in code based on the "Show" selection. -->
+    <LinearLayout
+        android:id="@+id/typeSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bs_filter_type_label"
+            android:textSize="@dimen/text_sm"
+            android:textStyle="bold"
+            android:textColor="@color/textMuted"
+            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginBottom="@dimen/spacing_sm" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true"
+                app:selectionRequired="true" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Primary Apply button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFilterApply"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="@string/bs_filter_apply"
+        android:textStyle="bold"
+        android:layout_marginTop="@dimen/spacing_lg"
+        android:insetTop="0dp"
+        android:insetBottom="0dp" />
+
+    <!-- Subtle "Clear all" link, only visible when a filter is active (toggled in code) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFilterReset"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bs_filter_clear_all"
+        android:textSize="@dimen/text_sm"
+        android:layout_marginTop="@dimen/spacing_xs"
+        android:visibility="gone" />
+</LinearLayout>

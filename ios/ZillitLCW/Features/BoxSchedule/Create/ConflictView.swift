@@ -17,7 +17,8 @@ struct ConflictView: View {
                 conflictOption(
                     title: "conflict_replace".localized,
                     desc: "conflict_replace_desc".localized,
-                    action: "replace"
+                    action: "replace",
+                    recommended: true
                 )
                 conflictOption(
                     title: "conflict_extend".localized,
@@ -41,15 +42,22 @@ struct ConflictView: View {
         .background(Color.surface)
     }
 
-    private func conflictOption(title: String, desc: String, action: String) -> some View {
+    private func conflictOption(title: String, desc: String, action: String, recommended: Bool = false) -> some View {
         Button(action: {
             onResolve(action)
             presentationMode.wrappedValue.dismiss()
         }) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.textPrimary)
+                HStack(spacing: 8) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.textPrimary)
+                    if recommended {
+                        Text("Recommended")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.successText)
+                    }
+                }
                 Text(desc)
                     .font(.system(size: 12))
                     .foregroundColor(.textSecondary)
@@ -59,7 +67,7 @@ struct ConflictView: View {
             .padding(14)
             .background(Color.surfaceAlt)
             .cornerRadius(8)
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.borderButton, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(recommended ? Color.solidDark : Color.borderButton, lineWidth: recommended ? 2 : 1))
         }
     }
 }

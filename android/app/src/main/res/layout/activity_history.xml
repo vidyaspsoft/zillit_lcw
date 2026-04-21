@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- History — full-screen Activity (web parity: ActivityLogDrawer opens as a page).
+     Top back bar + filter spinner + date picker + color legend + list. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/drawerBodyBg">
+
+    <!-- Top bar: back chevron + title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/surface"
+        android:paddingHorizontal="@dimen/spacing_sm">
+
+        <ImageButton
+            android:id="@+id/btnHistoryBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_chevron_left"
+            android:contentDescription="@string/action_cancel"
+            app:tint="@color/textPrimary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/history_title"
+            android:textSize="@dimen/text_lg"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:gravity="center"
+            android:layout_marginEnd="40dp" />
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" />
+
+    <!-- Subtitle + filter row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/drawerHeaderBg"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_base">
+
+        <!-- Filter + date picker (iOS parity: no subtitle, neutral-chip date button) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_md">
+
+            <Spinner
+                android:id="@+id/spinnerFilter"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/input_height"
+                android:layout_weight="1"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_history_chip"
+                android:paddingHorizontal="@dimen/spacing_md" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPickDate"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/input_height"
+                android:minHeight="@dimen/input_height"
+                android:minWidth="0dp"
+                android:text="@string/history_pick_date"
+                android:textColor="@color/textPrimary"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="@dimen/text_sm"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="@dimen/spacing_md"
+                app:backgroundTint="@color/segmentedBg"
+                app:cornerRadius="@dimen/radius_md"
+                app:icon="@drawable/ic_calendar"
+                app:iconSize="14dp"
+                app:iconTint="@color/textSecondary"
+                app:strokeWidth="0dp"
+                app:rippleColor="@color/borderLight" />
+        </LinearLayout>
+
+        <!-- Color legend -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginEnd="@dimen/spacing_base">
+                <View android:layout_width="@dimen/legend_dot_size" android:layout_height="@dimen/legend_dot_size"
+                    android:background="@drawable/bg_today_circle" android:backgroundTint="@color/actionAdded"
+                    android:layout_marginEnd="@dimen/spacing_xs" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/history_added" android:textSize="@dimen/text_xs" android:textColor="@color/textMuted" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginEnd="@dimen/spacing_base">
+                <View android:layout_width="@dimen/legend_dot_size" android:layout_height="@dimen/legend_dot_size"
+                    android:background="@drawable/bg_today_circle" android:backgroundTint="@color/actionChanged"
+                    android:layout_marginEnd="@dimen/spacing_xs" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/history_changed" android:textSize="@dimen/text_xs" android:textColor="@color/textMuted" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginEnd="@dimen/spacing_base">
+                <View android:layout_width="@dimen/legend_dot_size" android:layout_height="@dimen/legend_dot_size"
+                    android:background="@drawable/bg_today_circle" android:backgroundTint="@color/actionRemoved"
+                    android:layout_marginEnd="@dimen/spacing_xs" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/history_removed" android:textSize="@dimen/text_xs" android:textColor="@color/textMuted" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginEnd="@dimen/spacing_base">
+                <View android:layout_width="@dimen/legend_dot_size" android:layout_height="@dimen/legend_dot_size"
+                    android:background="@drawable/bg_today_circle" android:backgroundTint="@color/actionCopied"
+                    android:layout_marginEnd="@dimen/spacing_xs" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/history_copied" android:textSize="@dimen/text_xs" android:textColor="@color/textMuted" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <View android:layout_width="@dimen/legend_dot_size" android:layout_height="@dimen/legend_dot_size"
+                    android:background="@drawable/bg_today_circle" android:backgroundTint="@color/actionShared"
+                    android:layout_marginEnd="@dimen/spacing_xs" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/history_shared" android:textSize="@dimen/text_xs" android:textColor="@color/textMuted" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/historyList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="@dimen/spacing_sm"
+            android:paddingBottom="@dimen/spacing_xl" />
+
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="48sp" android:text="📜" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/history_no_history" android:textSize="@dimen/text_lg"
+                android:textColor="@color/textSubtle" android:textStyle="bold"
+                android:layout_marginTop="@dimen/spacing_md" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/history_no_history_desc" android:textSize="@dimen/text_body"
+                android:textColor="@color/textDisabled" android:gravity="center"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:paddingHorizontal="@dimen/spacing_xxl" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

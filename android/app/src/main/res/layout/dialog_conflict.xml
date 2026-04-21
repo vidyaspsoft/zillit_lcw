@@ -25,7 +25,7 @@
         android:textColor="@color/textSecondary"
         android:layout_marginBottom="@dimen/spacing_lg" />
 
-    <!-- Option: Replace -->
+    <!-- Option: Replace — "Recommended" (web parity) -->
     <LinearLayout
         android:id="@+id/optionReplace"
         android:layout_width="match_parent"
@@ -35,14 +35,30 @@
         android:padding="@dimen/spacing_base"
         android:layout_marginBottom="@dimen/spacing_sm">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/conflict_replace"
-            android:textSize="@dimen/text_md"
-            android:textColor="@color/textPrimary"
-            android:textStyle="bold"
-            android:layout_marginBottom="@dimen/spacing_xs" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_xs">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/conflict_replace"
+                android:textSize="@dimen/text_md"
+                android:textColor="@color/textPrimary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recommended"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/successText"
+                android:textStyle="bold"
+                android:layout_marginStart="@dimen/spacing_sm" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"

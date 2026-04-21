@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Drawer, Input, Select, DatePicker, TimePicker, Checkbox, Button, Segmented, ColorPicker } from 'antd';
 import { FiInfo } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -121,6 +121,36 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
   const [noteTitle, setNoteTitle] = useState(editingEvent?.title || '');
   const [noteText, setNoteText] = useState(editingEvent?.notes || '');
   const [noteColor, setNoteColor] = useState(editingEvent?.color || '#3498DB');
+
+  // Re-sync every field when `editingEvent` changes — useState initializers only fire on first mount,
+  // so if the modal opens with null and `editingEvent` arrives asynchronously (e.g. from ViewEventDrawer),
+  // the state would otherwise stay at the initial empty values.
+  useEffect(() => {
+    if (!editingEvent) return;
+    setActiveTab(editingEvent.eventType === 'note' ? 'Note' : 'Event');
+    setTitle(editingEvent.title || '');
+    setDescription(editingEvent.description || '');
+    setStartDate(editingEvent.startDateTime ? dayjs(editingEvent.startDateTime) : dayjs());
+    setStartTime(editingEvent.startDateTime && !editingEvent.fullDay ? dayjs(editingEvent.startDateTime) : null);
+    setEndDate(editingEvent.endDateTime ? dayjs(editingEvent.endDateTime) : dayjs());
+    setEndTime(editingEvent.endDateTime && !editingEvent.fullDay ? dayjs(editingEvent.endDateTime) : null);
+    setFullDay(!!editingEvent.fullDay);
+    setLocation(editingEvent.location || '');
+    setLocationLat(editingEvent.locationLat || null);
+    setLocationLng(editingEvent.locationLng || null);
+    setReminder(editingEvent.reminder || 'none');
+    setRepeatStatus(editingEvent.repeatStatus || 'none');
+    setRepeatEndDate(editingEvent.repeatEndDate || null);
+    setColor(editingEvent.color || '#3498DB');
+    setTimezone(editingEvent.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    setCallType(editingEvent.callType || '');
+    setTextColor(editingEvent.textColor || '');
+    setDistributeTo(editingEvent.distributeTo || '');
+    setOrganizerExcluded(!!editingEvent.organizerExcluded);
+    setNoteTitle(editingEvent.title || '');
+    setNoteText(editingEvent.notes || '');
+    setNoteColor(editingEvent.color || '#3498DB');
+  }, [editingEvent]);
 
   const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '600', color: colors.textSecondary, marginBottom: '4px', letterSpacing: '0.5px', textTransform: 'uppercase' };
 

@@ -1,6 +1,7 @@
 import boxScheduleApi from '../api/boxScheduleAxiosConfig';
-import { getCurrentUserName } from '../utils/userHelpers';
 
+// All write endpoints identify the user via the `moduledata` header (userId).
+// Display name is resolved client-side from the local users DB.
 const boxScheduleService = {
   // ── Schedule Types ──
 
@@ -10,20 +11,17 @@ const boxScheduleService = {
   },
 
   createType: async ({ title, color }) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/types', { title, color, userName });
+    const response = await boxScheduleApi.post('/types', { title, color });
     return response.data;
   },
 
   updateType: async (id, { title, color, order }) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.put(`/types/${id}`, { title, color, order, userName });
+    const response = await boxScheduleApi.put(`/types/${id}`, { title, color, order });
     return response.data;
   },
 
   deleteType: async (id) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.delete(`/types/${id}`, { data: { userName } });
+    const response = await boxScheduleApi.delete(`/types/${id}`);
     return response.data;
   },
 
@@ -35,32 +33,36 @@ const boxScheduleService = {
   },
 
   createDay: async (dayData) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/days', { ...dayData, userName });
+    const response = await boxScheduleApi.post('/days', dayData);
     return response.data;
   },
 
   updateDay: async (id, dayData) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.put(`/days/${id}`, { ...dayData, userName });
+    const response = await boxScheduleApi.put(`/days/${id}`, dayData);
+    return response.data;
+  },
+
+  /** Atomic single-day type change — web "Edit Day" flow. */
+  updateSingleDay: async (id, { date, typeId, action }) => {
+    const response = await boxScheduleApi.put(
+      `/days/${id}/single-date`,
+      { date, typeId, action }
+    );
     return response.data;
   },
 
   deleteDay: async (id) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.delete(`/days/${id}`, { data: { userName } });
+    const response = await boxScheduleApi.delete(`/days/${id}`);
     return response.data;
   },
 
   bulkUpdateDays: async (updates) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/days/bulk', { updates, userName });
+    const response = await boxScheduleApi.post('/days/bulk', { updates });
     return response.data;
   },
 
   removeDates: async (entries) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/days/remove-dates', { entries, userName });
+    const response = await boxScheduleApi.post('/days/remove-dates', { entries });
     return response.data;
   },
 
@@ -72,20 +74,17 @@ const boxScheduleService = {
   },
 
   createEvent: async (eventData) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/events', { ...eventData, userName });
+    const response = await boxScheduleApi.post('/events', eventData);
     return response.data;
   },
 
   updateEvent: async (id, eventData) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.put(`/events/${id}`, { ...eventData, userName });
+    const response = await boxScheduleApi.put(`/events/${id}`, eventData);
     return response.data;
   },
 
   deleteEvent: async (id) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.delete(`/events/${id}`, { data: { userName } });
+    const response = await boxScheduleApi.delete(`/events/${id}`);
     return response.data;
   },
 
@@ -118,16 +117,14 @@ const boxScheduleService = {
   // ── Duplicate ──
 
   duplicateDay: async (sourceDayId, newStartDate) => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/days/duplicate', { sourceDayId, newStartDate, userName });
+    const response = await boxScheduleApi.post('/days/duplicate', { sourceDayId, newStartDate });
     return response.data;
   },
 
   // ── Share ──
 
   generateShareLink: async () => {
-    const userName = getCurrentUserName();
-    const response = await boxScheduleApi.post('/share/generate-link', { userName });
+    const response = await boxScheduleApi.post('/share/generate-link', {});
     return response.data;
   },
 };

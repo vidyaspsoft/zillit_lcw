@@ -18,10 +18,11 @@ import com.zillit.lcw.databinding.ActivityBoxScheduleBinding
 import com.zillit.lcw.ui.boxschedule.calendar.CalendarFragment
 import com.zillit.lcw.ui.boxschedule.create.CreateEventActivity
 import com.zillit.lcw.ui.boxschedule.create.CreateScheduleActivity
-import com.zillit.lcw.ui.boxschedule.history.HistoryBottomSheet
+import com.zillit.lcw.ui.boxschedule.history.HistoryActivity
 import com.zillit.lcw.ui.boxschedule.list.ListFragment
 import com.zillit.lcw.ui.boxschedule.share.ShareDialog
-import com.zillit.lcw.ui.boxschedule.types.TypeManagerDialog
+import com.zillit.lcw.ui.boxschedule.types.TypeManagerActivity
+import com.zillit.lcw.ui.common.SetDefaultPopup
 import com.zillit.lcw.ui.common.ThemeManager
 import com.zillit.lcw.ui.login.LoginActivity
 import com.zillit.lcw.util.DateUtils
@@ -34,6 +35,9 @@ class BoxScheduleActivity : AppCompatActivity() {
     private var activeView = "calendar"
 
     private val viewDefaultKey = "box-schedule-default-view"
+
+    // Single cached SharedPreferences instance to avoid repeated lookups on every setup fn
+    private val prefs by lazy { getSharedPreferences("zillit_prefs", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +52,7 @@ class BoxScheduleActivity : AppCompatActivity() {
         viewModel.loadAll()
 
         // Restore default view
-        val prefs = getSharedPreferences("zillit_prefs", MODE_PRIVATE)
+        
         val savedView = prefs.getString(viewDefaultKey, "calendar") ?: "calendar"
         activeView = savedView
 
@@ -71,7 +75,10 @@ class BoxScheduleActivity : AppCompatActivity() {
         }
 
         viewModel.isLoading.observe(this) { loading ->
-            binding.loadingOverlay.visibility = if (loading) View.VISIBLE else View.GONE
+            // Blocking overlay only on initial empty load; otherwise show non-blocking Refreshing pill
+            val hasData = !viewModel.scheduleDays.value.isNullOrEmpty()
+            binding.loadingOverlay.visibility = if (loading && !hasData) View.VISIBLE else View.GONE
+            binding.refreshingIndicator.visibility = if (loading && hasData) View.VISIBLE else View.GONE
         }
 
         viewModel.scheduleTypes.observe(this) { types ->
@@ -84,15 +91,10 @@ class BoxScheduleActivity : AppCompatActivity() {
 
         // Back button
         binding.btnBack.setOnClickListener {
-            val prefs = getSharedPreferences("zillit_prefs", MODE_PRIVATE)
+            
             prefs.edit().putBoolean("is_logged_in", false).apply()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
-        }
-
-        // Share button
-        binding.btnShare.setOnClickListener {
-            ShareDialog().show(supportFragmentManager, "share")
         }
 
         // Hamburger menu → open drawer
@@ -100,12 +102,43 @@ class BoxScheduleActivity : AppCompatActivity() {
             binding.drawerLayout.openDrawer(GravityCompat.END)
         }
 
-        // Set Default for Calendar/List view
+        // Set Default for Calendar/List view → popup with options
         binding.btnSetDefaultView.setOnClickListener {
-            val prefs = getSharedPreferences("zillit_prefs", MODE_PRIVATE)
-            prefs.edit().putString(viewDefaultKey, activeView).apply()
-            val viewName = if (activeView == "calendar") getString(R.string.bs_calendar_view) else getString(R.string.bs_list_view)
-            Toast.makeText(this, getString(R.string.dv_default_set, viewName), Toast.LENGTH_SHORT).show()
+            
+            val current = prefs.getString(viewDefaultKey, activeView) ?: activeView
+            SetDefaultPopup.show(
+                anchor = binding.btnSetDefaultView,
+                title = getString(R.string.dv_choose_title),
+                subtitle = getString(R.string.bs_set_default),
+                options = listOf(
+                    SetDefaultPopup.Option(
+                        value = "calendar",
+                        label = getString(R.string.bs_calendar_view),
+                        description = getString(R.string.dv_calendar_desc),
+                    ),
+                    SetDefaultPopup.Option(
+                        value = "list",
+                        label = getString(R.string.bs_list_view),
+                        description = getString(R.string.dv_list_desc),
+                    ),
+                ),
+                currentValue = current,
+                onSelect = { value ->
+                    prefs.edit().putString(viewDefaultKey, value).apply()
+                    val viewName = if (value == "calendar") getString(R.string.bs_calendar_view) else getString(R.string.bs_list_view)
+                    Toast.makeText(this, getString(R.string.dv_default_set, viewName), Toast.LENGTH_SHORT).show()
+                    if (value != activeView) {
+                        activeView = value
+                        if (value == "calendar") {
+                            showFragment(CalendarFragment())
+                            binding.viewToggle.check(R.id.btnCalendarView)
+                        } else {
+                            showFragment(ListFragment())
+                            binding.viewToggle.check(R.id.btnListView)
+                        }
+                    }
+                },
+            )
         }
     }
 
@@ -137,12 +170,12 @@ class BoxScheduleActivity : AppCompatActivity() {
 
         binding.drawerEditTypes.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.END)
-            TypeManagerDialog().show(supportFragmentManager, "types")
+            startActivity(Intent(this, TypeManagerActivity::class.java))
         }
 
         binding.drawerHistory.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.END)
-            HistoryBottomSheet().show(supportFragmentManager, "history")
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
 
         // Theme toggle
@@ -161,7 +194,7 @@ class BoxScheduleActivity : AppCompatActivity() {
         }
 
         // User info in drawer footer
-        val prefs = getSharedPreferences("zillit_prefs", MODE_PRIVATE)
+        
         val userName = prefs.getString("user_name", "User") ?: "User"
         binding.drawerUserName.text = userName
         binding.drawerUserInitial.text = userName.take(1).uppercase()
@@ -228,7 +261,7 @@ class BoxScheduleActivity : AppCompatActivity() {
                 setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3))
                 background = ContextCompat.getDrawable(context, R.drawable.bg_button_secondary)
                 setOnClickListener {
-                    TypeManagerDialog().show(supportFragmentManager, "types")
+                    startActivity(Intent(this@BoxScheduleActivity, TypeManagerActivity::class.java))
                 }
             }
             binding.legendContainer.addView(moreBtn)

@@ -27,12 +27,27 @@
     <string name="bs_create_event">Create Event</string>
     <string name="bs_create_note">Create Note</string>
     <string name="bs_history">History</string>
+    <string name="bs_refreshing">Refreshing…</string>
     <string name="bs_share">Share</string>
     <string name="bs_edit_types">Edit Types</string>
     <string name="bs_print">Print</string>
     <string name="bs_back_to_tools">Back to Tools</string>
     <string name="bs_select">Select</string>
     <string name="bs_delete_selected">Delete Selected</string>
+    <string name="bs_search_hint">Search by title, type, date…</string>
+    <string name="bs_all_types">All Types</string>
+    <string name="bs_delete_script">Delete Script</string>
+    <string name="bs_filter_all">All</string>
+    <string name="bs_filter_schedules">Schedules</string>
+    <string name="bs_filter_events">Events</string>
+    <string name="bs_filter_notes">Notes</string>
+    <string name="bs_filters_title">Filters</string>
+    <string name="bs_filter">Filter</string>
+    <string name="bs_filter_type_label">Schedule Type</string>
+    <string name="bs_filter_kind_label">Show</string>
+    <string name="bs_filter_reset">Reset</string>
+    <string name="bs_filter_apply">Apply Filters</string>
+    <string name="bs_filter_clear_all">Clear all filters</string>
 
     <!-- Create Schedule -->
     <string name="cs_type">Type</string>
@@ -80,6 +95,7 @@
     <string name="ce_full_day">Full Day</string>
     <string name="ce_repeat">Repeat</string>
     <string name="ce_repeat_end_date">Repeat End Date</string>
+    <string name="ce_repeat_end_date_hint">Pick an end date</string>
     <string name="ce_no_repeat">No repeat</string>
     <string name="ce_daily">Daily</string>
     <string name="ce_weekly">Weekly</string>
@@ -109,11 +125,22 @@
     <string name="ce_save_note">Save Note</string>
     <string name="ce_update_event">Update Event</string>
     <string name="ce_update_note">Update Note</string>
-    <string name="ce_note_title_hint">Note Title *</string>
-    <string name="ce_note_text_hint">Write your note…</string>
+    <string name="ce_note_title_hint">e.g., Rain backup plan needed</string>
+    <string name="ce_note_text_hint">Details…</string>
+    <string name="ce_note_title_label">Title *</string>
+    <string name="ce_note_text_label">Notes</string>
     <string name="ce_event_tab">Event</string>
     <string name="ce_note_tab">Note</string>
-    <string name="ce_bg_color">Select Background Color</string>
+    <string name="ce_bg_color">Color</string>
+    <string name="ce_color">Color</string>
+    <string name="ce_link_schedule_day">Link to a Schedule Day (optional)</string>
+    <string name="ce_select_schedule_day">Select a schedule day…</string>
+    <string name="ce_organizer_excluded">The organizer will not be a part of this event.</string>
+    <string name="ce_distribute_select">Select</string>
+    <string name="ce_distribute_self">Only Me</string>
+    <string name="ce_distribute_users">Specific Users</string>
+    <string name="ce_distribute_depts">Specific Departments</string>
+    <string name="ce_distribute_all_depts">All Departments</string>
 
     <!-- History -->
     <string name="history_title">History</string>
@@ -174,6 +201,7 @@
     <string name="dd_add_prompt">Add a schedule or event to get started.</string>
     <string name="dd_add_schedule">Add Schedule</string>
     <string name="dd_add_event">Add Event</string>
+    <string name="dd_add_to_this_day">ADD TO THIS DAY</string>
     <string name="dd_view_details">View Full Details</string>
     <string name="dd_add_to_day">Add to this day</string>
 
@@ -226,4 +254,9 @@
     <string name="dv_by_schedule_desc">Grouped by each schedule block</string>
     <string name="dv_current">Current</string>
     <string name="dv_default_set">%s is now your default view.</string>
+
+    <plurals name="bs_day_count">
+        <item quantity="one">%d day(s)</item>
+        <item quantity="other">%d day(s)</item>
+    </plurals>
 </resources>

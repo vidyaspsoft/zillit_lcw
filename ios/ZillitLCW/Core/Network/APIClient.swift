@@ -128,7 +128,7 @@ enum APIError: Error, LocalizedError {
         switch self {
         case .invalidURL: return "Invalid URL"
         case .unauthorized: return "Unauthorized — please log in again"
-        case .conflict: return "409"  // ViewModel checks for "409" to trigger conflict dialog
+        case .conflict: return "Schedule date conflict"  // UI routes via type check (APIError.conflict), not this string
         case .serverError(let code, let msg): return "Server error \(code): \(msg)"
         case .decodingError(let err): return "Failed to parse response: \(err.localizedDescription)"
         }

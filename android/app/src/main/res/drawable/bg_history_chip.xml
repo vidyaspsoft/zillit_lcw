@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS-parity grey filled pill (used for History filter + date buttons). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/segmentedBg" />
+    <corners android:radius="@dimen/radius_md" />
+</shape>

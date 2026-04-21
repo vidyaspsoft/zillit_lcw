@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
   getTypes, createType, updateType, deleteType,
-  getDays, createDay, updateDay, deleteDay, removeDates, bulkUpdateDays,
+  getDays, createDay, updateDay, updateSingleDay, deleteDay, removeDates, bulkUpdateDays,
   getEvents, createEvent, updateEvent, deleteEvent,
   getCalendar,
   getActivityLog,
@@ -39,6 +39,7 @@ router.post("/days/bulk", bulkUpdateDays);
 router.post("/days/remove-dates", removeDates);
 router.post("/days/duplicate", duplicateDay);
 router.put("/days/:id", updateDay);
+router.put("/days/:id/single-date", updateSingleDay);
 router.delete("/days/:id", deleteDay);
 
 // ── Events ──

@@ -7,14 +7,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:minHeight="@dimen/cal_cell_min_height"
-    android:padding="@dimen/spacing_sm"
+    android:padding="@dimen/cal_cell_padding"
     android:background="@color/surface">
 
-    <!-- Date number (circled if today) -->
+    <!-- Date number (circled if today) — iOS parity: 22dp circle, 12sp number -->
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/spacing_xxs">
+        android:layout_marginBottom="1dp">
 
         <!-- Today circle background -->
         <View
@@ -29,8 +29,9 @@
             android:layout_width="@dimen/cal_today_circle"
             android:layout_height="@dimen/cal_today_circle"
             android:gravity="center"
-            android:textSize="@dimen/text_md"
-            android:fontFamily="serif"
+            android:textSize="@dimen/cal_day_number"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
             android:textColor="@color/textSecondary" />
     </FrameLayout>
 

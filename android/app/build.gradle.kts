@@ -70,4 +70,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Color picker (HSV + hex input dialog — matches iOS ColorPicker feel)
+    implementation("com.github.skydoves:colorpickerview:2.3.0")
 }

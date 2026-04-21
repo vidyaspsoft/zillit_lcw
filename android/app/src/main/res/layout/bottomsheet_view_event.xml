@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only event/note detail (web parity: ViewEventDrawer.jsx). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/pageBg">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/spacing_sm"
+        android:background="@color/surfaceAlt">
+
+        <ImageButton
+            android:id="@+id/btnVeClose"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:contentDescription="@string/action_cancel"
+            app:tint="@color/textMuted" />
+
+        <TextView
+            android:id="@+id/tvVeHeaderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="EVENT DETAILS"
+            android:textSize="@dimen/text_sm"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:letterSpacing="0.1"
+            android:gravity="center" />
+
+        <Space android:layout_width="36dp" android:layout_height="36dp" />
+    </LinearLayout>
+
+    <View style="@style/ZillitDivider" />
+
+    <!-- Colored header: title + time/date -->
+    <LinearLayout
+        android:id="@+id/veHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_lg"
+        android:background="@color/surfaceAlt">
+
+        <TextView
+            android:id="@+id/tvVeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:fontFamily="serif"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary" />
+
+        <TextView
+            android:id="@+id/tvVeTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_md"
+            android:textColor="@color/textMuted"
+            android:textStyle="bold"
+            android:layout_marginTop="@dimen/spacing_xxs"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvVeDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_body"
+            android:textColor="@color/textSubtle"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Detail rows container -->
+    <LinearLayout
+        android:id="@+id/veDetailContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingBottom="@dimen/spacing_lg" />
+
+</LinearLayout>

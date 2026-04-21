@@ -1,13 +1,13 @@
 import Foundation
 
-/// BoxScheduleAPI — all 21 API endpoint methods.
+/// BoxScheduleAPI — all Box Schedule endpoints.
 /// Uses APIClient for HTTP calls with auto-injected moduledata header.
+/// All write endpoints identify the user via moduledata (userId). Display name
+/// is resolved client-side from the local users cache.
 class BoxScheduleAPI {
     static let shared = BoxScheduleAPI()
 
     private let client = APIClient.shared
-
-    private var userName: String { AuthManager.shared.userName }
 
     // ═══════════════════════ SCHEDULE TYPES ═══════════════════════
 
@@ -19,13 +19,13 @@ class BoxScheduleAPI {
     func createType(title: String, color: String) async throws -> ScheduleType? {
         let response: APIResponse<ScheduleType> = try await client.request(
             path: "/types", method: "POST",
-            body: ["title": title, "color": color, "userName": userName]
+            body: ["title": title, "color": color]
         )
         return response.data
     }
 
     func updateType(id: String, title: String? = nil, color: String? = nil) async throws -> ScheduleType? {
-        var body: [String: Any] = ["userName": userName]
+        var body: [String: Any] = [:]
         if let t = title { body["title"] = t }
         if let c = color { body["color"] = c }
         let response: APIResponse<ScheduleType> = try await client.request(
@@ -36,8 +36,7 @@ class BoxScheduleAPI {
 
     func deleteType(id: String) async throws {
         let _: APIResponse<EmptyData> = try await client.request(
-            path: "/types/\(id)", method: "DELETE",
-            body: ["userName": userName]
+            path: "/types/\(id)", method: "DELETE"
         )
     }
 
@@ -66,8 +65,7 @@ class BoxScheduleAPI {
             "endDate": calendarDays.max() ?? 0,
             "numberOfDays": calendarDays.count,
             "timezone": timezone,
-            "conflictAction": conflictAction,
-            "userName": userName
+            "conflictAction": conflictAction
         ]
         let response: APIResponse<ScheduleDay> = try await client.request(
             path: "/days", method: "POST", body: body
@@ -76,25 +74,30 @@ class BoxScheduleAPI {
     }
 
     func updateDay(id: String, data: [String: Any]) async throws -> ScheduleDay? {
-        var body = data
-        body["userName"] = userName
         let response: APIResponse<ScheduleDay> = try await client.request(
-            path: "/days/\(id)", method: "PUT", body: body
+            path: "/days/\(id)", method: "PUT", body: data
         )
         return response.data
     }
 
+    /// Atomic single-day type change — PUT /days/:id/single-date.
+    func updateSingleDay(id: String, date: Int64, typeId: String, action: String) async throws {
+        let _: APIResponse<EmptyData> = try await client.request(
+            path: "/days/\(id)/single-date", method: "PUT",
+            body: ["date": date, "typeId": typeId, "action": action]
+        )
+    }
+
     func deleteDay(id: String) async throws {
         let _: APIResponse<EmptyData> = try await client.request(
-            path: "/days/\(id)", method: "DELETE",
-            body: ["userName": userName]
+            path: "/days/\(id)", method: "DELETE"
         )
     }
 
     func bulkUpdateDays(updates: [[String: Any]]) async throws -> [ScheduleDay] {
         let response: APIResponse<[ScheduleDay]> = try await client.request(
             path: "/days/bulk", method: "POST",
-            body: ["updates": updates, "userName": userName]
+            body: ["updates": updates]
         )
         return response.data ?? []
     }
@@ -102,14 +105,14 @@ class BoxScheduleAPI {
     func removeDates(entries: [[String: Any]]) async throws {
         let _: APIResponse<EmptyData> = try await client.request(
             path: "/days/remove-dates", method: "POST",
-            body: ["entries": entries, "userName": userName]
+            body: ["entries": entries]
         )
     }
 
     func duplicateDay(sourceDayId: String, newStartDate: Int64) async throws -> ScheduleDay? {
         let response: APIResponse<ScheduleDay> = try await client.request(
             path: "/days/duplicate", method: "POST",
-            body: ["sourceDayId": sourceDayId, "newStartDate": newStartDate, "userName": userName]
+            body: ["sourceDayId": sourceDayId, "newStartDate": newStartDate]
         )
         return response.data
     }
@@ -132,27 +135,22 @@ class BoxScheduleAPI {
     }
 
     func createEvent(data: [String: Any]) async throws -> ScheduleEvent? {
-        var body = data
-        body["userName"] = userName
         let response: APIResponse<ScheduleEvent> = try await client.request(
-            path: "/events", method: "POST", body: body
+            path: "/events", method: "POST", body: data
         )
         return response.data
     }
 
     func updateEvent(id: String, data: [String: Any]) async throws -> ScheduleEvent? {
-        var body = data
-        body["userName"] = userName
         let response: APIResponse<ScheduleEvent> = try await client.request(
-            path: "/events/\(id)", method: "PUT", body: body
+            path: "/events/\(id)", method: "PUT", body: data
         )
         return response.data
     }
 
     func deleteEvent(id: String) async throws {
         let _: APIResponse<EmptyData> = try await client.request(
-            path: "/events/\(id)", method: "DELETE",
-            body: ["userName": userName]
+            path: "/events/\(id)", method: "DELETE"
         )
     }
 
@@ -207,7 +205,7 @@ class BoxScheduleAPI {
     func generateShareLink() async throws -> ShareLinkData? {
         let response: APIResponse<ShareLinkData> = try await client.request(
             path: "/share/generate-link", method: "POST",
-            body: ["userName": userName]
+            body: [:]
         )
         return response.data
     }

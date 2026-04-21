@@ -7,11 +7,16 @@ struct CreateEventView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: BoxScheduleViewModel
     var mode: String? = nil  // "event" or "note" — hides tab switcher
+    var editingEvent: ScheduleEvent? = nil  // non-nil → edit mode (PUT /events/:id)
+
+    private var isEditingEvent: Bool { editingEvent != nil }
 
     @State private var validationError: String?
     @State private var activeTab = 0
     @State private var title = ""
     @State private var description = ""
+    @State private var linkedScheduleDayId: String? = nil
+    @State private var linkedDate: Int64? = nil
     @State private var startDate = Date()
     @State private var endDate = Date()
     @State private var startTime = Date()
@@ -25,6 +30,21 @@ struct CreateEventView: View {
     @State private var noteTitle = ""
     @State private var noteText = ""
     @State private var selectedColor = "#3498DB"
+    @State private var noteColor = "#3498DB"
+    @State private var eventColor = "#3498DB"
+    @State private var repeatEndDate: Date? = nil
+    @State private var organizerExcluded = false
+    @State private var distributeTo: String = ""  // "", "self", "users", "departments", "all_departments"
+
+    // Web-parity color presets (CreateEventModal.jsx COLOR_PRESETS)
+    private let noteColorPresets: [(hex: String, label: String)] = [
+        ("#3498DB", "Blue"),
+        ("#E74C3C", "Red"),
+        ("#27AE60", "Green"),
+        ("#F39C12", "Orange"),
+        ("#8E44AD", "Purple"),
+        ("#95A5A6", "Gray")
+    ]
 
     let repeatOptions = [
         ("none", "ce_no_repeat"), ("daily", "ce_daily"),
@@ -41,14 +61,18 @@ struct CreateEventView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Tab picker — hidden when mode is set
-                    if mode == nil {
+                    // Tab picker — hidden when mode is set OR when we're editing an existing
+                    // item (the event-vs-note kind is already decided and can't be toggled).
+                    if mode == nil && editingEvent == nil {
                         Picker("", selection: $activeTab) {
                             Text("ce_event_tab".localized).tag(0)
                             Text("ce_note_tab".localized).tag(1)
                         }
                         .pickerStyle(SegmentedPickerStyle())
                     }
+
+                    // LINK TO A SCHEDULE DAY (OPTIONAL) — web parity, shown on both tabs
+                    linkScheduleDayCard
 
                     if activeTab == 0 {
                         eventForm
@@ -59,9 +83,9 @@ struct CreateEventView: View {
                 .padding(20)
             }
 
-            // Save button pinned at bottom
+            // Save button pinned at bottom — label flips to "Update" in edit mode.
             Button(action: { if activeTab == 0 { saveEvent() } else { saveNote() } }) {
-                Text(activeTab == 0 ? "ce_save_event".localized : "ce_save_note".localized)
+                Text(saveButtonLabel)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.solidDarkText)
                     .frame(maxWidth: .infinity)
@@ -75,13 +99,19 @@ struct CreateEventView: View {
             .overlay(Rectangle().frame(height: 1).foregroundColor(.appBorder), alignment: .top)
         }
         .background(Color.pageBg.ignoresSafeArea())
-        .navigationTitle(activeTab == 0 ? "ce_add_event".localized : "ce_add_note".localized)
+        .navigationTitle(screenTitle)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(false)
         .onAppear {
-            // Set initial tab based on mode
-            if mode == "note" { activeTab = 1 }
-            else if mode == "event" { activeTab = 0 }
+            // Set initial tab based on editingEvent OR mode
+            if let e = editingEvent {
+                activeTab = (e.eventType == "note") ? 1 : 0
+                prefillFromEditingEvent(e)
+            } else if mode == "note" {
+                activeTab = 1
+            } else if mode == "event" {
+                activeTab = 0
+            }
         }
             .alert(isPresented: Binding<Bool>(
                 get: { validationError != nil },
@@ -93,6 +123,58 @@ struct CreateEventView: View {
                     dismissButton: .default(Text("bs_ok".localized))
                 )
             }
+    }
+
+    // MARK: - Edit mode helpers
+
+    private var saveButtonLabel: String {
+        if isEditingEvent {
+            return activeTab == 0 ? "Update Event" : "Update Note"
+        }
+        return activeTab == 0 ? "ce_save_event".localized : "ce_save_note".localized
+    }
+
+    private var screenTitle: String {
+        if isEditingEvent {
+            return activeTab == 0 ? "Edit Event" : "Edit Note"
+        }
+        return activeTab == 0 ? "ce_add_event".localized : "ce_add_note".localized
+    }
+
+    /// Copy every field from an existing event into the form state.
+    private func prefillFromEditingEvent(_ e: ScheduleEvent) {
+        title = e.title
+        description = e.description ?? ""
+
+        if let s = e.startDateTime, s > 0 {
+            let d = DateUtils.fromEpoch(s)
+            startDate = d
+            if !e.fullDay { startTime = d }
+        }
+        if let en = e.endDateTime, en > 0 {
+            let d = DateUtils.fromEpoch(en)
+            endDate = d
+            if !e.fullDay { endTime = d }
+        }
+        isFullDay = e.fullDay
+        location = e.location ?? ""
+        reminder = e.reminder.isEmpty ? "none" : e.reminder
+        repeatMode = e.repeatStatus.isEmpty ? "none" : e.repeatStatus
+        if let r = e.repeatEndDate, r > 0 { repeatEndDate = DateUtils.fromEpoch(r) }
+        timezone = (e.timezone?.isEmpty == false) ? e.timezone! : TimeZone.current.identifier
+        callType = e.callType ?? ""
+        eventColor = e.color.isEmpty ? "#3498DB" : e.color
+        noteColor = e.color.isEmpty ? "#3498DB" : e.color
+
+        // Link to schedule day pre-select
+        if let sdId = e.scheduleDayId, !sdId.isEmpty {
+            linkedScheduleDayId = sdId
+            linkedDate = e.date
+        }
+
+        // Note-specific fields
+        noteTitle = e.title
+        noteText = e.notes ?? ""
     }
 
     // MARK: - Save Event
@@ -113,18 +195,29 @@ struct CreateEventView: View {
             "startDate": DateUtils.toEpoch(startDate),
             "endDate": DateUtils.toEpoch(endDate),
             "fullDay": isFullDay,
-            "repeat": repeatMode,
+            "repeatStatus": repeatMode,                       // web parity key
             "reminder": reminder,
             "timezone": timezone,
             "callType": callType,
-            "location": location
+            "location": location,
+            "color": eventColor,                              // web parity
+            "distributeTo": distributeTo,                      // web parity
+            "organizerExcluded": organizerExcluded,            // web parity
+            "advancedEnabled": true,                           // web parity
+            "date": linkedDate ?? DateUtils.toEpoch(startDate)
         ]
+        if let id = linkedScheduleDayId { data["scheduleDayId"] = id }
+        if let red = repeatEndDate { data["repeatEndDate"] = DateUtils.toEpoch(red) }
         if !isFullDay {
             data["startTime"] = DateUtils.toEpoch(startTime)
             data["endTime"] = DateUtils.toEpoch(endTime)
         }
 
-        viewModel.createEvent(data: data)
+        if let existing = editingEvent {
+            viewModel.updateEvent(id: existing.id, data: data)
+        } else {
+            viewModel.createEvent(data: data)
+        }
         presentationMode.wrappedValue.dismiss()
     }
 
@@ -135,17 +228,91 @@ struct CreateEventView: View {
             return
         }
 
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             "eventType": "note",
             "title": noteTitle,
-            "description": noteText,
+            "notes": noteText,
+            "color": noteColor,
             "startDate": DateUtils.toEpoch(Date()),
             "endDate": DateUtils.toEpoch(Date()),
-            "fullDay": true
+            "fullDay": true,
+            "date": linkedDate ?? DateUtils.toEpoch(Date())
         ]
+        if let id = linkedScheduleDayId { data["scheduleDayId"] = id }
 
-        viewModel.createEvent(data: data)
+        if let existing = editingEvent {
+            viewModel.updateEvent(id: existing.id, data: data)
+        } else {
+            viewModel.createEvent(data: data)
+        }
         presentationMode.wrappedValue.dismiss()
+    }
+
+    // MARK: - Link to Schedule Day (web parity)
+    private struct LinkDayOption: Identifiable, Hashable {
+        let scheduleDayId: String
+        let dayMs: Int64
+        let label: String
+        var id: String { "\(scheduleDayId)|\(dayMs)" }
+    }
+
+    private var linkDayOptions: [LinkDayOption] {
+        var opts: [LinkDayOption] = []
+        for sd in viewModel.scheduleDays {
+            for cd in (sd.calendarDays ?? []).sorted() {
+                let titleSuffix = sd.title.isEmpty ? "" : " (\(sd.title))"
+                opts.append(LinkDayOption(
+                    scheduleDayId: sd.id,
+                    dayMs: cd,
+                    label: "\(DateUtils.formatShortDate(cd)) — \(sd.typeName)\(titleSuffix)"
+                ))
+            }
+        }
+        return opts.sorted { $0.dayMs < $1.dayMs }
+    }
+
+    private var linkScheduleDayCard: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Link to a Schedule Day (optional)").sectionLabel()
+            Menu {
+                Button("Select a schedule day…") {
+                    linkedScheduleDayId = nil
+                    linkedDate = nil
+                }
+                ForEach(linkDayOptions) { opt in
+                    Button(opt.label) {
+                        linkedScheduleDayId = opt.scheduleDayId
+                        linkedDate = opt.dayMs
+                        let d = DateUtils.fromEpoch(opt.dayMs)
+                        startDate = d
+                        endDate = d
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedLinkLabel())
+                        .font(.system(size: 14))
+                        .foregroundColor(linkedScheduleDayId == nil ? .textPlaceholder : .textBody)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12))
+                        .foregroundColor(.textSubtle)
+                }
+                .inputStyle()
+            }
+        }
+        .padding(12)
+        .background(Color.surfaceAlt)
+        .cornerRadius(8)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.appBorder, lineWidth: 1))
+    }
+
+    private func selectedLinkLabel() -> String {
+        if let id = linkedScheduleDayId, let date = linkedDate,
+           let opt = linkDayOptions.first(where: { $0.scheduleDayId == id && $0.dayMs == date }) {
+            return opt.label
+        }
+        return "Select a schedule day…"
     }
 
     // MARK: - Event Form
@@ -201,15 +368,27 @@ struct CreateEventView: View {
                 }
             }
 
-            // Repeat
-            formField(label: "ce_repeat".localized) {
-                Picker("", selection: $repeatMode) {
-                    ForEach(repeatOptions, id: \.0) { option in
-                        Text(option.1.localized).tag(option.0)
+            // Repeat + Repeat End Date (web parity: shown when not "none")
+            HStack(spacing: 12) {
+                formField(label: "ce_repeat".localized) {
+                    Picker("", selection: $repeatMode) {
+                        ForEach(repeatOptions, id: \.0) { option in
+                            Text(option.1.localized).tag(option.0)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .inputStyle()
+                }
+                if repeatMode != "none" {
+                    formField(label: "Repeat End Date") {
+                        DatePicker("", selection: Binding(
+                            get: { repeatEndDate ?? Date() },
+                            set: { repeatEndDate = $0 }
+                        ), displayedComponents: .date)
+                            .labelsHidden()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .pickerStyle(MenuPickerStyle())
-                .inputStyle()
             }
 
             // Timezone
@@ -248,29 +427,99 @@ struct CreateEventView: View {
                 TextField("ce_location_hint".localized, text: $location).inputStyle()
             }
 
-            // Distribute To
+            // Distribute To (web parity: functional picker)
             formField(label: "ce_distribute_to".localized) {
+                Picker("", selection: $distributeTo) {
+                    Text("Select").tag("")
+                    Text("Only Me").tag("self")
+                    Text("Specific Users").tag("users")
+                    Text("Specific Departments").tag("departments")
+                    Text("All Departments").tag("all_departments")
+                }
+                .pickerStyle(MenuPickerStyle())
+                .inputStyle()
                 Text("ce_distribute_hint".localized)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundColor(.textSubtle)
+                    .italic()
+            }
+
+            // Organizer Excluded (web parity: boxed checkbox)
+            HStack(spacing: 10) {
+                Toggle(isOn: $organizerExcluded) { EmptyView() }
+                    .labelsHidden()
+                Text("The organizer will not be a part of this event.")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textBody)
+            }
+            .padding(12)
+            .background(Color.surfaceAlt)
+            .cornerRadius(8)
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.appBorder, lineWidth: 1))
+
+            // Event Color (web parity: 6 preset palette)
+            formField(label: "Color") {
+                HStack(spacing: 8) {
+                    ForEach(noteColorPresets, id: \.hex) { preset in
+                        Button(action: { eventColor = preset.hex }) {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(hex: preset.hex))
+                                .frame(width: 28, height: 28)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(
+                                            eventColor.lowercased() == preset.hex.lowercased() ? Color.solidDark : Color.borderInput,
+                                            lineWidth: eventColor.lowercased() == preset.hex.lowercased() ? 3 : 2
+                                        )
+                                )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    Spacer()
+                }
             }
         }
     }
 
-    // MARK: - Note Form
+    // MARK: - Note Form (web parity: Title *, Notes, Color palette)
     private var noteForm: some View {
         VStack(alignment: .leading, spacing: 16) {
-            formField(label: "ce_note_title_hint".localized) {
-                TextField("ce_note_title_hint".localized, text: $noteTitle).inputStyle()
+            formField(label: "Title *") {
+                TextField("e.g., Rain backup plan needed", text: $noteTitle).inputStyle()
             }
 
-            formField(label: "ce_note_text_hint".localized) {
+            formField(label: "Notes") {
                 TextEditor(text: $noteText)
                     .frame(minHeight: 120)
                     .padding(8)
                     .background(Color.surface)
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.borderInput, lineWidth: 1))
+            }
+
+            formField(label: "Color") {
+                HStack(spacing: 8) {
+                    ForEach(noteColorPresets, id: \.hex) { preset in
+                        Button(action: { noteColor = preset.hex }) {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(hex: preset.hex))
+                                .frame(width: 28, height: 28)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(
+                                            noteColor.lowercased() == preset.hex.lowercased() ? Color.solidDark : Color.borderInput,
+                                            lineWidth: noteColor.lowercased() == preset.hex.lowercased() ? 3 : 2
+                                        )
+                                )
+                                .shadow(
+                                    color: noteColor.lowercased() == preset.hex.lowercased() ? Color.solidDark.opacity(0.3) : Color.clear,
+                                    radius: 2
+                                )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    Spacer()
+                }
             }
         }
     }

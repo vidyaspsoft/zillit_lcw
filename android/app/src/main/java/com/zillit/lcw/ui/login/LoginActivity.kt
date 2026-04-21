@@ -3,6 +3,7 @@ package com.zillit.lcw.ui.login
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -21,11 +22,20 @@ import com.zillit.lcw.data.model.UserItem
 import com.zillit.lcw.databinding.ActivityLoginBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleActivity
 import com.zillit.lcw.ui.common.ThemeManager
+import io.ktor.client.HttpClient
 import io.ktor.client.call.*
+import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.*
+import kotlinx.serialization.json.Json
 
 /**
  * LoginActivity — Select Project → Select User → Auto-login.
@@ -39,6 +49,36 @@ class LoginActivity : AppCompatActivity() {
 
     // Auth base URL (NOT box-schedule)
     private val authBaseUrl = "http://10.0.2.2:5003/api/v2/auth"
+
+    companion object {
+        private const val TAG = "LoginActivity"
+        private const val KTOR_TAG = "KtorAuth"
+    }
+
+    // Single HttpClient reused across all auth requests (was previously re-created per call,
+    // paying ~100-200ms of engine init per request).
+    private val authClient: HttpClient by lazy {
+        HttpClient(Android) {
+            install(ContentNegotiation) { json(KtorClient.json) }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 30_000
+                connectTimeoutMillis = 15_000
+                socketTimeoutMillis = 30_000
+            }
+            install(Logging) {
+                logger = object : Logger {
+                    override fun log(message: String) {
+                        if (message.length > 3000) {
+                            message.chunked(3000).forEach { Log.d(KTOR_TAG, it) }
+                        } else {
+                            Log.d(KTOR_TAG, message)
+                        }
+                    }
+                }
+                level = LogLevel.ALL
+            }
+        }
+    }
 
     private var currentStep = "projects" // "projects" or "users"
     private var selectedProjectId = ""
@@ -76,17 +116,25 @@ class LoginActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvError.visibility = View.GONE
 
+        val url = "$authBaseUrl/projects"
+        Log.d(TAG, "→ GET $url")
+
         scope.launch {
             try {
-                val client = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android) {
-                    install(ContentNegotiation) {
-                        json(KtorClient.json)
-                    }
-                }
-                val response: ApiListResponse<ProjectItem> = client.get("$authBaseUrl/projects").body()
+                val httpResponse: HttpResponse = authClient.get(url)
+                val rawBody = httpResponse.bodyAsText()
+                Log.d(TAG, "← ${httpResponse.status.value} ${httpResponse.status.description}")
+                Log.d(TAG, "← body: $rawBody")
+
+                val response = KtorClient.json.decodeFromString<ApiListResponse<ProjectItem>>(rawBody)
                 val projects = response.data ?: emptyList()
+                Log.d(TAG, "← parsed ${projects.size} project(s): ${projects.joinToString { it.name }}")
 
                 binding.progressBar.visibility = View.GONE
+                if (projects.isEmpty()) {
+                    binding.tvError.text = "No projects returned (status=${response.status}, message=${response.message})"
+                    binding.tvError.visibility = View.VISIBLE
+                }
                 binding.recyclerView.adapter = ProjectAdapter(projects) { project ->
                     selectedProjectId = project.id
                     selectedProjectName = project.name
@@ -96,10 +144,10 @@ class LoginActivity : AppCompatActivity() {
                     binding.btnBackToProjects.text = "← ${project.name}"
                     fetchUsers(project.id)
                 }
-                client.close()
             } catch (e: Exception) {
+                Log.e(TAG, "✗ fetchProjects failed", e)
                 binding.progressBar.visibility = View.GONE
-                binding.tvError.text = "Failed to load projects: ${e.message}"
+                binding.tvError.text = "Failed to load projects: ${e.message ?: e::class.simpleName}"
                 binding.tvError.visibility = View.VISIBLE
             }
         }
@@ -109,27 +157,41 @@ class LoginActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvError.visibility = View.GONE
 
+        val url = "$authBaseUrl/projects/$projectId/users"
+        Log.d(TAG, "→ GET $url")
+
         scope.launch {
             try {
-                val client = io.ktor.client.HttpClient(io.ktor.client.engine.android.Android) {
-                    install(ContentNegotiation) {
-                        json(KtorClient.json)
-                    }
-                }
-                val response: ApiListResponse<UserItem> = client.get("$authBaseUrl/projects/$projectId/users").body()
+                val httpResponse: HttpResponse = authClient.get(url)
+                val rawBody = httpResponse.bodyAsText()
+                Log.d(TAG, "← ${httpResponse.status.value} ${httpResponse.status.description}")
+                Log.d(TAG, "← body: $rawBody")
+
+                val response = KtorClient.json.decodeFromString<ApiListResponse<UserItem>>(rawBody)
                 val users = response.data ?: emptyList()
+                Log.d(TAG, "← parsed ${users.size} user(s): ${users.joinToString { it.name }}")
 
                 binding.progressBar.visibility = View.GONE
+                if (users.isEmpty()) {
+                    binding.tvError.text = "No users returned (status=${response.status}, message=${response.message})"
+                    binding.tvError.visibility = View.VISIBLE
+                }
                 binding.recyclerView.adapter = UserAdapter(users) { user ->
                     loginAs(user)
                 }
-                client.close()
             } catch (e: Exception) {
+                Log.e(TAG, "✗ fetchUsers failed", e)
                 binding.progressBar.visibility = View.GONE
-                binding.tvError.text = "Failed to load users: ${e.message}"
+                binding.tvError.text = "Failed to load users: ${e.message ?: e::class.simpleName}"
                 binding.tvError.visibility = View.VISIBLE
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        authClient.close()
+        scope.cancel()
     }
 
     private fun loginAs(user: UserItem) {
@@ -146,10 +208,6 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        scope.cancel()
-    }
 
     // ═══════════════════════ ADAPTERS ═══════════════════════
 

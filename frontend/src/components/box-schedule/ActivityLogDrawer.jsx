@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import boxScheduleService from '../../services/boxScheduleService';
 import { useTheme } from '../../context/ThemeContext';
+import { loadProjectUsers, resolveUserName } from '../../utils/userHelpers';
 
 dayjs.extend(relativeTime);
 
@@ -37,6 +38,7 @@ const ActivityLogDrawer = ({ open, onClose }) => {
   const { colors } = useTheme();
   const [logs, setLogs] = useState([]);
   const [revisions, setRevisions] = useState([]);
+  const [projectUsers, setProjectUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionFilter, setActionFilter] = useState('all');
   const [filterDate, setFilterDate] = useState(null);
@@ -44,12 +46,14 @@ const ActivityLogDrawer = ({ open, onClose }) => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [logsRes, revsRes] = await Promise.all([
+      const [logsRes, revsRes, users] = await Promise.all([
         boxScheduleService.getActivityLog({ limit: 200, page: 0 }),
         boxScheduleService.getRevisions({}),
+        loadProjectUsers(),
       ]);
       setLogs(logsRes.data?.logs || []);
       setRevisions(revsRes.data || []);
+      setProjectUsers(users || []);
     } catch {
       /* ignore */
     } finally {
@@ -239,7 +243,7 @@ const ActivityLogDrawer = ({ open, onClose }) => {
                     <span style={{ margin: '0 6px', color: colors.textDisabled }}>·</span>
                     <span>by </span>
                     <span style={{ fontWeight: 600, color: colors.textBody }}>
-                      {log.performedBy?.name || 'Someone'}
+                      {resolveUserName(log.performedBy, projectUsers) || 'Someone'}
                     </span>
                   </div>
                   {rev && (

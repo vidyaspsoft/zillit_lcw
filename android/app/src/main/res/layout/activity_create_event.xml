@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Create Event/Note — full-screen form matching web's CreateEventModal.
-     Event/Note tab switcher, all form fields, save button. -->
+<!-- Create Event/Note — iOS parity (CreateEventView.swift):
+     back chevron + centered title, reordered form, full-width dark Save button. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -8,23 +8,23 @@
     android:orientation="vertical"
     android:background="@color/pageBg">
 
-    <!-- Header bar -->
+    <!-- Header bar: back chevron + centered title -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolbar_height"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/surfaceAlt"
-        android:paddingHorizontal="@dimen/spacing_base">
+        android:background="@color/surface"
+        android:paddingHorizontal="@dimen/spacing_sm">
 
         <ImageButton
-            android:id="@+id/btnClose"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:src="@drawable/ic_chevron_left"
             android:contentDescription="@string/action_cancel"
-            app:tint="@color/textSecondary" />
+            app:tint="@color/textPrimary" />
 
         <TextView
             android:id="@+id/tvFormTitle"
@@ -32,46 +32,50 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/ce_add_event"
-            style="@style/ZillitTitle"
+            android:textSize="@dimen/text_lg"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
             android:gravity="center"
-            android:layout_marginEnd="36dp" />
+            android:layout_marginEnd="40dp" />
     </LinearLayout>
 
     <View style="@style/ZillitDivider" />
 
-    <!-- Event / Note tab switcher -->
+    <!-- Event / Note tab switcher — hidden when tab extra is passed -->
     <LinearLayout
+        android:id="@+id/tabContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingVertical="@dimen/spacing_md">
+        android:paddingVertical="@dimen/spacing_md"
+        android:visibility="gone">
 
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/eventNoteToggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_segmented_track"
+            android:padding="2dp"
             app:singleSelection="true"
             app:selectionRequired="true">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEventTab"
-                style="?attr/materialButtonOutlinedStyle"
+                style="@style/ZillitSegmentedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="@string/ce_event_tab"
-                android:textSize="@dimen/text_body" />
+                android:paddingLeft="@dimen/spacing_lg"
+                android:paddingRight="@dimen/spacing_lg"
+                android:text="@string/ce_event_tab" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNoteTab"
-                style="?attr/materialButtonOutlinedStyle"
+                style="@style/ZillitSegmentedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="@string/ce_note_tab"
-                android:textSize="@dimen/text_body" />
+                android:paddingLeft="@dimen/spacing_lg"
+                android:paddingRight="@dimen/spacing_lg"
+                android:text="@string/ce_note_tab" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
     </LinearLayout>
-
-    <View style="@style/ZillitDivider" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -83,7 +87,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/spacing_xl">
+            android:paddingHorizontal="@dimen/spacing_lg"
+            android:paddingTop="@dimen/spacing_md"
+            android:paddingBottom="@dimen/spacing_lg">
+
+            <!-- LINK TO A SCHEDULE DAY (optional) — web parity, shown on both Event and Note -->
+            <LinearLayout
+                android:id="@+id/linkDayCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_rounded"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_md">
+
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_link_schedule_day" />
+
+                <Spinner
+                    android:id="@+id/spinnerLinkDay"
+                    style="@style/ZillitInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
 
             <!-- ═══ EVENT FORM ═══ -->
             <LinearLayout
@@ -92,7 +121,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Title -->
+                <!-- ADD TITLE * -->
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_title_hint" />
+
                 <EditText
                     android:id="@+id/etEventTitle"
                     style="@style/ZillitInput"
@@ -102,36 +137,97 @@
                     android:inputType="text"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Description -->
+                <!-- EVENT DESCRIPTION -->
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_description_hint" />
+
                 <EditText
                     android:id="@+id/etEventDesc"
                     style="@style/ZillitInput.MultiLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/ce_description_hint"
+                    android:hint=""
                     android:inputType="textMultiLine"
+                    android:minLines="4"
                     android:layout_marginBottom="@dimen/spacing_lg" />
 
-                <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_md" />
-
-                <!-- Start Date -->
-                <TextView
-                    style="@style/ZillitLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/cs_start_date" />
-
-                <TextView
-                    android:id="@+id/tvEventStartDate"
-                    style="@style/ZillitInput"
+                <!-- Full Day inline row -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/cs_start_date"
-                    android:drawableEnd="@android:drawable/ic_menu_today"
-                    android:layout_marginBottom="@dimen/spacing_md" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/spacing_md">
 
-                <!-- Start Time / End Time row -->
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ce_full_day"
+                        android:textSize="@dimen/text_md"
+                        android:textColor="@color/textPrimary"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchFullDay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Start Date | End Date row -->
                 <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/spacing_md">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="@dimen/spacing_sm">
+
+                        <TextView
+                            style="@style/ZillitLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cs_start_date" />
+
+                        <TextView
+                            android:id="@+id/tvEventStartDate"
+                            style="@style/ZillitInputPill"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="@dimen/spacing_sm">
+
+                        <TextView
+                            style="@style/ZillitLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cs_end_date" />
+
+                        <TextView
+                            android:id="@+id/tvEventEndDate"
+                            style="@style/ZillitInputPill"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Start Time | End Time row (hidden when full day) -->
+                <LinearLayout
+                    android:id="@+id/timeRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -152,11 +248,9 @@
 
                         <TextView
                             android:id="@+id/tvStartTime"
-                            style="@style/ZillitInput"
+                            style="@style/ZillitInputPill"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/ce_start_time"
-                            android:drawableEnd="@android:drawable/ic_menu_recent_history" />
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -174,55 +268,13 @@
 
                         <TextView
                             android:id="@+id/tvEndTime"
-                            style="@style/ZillitInput"
+                            style="@style/ZillitInputPill"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/ce_end_time"
-                            android:drawableEnd="@android:drawable/ic_menu_recent_history" />
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- End Date -->
-                <TextView
-                    style="@style/ZillitLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/cs_end_date" />
-
-                <TextView
-                    android:id="@+id/tvEventEndDate"
-                    style="@style/ZillitInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/cs_end_date"
-                    android:drawableEnd="@android:drawable/ic_menu_today"
-                    android:layout_marginBottom="@dimen/spacing_md" />
-
-                <!-- Full Day toggle -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="@dimen/spacing_md">
-
-                    <TextView
-                        style="@style/ZillitLabel"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/ce_full_day"
-                        android:paddingBottom="0dp" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchFullDay"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_md" />
-
-                <!-- Repeat picker -->
+                <!-- REPEAT -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -236,7 +288,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Repeat End Date (hidden if no repeat) -->
+                <!-- Repeat end date (hidden unless repeat != none) -->
                 <LinearLayout
                     android:id="@+id/repeatEndDateContainer"
                     android:layout_width="match_parent"
@@ -253,14 +305,14 @@
 
                     <TextView
                         android:id="@+id/tvRepeatEndDate"
-                        style="@style/ZillitInput"
+                        style="@style/ZillitInputPill"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/ce_repeat_end_date"
-                        android:drawableEnd="@android:drawable/ic_menu_today" />
+                        android:hint="@string/ce_repeat_end_date_hint"
+                        android:textColorHint="@color/textPlaceholder" />
                 </LinearLayout>
 
-                <!-- Timezone picker -->
+                <!-- SELECT TIMEZONE -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -274,7 +326,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Reminder picker -->
+                <!-- ADD REMINDER/ALERT -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -288,7 +340,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Call Type picker -->
+                <!-- CALL TYPE -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -302,23 +354,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <View style="@style/ZillitDivider" android:layout_marginBottom="@dimen/spacing_md" />
-
-                <!-- Text Color picker -->
-                <TextView
-                    style="@style/ZillitLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/ce_text_color" />
-
-                <LinearLayout
-                    android:id="@+id/textColorPicker"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="@dimen/spacing_md" />
-
-                <!-- Location search -->
+                <!-- LOCATION -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -332,26 +368,81 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/ce_location_hint"
                     android:inputType="text"
-                    android:drawableEnd="@android:drawable/ic_menu_mylocation"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Distribute To -->
+                <!-- DISTRIBUTE TO (web parity: functional dropdown) -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/ce_distribute_to" />
 
-                <TextView
-                    android:id="@+id/tvDistributeTo"
+                <Spinner
+                    android:id="@+id/spinnerDistributeTo"
                     style="@style/ZillitInput"
                     android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="@string/ce_distribute_hint"
+                    android:text="@string/ce_distribute_hint"
+                    android:textSize="@dimen/text_xs"
+                    android:textColor="@color/textSubtle"
+                    android:textStyle="italic"
+                    android:layout_marginTop="@dimen/spacing_xxs"
                     android:layout_marginBottom="@dimen/spacing_md" />
+
+                <!-- ORGANIZER EXCLUDED (web parity: boxed checkbox) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_card_rounded"
+                    android:padding="@dimen/spacing_md"
+                    android:layout_marginBottom="@dimen/spacing_md">
+
+                    <CheckBox
+                        android:id="@+id/cbOrganizerExcluded"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ce_organizer_excluded"
+                        android:textSize="@dimen/text_body"
+                        android:textColor="@color/textBody"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginStart="@dimen/spacing_xs" />
+                </LinearLayout>
+
+                <!-- EVENT COLOR (web parity: 6 presets) -->
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_color" />
+
+                <LinearLayout
+                    android:id="@+id/eventColorPicker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <!-- Hidden: text color picker (kept for API compat, not shown on iOS) -->
+                <LinearLayout
+                    android:id="@+id/textColorPicker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <!-- ═══ NOTE FORM ═══ -->
+            <!-- ═══ NOTE FORM (web parity: Title, Notes, Color) ═══ -->
             <LinearLayout
                 android:id="@+id/noteForm"
                 android:layout_width="match_parent"
@@ -359,7 +450,12 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- Note Title -->
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_note_title_label" />
+
                 <EditText
                     android:id="@+id/etNoteTitle"
                     style="@style/ZillitInput"
@@ -369,7 +465,12 @@
                     android:inputType="text"
                     android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Note Text -->
+                <TextView
+                    style="@style/ZillitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ce_note_text_label" />
+
                 <EditText
                     android:id="@+id/etNoteText"
                     style="@style/ZillitInput.MultiLine"
@@ -377,10 +478,9 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/ce_note_text_hint"
                     android:inputType="textMultiLine"
-                    android:minLines="6"
-                    android:layout_marginBottom="@dimen/spacing_lg" />
+                    android:minLines="4"
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
-                <!-- Background Color picker -->
                 <TextView
                     style="@style/ZillitLabel"
                     android:layout_width="wrap_content"
@@ -397,29 +497,22 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- ═══ FOOTER BUTTON ═══ -->
+    <!-- ═══ FOOTER: single full-width dark Save button (iOS parity) ═══ -->
     <View style="@style/ZillitDivider" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end|center_vertical"
-        android:padding="@dimen/spacing_base">
+        android:orientation="vertical"
+        android:background="@color/surface"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingTop="@dimen/spacing_md"
+        android:paddingBottom="@dimen/spacing_md">
 
-        <Button
-            android:id="@+id/btnCancel"
-            style="@style/ZillitButton.Secondary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/action_cancel"
-            android:layout_marginEnd="@dimen/spacing_sm" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
-            style="@style/ZillitButton.Primary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/ZillitSaveButton"
+            android:layout_width="match_parent"
             android:text="@string/ce_save_event" />
     </LinearLayout>
 </LinearLayout>

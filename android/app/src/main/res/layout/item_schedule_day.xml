@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Schedule day row — matches web ScheduleTable row.
-     Date (left), type pill with color dot + name (center), title (right),
-     today badge, expandable chevron. -->
+<!-- Schedule day row — two modes:
+     1. By Date (scheduleBlockLayout hidden): date + pill + title in one row.
+     2. By Schedule (byDateLayout hidden): iOS-parity card — color square + typeName
+        + day count on top, date range below.
+     Either layout is toggled visibility in ScheduleViewHolder.bind(). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@color/surface">
 
-    <!-- Main row -->
+    <!-- ══════════ BY DATE LAYOUT (existing) ══════════ -->
     <LinearLayout
-        android:id="@+id/rowContainer"
+        android:id="@+id/byDateLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -19,7 +22,6 @@
         android:paddingVertical="@dimen/spacing_md"
         android:background="?attr/selectableItemBackground">
 
-        <!-- Checkbox (hidden by default, shown in select mode) -->
         <CheckBox
             android:id="@+id/cbSelect"
             android:layout_width="wrap_content"
@@ -27,7 +29,6 @@
             android:visibility="gone"
             android:layout_marginEnd="@dimen/spacing_sm" />
 
-        <!-- Date text -->
         <TextView
             android:id="@+id/tvDate"
             android:layout_width="0dp"
@@ -37,7 +38,6 @@
             android:textColor="@color/textPrimary"
             android:fontFamily="serif" />
 
-        <!-- Type pill: color dot + type name -->
         <LinearLayout
             android:id="@+id/typePill"
             android:layout_width="0dp"
@@ -60,7 +60,6 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Title -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
@@ -71,7 +70,6 @@
             android:ellipsize="end"
             android:maxLines="1" />
 
-        <!-- Today badge -->
         <TextView
             android:id="@+id/tvTodayBadge"
             android:layout_width="wrap_content"
@@ -86,17 +84,143 @@
             android:paddingVertical="@dimen/spacing_xxs"
             android:layout_marginStart="@dimen/spacing_sm" />
 
-        <!-- Expand chevron -->
         <ImageView
             android:id="@+id/ivChevron"
-            android:layout_width="@dimen/toolbar_icon_size"
-            android:layout_height="@dimen/toolbar_icon_size"
-            android:src="@android:drawable/arrow_down_float"
-            android:contentDescription="Expand"
-            android:layout_marginStart="@dimen/spacing_sm" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:contentDescription="Expand" />
     </LinearLayout>
 
-    <!-- Bottom divider -->
+    <!-- ══════════ BY SCHEDULE LAYOUT (iOS parity) ══════════ -->
+    <LinearLayout
+        android:id="@+id/byScheduleLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/spacing_base"
+        android:paddingVertical="@dimen/spacing_md"
+        android:visibility="gone"
+        android:background="?attr/selectableItemBackground">
+
+        <!-- Top row: color square + typeName (+ optional title) + day count -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:id="@+id/cbSelectBlock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginEnd="@dimen/spacing_sm" />
+
+            <!-- Larger color square (matches iOS 12x12) -->
+            <View
+                android:id="@+id/colorSquare"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="@dimen/spacing_sm"
+                android:background="@drawable/bg_schedule_pill" />
+
+            <TextView
+                android:id="@+id/tvBlockTypeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_md"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary" />
+
+            <TextView
+                android:id="@+id/tvBlockTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="@dimen/text_sm"
+                android:textColor="@color/textSecondary"
+                android:fontFamily="serif"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:layout_marginStart="@dimen/spacing_xs"
+                android:visibility="gone" />
+
+            <Space
+                android:id="@+id/blockSpacer"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tvDayCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_xs"
+                android:textColor="@color/textMuted"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Date range (iOS style: smaller gray text below) -->
+        <TextView
+            android:id="@+id/tvDateRange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textSubtle"
+            android:layout_marginTop="@dimen/spacing_xs" />
+    </LinearLayout>
+
+    <!-- Shared tap targets over both layouts — handled via rowContainer in code. -->
+    <!-- NB: ScheduleViewHolder still references @+id/rowContainer; we use the active layout. -->
+    <View
+        android:id="@+id/rowContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <!-- Edit + Delete chips -->
+    <LinearLayout
+        android:id="@+id/rowActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/spacing_base"
+        android:paddingBottom="@dimen/spacing_sm">
+
+        <TextView
+            android:id="@+id/btnRowEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action_edit"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/textLink"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:paddingVertical="@dimen/spacing_xs"
+            android:background="@drawable/bg_chip_link"
+            android:drawableStart="@drawable/ic_edit"
+            android:drawablePadding="@dimen/spacing_xxs"
+            app:drawableTint="@color/textLink" />
+
+        <TextView
+            android:id="@+id/btnRowDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_sm"
+            android:textColor="@color/dangerBg"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/spacing_md"
+            android:paddingVertical="@dimen/spacing_xs"
+            android:background="@drawable/bg_chip_danger"
+            android:drawableStart="@drawable/ic_trash"
+            android:drawablePadding="@dimen/spacing_xxs"
+            android:layout_marginStart="@dimen/spacing_sm"
+            app:drawableTint="@color/dangerBg" />
+    </LinearLayout>
+
     <View
         style="@style/ZillitDivider"
         android:background="@color/borderLight" />

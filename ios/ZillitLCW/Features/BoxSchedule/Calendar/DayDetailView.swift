@@ -15,12 +15,22 @@ struct DayDetailView: View {
     @State private var deleteTargetId: String? = nil
     @State private var deleteTargetType: String? = nil
     @State private var deleteTargetName: String? = nil
+    @State private var showDuplicateSheet = false
+    @State private var duplicateTarget: ScheduleDay? = nil
+    @State private var duplicateNewStartDate: Date = Date()
+    @State private var viewingEvent: ScheduleEvent? = nil
 
     private var isToday: Bool { DateUtils.isToday(dayKey) }
     private var isPast: Bool { DateUtils.isPast(dayKey) }
     private var isEmpty: Bool { schedules.isEmpty }
-    private var allEvents: [ScheduleEvent] { schedules.flatMap { $0.events ?? [] } }
-    private var allNotes: [ScheduleEvent] { schedules.flatMap { $0.notes ?? [] } }
+    // Only events/notes whose `date` equals the detail's dayKey — prevents showing every
+    // event of a multi-day block on every one of its calendar days.
+    private var allEvents: [ScheduleEvent] {
+        schedules.flatMap { ($0.events ?? []).filter { $0.date == dayKey } }
+    }
+    private var allNotes: [ScheduleEvent] {
+        schedules.flatMap { ($0.notes ?? []).filter { $0.date == dayKey } }
+    }
 
     var body: some View {
         ScrollView {
@@ -49,6 +59,63 @@ struct DayDetailView: View {
                 secondaryButton: .cancel()
             )
         }
+        .sheet(isPresented: $showDuplicateSheet) { duplicateSheet }
+        .sheet(item: $viewingEvent) { evt in
+            ViewEventView(event: evt)
+        }
+    }
+
+    // MARK: - Duplicate sheet (web parity: DuplicateScheduleModal.jsx)
+    private var duplicateSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "doc.on.doc").font(.system(size: 16))
+                Text("Duplicate Schedule").font(.system(size: 16, weight: .bold))
+                Spacer()
+                Button(action: { showDuplicateSheet = false }) {
+                    Image(systemName: "xmark").foregroundColor(.textMuted)
+                }
+            }
+
+            if let t = duplicateTarget {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(t.typeName): \(t.title.isEmpty ? "(untitled)" : t.title)")
+                        .font(.system(size: 13, weight: .semibold)).foregroundColor(.textBody)
+                    Text("\(t.numberOfDays) day(s) — \(DateUtils.formatShortDate(t.startDate)) – \(DateUtils.formatDate(t.endDate))")
+                        .font(.system(size: 12)).foregroundColor(.textMuted)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.surfaceAlt)
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.appBorder, lineWidth: 1))
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("NEW START DATE").sectionLabel()
+                DatePicker("", selection: $duplicateNewStartDate, displayedComponents: .date)
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                Text("All days will be shifted to start from this date. Events will be copied too.")
+                    .font(.system(size: 12)).foregroundColor(.textSubtle).italic()
+            }
+
+            Spacer()
+            Button(action: {
+                if let id = duplicateTarget?.id {
+                    viewModel?.duplicateDay(sourceDayId: id, newStartDate: DateUtils.toEpoch(duplicateNewStartDate))
+                    showDuplicateSheet = false
+                }
+            }) {
+                Text("Duplicate")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.solidDarkText)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Color.solidDark).cornerRadius(10)
+            }
+        }
+        .padding(20)
+        .background(Color.pageBg.ignoresSafeArea())
     }
 
     // MARK: - Date Header
@@ -149,6 +216,7 @@ struct DayDetailView: View {
 
             ForEach(allEvents, id: \.id) { event in
                 VStack(spacing: 0) {
+                    Button(action: { viewingEvent = event }) {
                     HStack(spacing: 10) {
                         Rectangle().fill(Color(hex: event.color)).frame(width: 4).cornerRadius(2)
                         VStack(alignment: .leading, spacing: 2) {
@@ -158,25 +226,33 @@ struct DayDetailView: View {
                             }
                             Text(event.title).font(.system(size: 14, weight: .semibold)).foregroundColor(.textPrimary)
                             if let loc = event.location, !loc.isEmpty {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "mappin").font(.system(size: 10)).foregroundColor(.textLink)
-                                    Text(loc).font(.system(size: 11)).foregroundColor(.textLink)
+                                Button(action: { openMaps(event) }) {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "mappin").font(.system(size: 10)).foregroundColor(.textLink)
+                                        Text(loc).font(.system(size: 11)).foregroundColor(.textLink).underline()
+                                    }
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
                             if let desc = event.description, !desc.isEmpty {
                                 Text(desc).font(.system(size: 12)).foregroundColor(.textSubtle).lineLimit(2)
                             }
+                            // Metadata badges (web parity: callType, timezone, reminder, repeat)
+                            eventMetadataBadges(event)
                         }
                         Spacer()
                     }
                     .padding(10)
+                    }
+                    .buttonStyle(PlainButtonStyle())
 
                     // Edit + Remove buttons (matching web)
                     if !isPast {
                         Divider().background(Color.borderLight)
                         HStack(spacing: 8) {
                             if let vm = viewModel {
-                                NavigationLink(destination: CreateEventView(viewModel: vm)) {
+                                // Pass editingEvent so the form pre-fills + the save path becomes PUT.
+                                NavigationLink(destination: CreateEventView(viewModel: vm, mode: event.eventType, editingEvent: event)) {
                                     HStack(spacing: 3) {
                                         Image(systemName: "pencil").font(.system(size: 11))
                                         Text("action_edit".localized).font(.system(size: 11, weight: .medium))
@@ -247,6 +323,56 @@ struct DayDetailView: View {
         }
     }
 
+    // MARK: - Open Maps (web parity: ScheduleDayDetail.jsx:61)
+    private func openMaps(_ event: ScheduleEvent) {
+        let q: String
+        if let lat = event.locationLat, let lng = event.locationLng {
+            q = "?q=\(lat),\(lng)"
+        } else if let loc = event.location, !loc.isEmpty {
+            q = "?q=\(loc.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        } else { return }
+        if let url = URL(string: "https://maps.apple.com/\(q)") {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    // MARK: - Event Metadata Badges (web parity)
+    @ViewBuilder
+    private func eventMetadataBadges(_ event: ScheduleEvent) -> some View {
+        let parts: [String] = {
+            var p: [String] = []
+            if let ct = event.callType, !ct.isEmpty {
+                let label = ct == "meet_in_person" || ct == "in_person" ? "In Person" : ct == "audio" ? "Audio" : ct == "video" ? "Video" : ct
+                p.append("📞 \(label)")
+            }
+            if let tz = event.timezone, !tz.isEmpty { p.append("🌐 \(tz)") }
+            if !event.reminder.isEmpty && event.reminder != "none" {
+                let label: String = {
+                    switch event.reminder {
+                    case "at_time": return "At time"
+                    case "5min": return "5 min before"
+                    case "15min": return "15 min before"
+                    case "30min": return "30 min before"
+                    case "1hr": return "1 hr before"
+                    case "1day": return "1 day before"
+                    default: return event.reminder
+                    }
+                }()
+                p.append("🔔 \(label)")
+            }
+            if !event.repeatStatus.isEmpty && event.repeatStatus != "none" {
+                p.append("🔁 \(event.repeatStatus.capitalized)")
+            }
+            return p
+        }()
+        if !parts.isEmpty {
+            Text(parts.joined(separator: "  ·  "))
+                .font(.system(size: 10))
+                .foregroundColor(.textMuted)
+                .padding(.top, 3)
+        }
+    }
+
     // MARK: - Empty State
     private var emptyState: some View {
         VStack(spacing: 12) {
@@ -258,7 +384,7 @@ struct DayDetailView: View {
         .frame(maxWidth: .infinity).padding(.vertical, 40)
     }
 
-    // MARK: - Action Buttons: Add Schedule + Add Event (no Create Note here)
+    // MARK: - Action Buttons: Add Schedule + Add Event
     private var actionButtons: some View {
         VStack(spacing: 0) {
             Divider().background(Color.borderDashed)
@@ -287,6 +413,7 @@ struct DayDetailView: View {
                         .background(Color.surface).cornerRadius(6)
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.borderButton, lineWidth: 1))
                     }
+
                 }
             }
             .padding(.top, 8)

@@ -40,12 +40,26 @@ class BoxScheduleViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
+    fun clearErrorMessage() { _errorMessage.value = null }
 
     private val _calendarMode = MutableLiveData("month")
     val calendarMode: LiveData<String> = _calendarMode
 
     private val _activeView = MutableLiveData("calendar")
     val activeView: LiveData<String> = _activeView
+
+    // ── Shared filters (List + Calendar views both consume these) ──
+    private val _filterSearchText = MutableLiveData("")
+    val filterSearchText: LiveData<String> = _filterSearchText
+    fun setFilterSearchText(v: String) { _filterSearchText.value = v }
+
+    private val _filterTypeName = MutableLiveData("") // "" = All Types
+    val filterTypeName: LiveData<String> = _filterTypeName
+    fun setFilterTypeName(v: String) { _filterTypeName.value = v }
+
+    private val _filterContentKind = MutableLiveData("all") // "all" | "schedules" | "events" | "notes"
+    val filterContentKind: LiveData<String> = _filterContentKind
+    fun setFilterContentKind(v: String) { _filterContentKind.value = v }
 
     // ── Load All Data ──
 
@@ -107,20 +121,124 @@ class BoxScheduleViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    // One-shot success signal for save screens (null = idle, true = success, false = failed)
+    private val _scheduleSaved = MutableLiveData<Boolean?>()
+    val scheduleSaved: LiveData<Boolean?> = _scheduleSaved
+    fun clearScheduleSaved() { _scheduleSaved.value = null }
+
+    // Dedicated 409 conflict signal — carries the conflicts array from the response body.
+    // UI observes this instead of string-matching the error message.
+    private val _conflictDetected = MutableLiveData<List<kotlinx.serialization.json.JsonObject>?>()
+    val conflictDetected: LiveData<List<kotlinx.serialization.json.JsonObject>?> = _conflictDetected
+    fun clearConflictDetected() { _conflictDetected.value = null }
+
     fun createDay(
         title: String, typeId: String, dateRangeType: String,
         calendarDays: List<Long>, conflictAction: String = ""
     ) {
         viewModelScope.launch {
             repository.createDay(title, typeId, dateRangeType, calendarDays, "UTC", conflictAction)
-                .onSuccess { refreshAll() }
-                .onFailure { _errorMessage.value = it.message }
+                .onSuccess {
+                    _scheduleSaved.value = true
+                    refreshAll()
+                }
+                .onFailure { err ->
+                    // HTTP 409 → surface conflicts on the dedicated signal (no message-string matching)
+                    if (err is com.zillit.lcw.data.api.ScheduleConflictException) {
+                        _conflictDetected.value = err.conflicts
+                    } else {
+                        _errorMessage.value = err.message
+                    }
+                    _scheduleSaved.value = false
+                }
         }
     }
 
     fun deleteDay(id: String) {
         viewModelScope.launch {
             repository.deleteDay(id)
+                .onSuccess { refreshAll() }
+                .onFailure { _errorMessage.value = it.message }
+        }
+    }
+
+    /**
+     * Atomic single-day edit (PUT /days/:id/single-date).
+     * Backend handles the split: mutates source block + creates new 1-day block in one transaction.
+     */
+    fun executeSingleDayEdit(
+        oldDayId: String,
+        singleDate: Long,
+        originalTypeId: String,
+        newTypeId: String,
+        action: String    // "replace" | "extend" | "overlap"
+    ) {
+        viewModelScope.launch {
+            // Same type → nothing material to change.
+            if (originalTypeId == newTypeId) {
+                _scheduleSaved.value = true
+                refreshAll()
+                return@launch
+            }
+            repository.updateSingleDay(oldDayId, singleDate, newTypeId, action)
+                .onSuccess {
+                    _scheduleSaved.value = true
+                    refreshAll()
+                }
+                .onFailure { err ->
+                    _errorMessage.value = err.message
+                    _scheduleSaved.value = false
+                }
+        }
+    }
+
+    /** Update an existing schedule day (web parity: PUT /days/:id). */
+    fun updateDay(
+        id: String, typeId: String, dateRangeType: String,
+        calendarDays: List<Long>, title: String = "",
+        conflictAction: String = ""
+    ) {
+        viewModelScope.launch {
+            val data = kotlinx.serialization.json.buildJsonObject {
+                put("title", kotlinx.serialization.json.JsonPrimitive(title))
+                put("typeId", kotlinx.serialization.json.JsonPrimitive(typeId))
+                put("dateRangeType", kotlinx.serialization.json.JsonPrimitive(dateRangeType))
+                put("calendarDays", kotlinx.serialization.json.JsonArray(
+                    calendarDays.map { kotlinx.serialization.json.JsonPrimitive(it) }
+                ))
+                put("startDate", kotlinx.serialization.json.JsonPrimitive(calendarDays.minOrNull() ?: 0L))
+                put("endDate", kotlinx.serialization.json.JsonPrimitive(calendarDays.maxOrNull() ?: 0L))
+                put("numberOfDays", kotlinx.serialization.json.JsonPrimitive(calendarDays.size))
+                if (conflictAction.isNotEmpty()) {
+                    put("conflictAction", kotlinx.serialization.json.JsonPrimitive(conflictAction))
+                }
+            }
+            repository.updateDay(id, data)
+                .onSuccess {
+                    _scheduleSaved.value = true
+                    refreshAll()
+                }
+                .onFailure { err ->
+                    if (err is com.zillit.lcw.data.api.ScheduleConflictException) {
+                        _conflictDetected.value = err.conflicts
+                    } else {
+                        _errorMessage.value = err.message
+                    }
+                    _scheduleSaved.value = false
+                }
+        }
+    }
+
+    /** Remove specific calendar dates from one or more schedule days (web /days/remove-dates). */
+    fun removeDates(entries: List<Pair<String, List<Long>>>) {
+        viewModelScope.launch {
+            val jsonEntries = entries.map { (id, dates) ->
+                kotlinx.serialization.json.buildJsonObject {
+                    put("id", kotlinx.serialization.json.JsonPrimitive(id))
+                    put("dates", kotlinx.serialization.json.JsonArray(dates.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+                }
+            }
+            repository.removeDates(jsonEntries)
                 .onSuccess { refreshAll() }
                 .onFailure { _errorMessage.value = it.message }
         }
@@ -144,6 +262,15 @@ class BoxScheduleViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    /** Update an existing event/note (PUT /events/:id). */
+    fun updateEvent(id: String, data: JsonObject) {
+        viewModelScope.launch {
+            repository.updateEvent(id, data)
+                .onSuccess { refreshAll() }
+                .onFailure { _errorMessage.value = it.message }
+        }
+    }
+
     fun deleteEvent(id: String) {
         viewModelScope.launch {
             repository.deleteEvent(id)
@@ -162,9 +289,9 @@ class BoxScheduleViewModel(application: Application) : AndroidViewModel(applicat
 
     // ── Activity Log ──
 
-    fun fetchActivityLog() {
+    fun fetchActivityLog(startDate: Long? = null, endDate: Long? = null) {
         viewModelScope.launch {
-            repository.getActivityLog()
+            repository.getActivityLog(startDate = startDate, endDate = endDate)
                 .onSuccess { _activityLogs.value = it.logs }
         }
     }

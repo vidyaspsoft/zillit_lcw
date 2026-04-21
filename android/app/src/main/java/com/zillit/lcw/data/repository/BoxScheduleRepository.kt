@@ -53,6 +53,11 @@ class BoxScheduleRepository(context: Context) {
         api.updateDay(id, data).data!!
     }
 
+    /** Atomic single-day edit (PUT /days/:id/single-date). */
+    suspend fun updateSingleDay(id: String, date: Long, typeId: String, action: String): Result<Unit> = apiCall("updateSingleDay") {
+        api.updateSingleDay(id, date, typeId, action); Unit
+    }
+
     suspend fun deleteDay(id: String): Result<Unit> = apiCall("deleteDay") {
         api.deleteDay(id)
         Unit

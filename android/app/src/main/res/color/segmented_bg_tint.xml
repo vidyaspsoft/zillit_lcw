@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected = white surface (iOS-like pill); unselected = transparent so group track shows -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="@color/surface" />
+    <item android:color="@android:color/transparent" />
+</selector>

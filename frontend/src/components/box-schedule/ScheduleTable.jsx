@@ -16,6 +16,8 @@ const ScheduleTable = ({
   isSelectMode = false, selectedRowKeys = [], onToggleSelect, onSelectAll, onDeselectAll,
   // New props for "By Schedule" view
   scheduleDays = [], onEditFullBlock, onDeleteFullBlock,
+  // Consolidated content-kind filter — driven by the page-level Filter modal.
+  contentFilter = 'all',
 }) => {
   const { colors } = useTheme();
 
@@ -29,13 +31,19 @@ const ScheduleTable = ({
   const [showListDefaultPopover, setShowListDefaultPopover] = useState(false);
   const [deleteBlockConfirm, setDeleteBlockConfirm] = useState(null);
 
-  // Style constants (inside component to access colors)
-  const thStyle = { padding: '12px 14px', textAlign: 'center', fontWeight: '700', fontSize: '10px', letterSpacing: '1.5px', color: colors.textSubtle, textTransform: 'uppercase' };
-  const tdStyle = { padding: '12px 14px', verticalAlign: 'middle' };
-  const standaloneBtnStyle = { display: 'inline-flex', alignItems: 'center', gap: '3px', background: colors.surface, border: `1px solid ${colors.borderInput}`, borderRadius: '5px', cursor: 'pointer', color: colors.textMuted, fontSize: '11px', fontWeight: '500', padding: '3px 8px', transition: 'all 0.15s' };
-  const blockBtnStyle = { display: 'inline-flex', alignItems: 'center', gap: '4px', background: colors.surface, border: `1px solid ${colors.borderInput}`, borderRadius: '6px', cursor: 'pointer', color: colors.textSecondary, fontSize: '12px', fontWeight: '500', padding: '6px 12px', transition: 'all 0.15s', width: '100%', justifyContent: 'center' };
+  const showSchedules = contentFilter === 'all' || contentFilter === 'schedules';
+  const showEvents    = contentFilter === 'all' || contentFilter === 'events';
+  const showNotes     = contentFilter === 'all' || contentFilter === 'notes';
 
-  // Group schedule blocks for "By Schedule" view
+  const visibleEvents = useMemo(
+    () => standaloneEvents.filter((e) => {
+      const kind = e.eventType === 'note' ? 'notes' : 'events';
+      return contentFilter === 'all' || contentFilter === kind;
+    }),
+    [standaloneEvents, contentFilter]
+  );
+
+  // Schedule blocks sorted by start date — consumed by by_schedule view.
   const scheduleBlocks = useMemo(() => {
     return [...scheduleDays]
       .sort((a, b) => {
@@ -45,7 +53,97 @@ const ScheduleTable = ({
       });
   }, [scheduleDays]);
 
-  if (rows.length === 0 && standaloneEvents.length === 0 && scheduleDays.length === 0) {
+  // Merged chronological list — matches iOS/Android ordering.
+  // Each entry is { kind: 'schedule-row' | 'schedule-block' | 'event', sortKey, payload }.
+  const mergedByDate = useMemo(() => {
+    const items = [];
+    if (showSchedules) {
+      rows.forEach((row) => items.push({
+        kind: 'schedule-row', sortKey: Number(row.singleDate), id: `s-${row._id}-${row.singleDate}`, payload: row,
+      }));
+    }
+    visibleEvents.forEach((evt) => items.push({
+      kind: 'event', sortKey: Number(evt.date || evt.startDateTime || 0), id: `e-${evt._id}`, payload: evt,
+    }));
+    return items.sort((a, b) => a.sortKey - b.sortKey);
+  }, [rows, visibleEvents, showSchedules]);
+
+  const mergedBySchedule = useMemo(() => {
+    const items = [];
+    if (showSchedules) {
+      scheduleBlocks.forEach((block) => {
+        const firstDate = Math.min(...(block.calendarDays || []).map(Number));
+        items.push({ kind: 'schedule-block', sortKey: firstDate, id: `b-${block._id}`, payload: block });
+      });
+    }
+    visibleEvents.forEach((evt) => items.push({
+      kind: 'event', sortKey: Number(evt.date || evt.startDateTime || 0), id: `e-${evt._id}`, payload: evt,
+    }));
+    return items.sort((a, b) => a.sortKey - b.sortKey);
+  }, [scheduleBlocks, visibleEvents, showSchedules]);
+
+  // Inline event/note card — shared between by_date & by_schedule views.
+  const renderInlineEventCard = (evt) => {
+    const isEvent = evt.eventType === 'event';
+    const timeStr = isEvent && evt.startDateTime
+      ? (evt.fullDay ? 'Full Day' : `${dayjs(evt.startDateTime).format('h:mm A')}${evt.endDateTime ? ` – ${dayjs(evt.endDateTime).format('h:mm A')}` : ''}`)
+      : '';
+    const evtDate = evt.date ? dayjs(evt.date) : evt.startDateTime ? dayjs(evt.startDateTime) : null;
+    const isEvtPast = evtDate && evtDate.isBefore(dayjs().startOf('day'));
+    return (
+      <div key={evt._id} style={{
+        display: 'flex', alignItems: 'flex-start', gap: '10px',
+        padding: '10px 14px',
+        borderLeft: `3px solid ${evt.color || '#3498DB'}`,
+        background: colors.surface,
+        opacity: isEvtPast ? 0.5 : 1,
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.8px', color: evt.color || '#3498DB', textTransform: 'uppercase', marginBottom: '2px' }}>
+            {isEvent ? 'Event' : 'Note'}
+          </div>
+          {timeStr && <div style={{ fontSize: '11px', color: colors.textMuted, fontWeight: '500' }}>{timeStr}</div>}
+          <div style={{ fontSize: '14px', fontWeight: '600', color: evt.textColor || colors.textBody }}>{evt.title || '(untitled)'}</div>
+          {evtDate && <div style={{ fontSize: '10px', color: colors.textMuted }}>{evtDate.format('ddd, MMM D')}</div>}
+          {evt.location && (
+            <div onClick={() => window.open(evt.locationLat ? `https://www.google.com/maps?q=${evt.locationLat},${evt.locationLng}` : `https://www.google.com/maps/search/${encodeURIComponent(evt.location)}`, '_blank')}
+              style={{ fontSize: '12px', color: colors.textLink, marginTop: '2px', cursor: 'pointer', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <FiMapPin size={11} /> {evt.location}
+            </div>
+          )}
+          {(evt.description || evt.notes) && (
+            <div style={{ fontSize: '12px', color: colors.textSubtle, marginTop: '3px' }}>{evt.description || evt.notes}</div>
+          )}
+        </div>
+        <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+          {onViewEvent && (
+            <button onClick={() => onViewEvent(evt)} style={standaloneBtnStyle}>
+              <FiEye size={11} /> View
+            </button>
+          )}
+          {!isEvtPast && onEditStandaloneEvent && (
+            <button onClick={() => onEditStandaloneEvent(evt)} style={standaloneBtnStyle}>
+              <FiEdit2 size={11} /> Edit
+            </button>
+          )}
+          {!isEvtPast && onDeleteEvent && (
+            <button onClick={() => { onDeleteEvent(evt._id); }} style={standaloneBtnStyle}>
+              <FiTrash2 size={11} /> Remove
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Style constants (inside component to access colors)
+  const thStyle = { padding: '12px 14px', textAlign: 'center', fontWeight: '700', fontSize: '10px', letterSpacing: '1.5px', color: colors.textSubtle, textTransform: 'uppercase' };
+  const tdStyle = { padding: '12px 14px', verticalAlign: 'middle' };
+  const standaloneBtnStyle = { display: 'inline-flex', alignItems: 'center', gap: '3px', background: colors.surface, border: `1px solid ${colors.borderInput}`, borderRadius: '5px', cursor: 'pointer', color: colors.textMuted, fontSize: '11px', fontWeight: '500', padding: '3px 8px', transition: 'all 0.15s' };
+  const blockBtnStyle = { display: 'inline-flex', alignItems: 'center', gap: '4px', background: colors.surface, border: `1px solid ${colors.borderInput}`, borderRadius: '6px', cursor: 'pointer', color: colors.textSecondary, fontSize: '12px', fontWeight: '500', padding: '6px 12px', transition: 'all 0.15s', width: '100%', justifyContent: 'center' };
+
+  const hasAnyData = rows.length > 0 || standaloneEvents.length > 0 || scheduleDays.length > 0;
+  if (!hasAnyData) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div style={{ textAlign: 'center', padding: '40px', color: colors.textFaint }}>
@@ -145,18 +243,18 @@ const ScheduleTable = ({
         </div>
       )}
 
-      {/* ══════════ BY DATE VIEW (existing) ══════════ */}
+      {/* ══════════ BY DATE VIEW ══════════ */}
       {listMode === 'by_date' && (
         <>
-          {rows.length === 0 && standaloneEvents.length > 0 && (
+          {mergedByDate.length === 0 && (
             <div style={{ textAlign: 'center', padding: '30px 40px 20px', color: colors.textFaint }}>
               <div style={{ fontSize: '40px', marginBottom: '8px', opacity: 0.25 }}>&#x1f4c5;</div>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: colors.textSubtle, margin: '0 0 4px' }}>No schedule days yet</p>
-              <p style={{ fontSize: '12px', color: colors.textDisabled }}>Click "Add Schedule" to create your production schedule.</p>
+              <p style={{ fontSize: '15px', fontWeight: '600', color: colors.textSubtle, margin: '0 0 4px' }}>Nothing to show</p>
+              <p style={{ fontSize: '12px', color: colors.textDisabled }}>Adjust the filter or add a schedule/event.</p>
             </div>
           )}
 
-          {rows.length > 0 && (
+          {mergedByDate.length > 0 && (
           <div style={{ background: colors.surface, borderRadius: '10px', border: `1px solid ${colors.border}`, overflow: 'hidden', boxShadow: `0 1px 6px ${colors.shadow}` }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
@@ -176,7 +274,18 @@ const ScheduleTable = ({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
+                {mergedByDate.map((mItem) => {
+                  if (mItem.kind === 'event') {
+                    const colSpan = isSelectMode ? 5 : 6;
+                    return (
+                      <tr key={mItem.id}>
+                        <td colSpan={colSpan} style={{ padding: 0, borderBottom: `1px solid ${colors.borderLight}` }}>
+                          {renderInlineEventCard(mItem.payload)}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  const row = mItem.payload;
                   const dateStr = dayjs(row.singleDate).format('ddd, MMM DD');
                   const key = `${row._id}-${row.singleDate}`;
                   const isExpanded = !isSelectMode && expandedDayId === key;
@@ -247,17 +356,25 @@ const ScheduleTable = ({
         </>
       )}
 
-      {/* ══════════ BY SCHEDULE VIEW (new) ══════════ */}
+      {/* ══════════ BY SCHEDULE VIEW ══════════ */}
       {listMode === 'by_schedule' && (
         <div className="flex flex-col gap-3">
-          {scheduleBlocks.length === 0 && (
+          {mergedBySchedule.length === 0 && (
             <div style={{ textAlign: 'center', padding: '40px', color: colors.textFaint }}>
               <div style={{ fontSize: '40px', marginBottom: '8px', opacity: 0.25 }}>&#x1f4c5;</div>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: colors.textSubtle }}>No schedule blocks yet</p>
+              <p style={{ fontSize: '15px', fontWeight: '600', color: colors.textSubtle }}>Nothing to show</p>
             </div>
           )}
 
-          {scheduleBlocks.map((block) => {
+          {mergedBySchedule.map((mItem) => {
+            if (mItem.kind === 'event') {
+              return (
+                <div key={mItem.id} style={{ background: colors.surface, borderRadius: '10px', border: `1px solid ${colors.border}`, overflow: 'hidden', boxShadow: `0 1px 6px ${colors.shadow}` }}>
+                  {renderInlineEventCard(mItem.payload)}
+                </div>
+              );
+            }
+            const block = mItem.payload;
             const sortedDates = [...(block.calendarDays || [])].map(Number).sort((a, b) => a - b);
             const firstDate = sortedDates[0];
             const lastDate = sortedDates[sortedDates.length - 1];
@@ -373,82 +490,6 @@ const ScheduleTable = ({
                   <span>ID: {String(block._id).slice(-6)}</span>
                   <span>Created: {dayjs(block.createdAt).format('MMM D, YYYY')}</span>
                   {block.version > 1 && <span>Version: {block.version}</span>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ══════════ Standalone Events ══════════ */}
-      {standaloneEvents.length > 0 && !isSelectMode && (
-        <div style={{
-          background: colors.surface, borderRadius: '10px', border: `1px solid ${colors.border}`,
-          overflow: 'hidden', boxShadow: `0 1px 6px ${colors.shadow}`, marginTop: '16px',
-        }}>
-          <div style={{
-            padding: '12px 16px', background: `linear-gradient(180deg, ${colors.surfaceAlt} 0%, ${colors.surfaceAlt2} 100%)`,
-            borderBottom: `2px solid ${colors.borderMedium}`, display: 'flex', alignItems: 'center', gap: '8px',
-          }}>
-            <FiClock size={14} style={{ color: colors.textMuted }} />
-            <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>
-              Standalone Events & Notes
-            </span>
-            <span style={{ fontSize: '11px', color: colors.textPlaceholder }}>({standaloneEvents.length})</span>
-          </div>
-          {standaloneEvents.map((evt) => {
-            const isEvent = evt.eventType === 'event';
-            const timeStr = isEvent && evt.startDateTime
-              ? (evt.fullDay ? 'Full Day' : `${dayjs(evt.startDateTime).format('h:mm A')}${evt.endDateTime ? ` – ${dayjs(evt.endDateTime).format('h:mm A')}` : ''}`)
-              : '';
-            const evtDate = evt.startDateTime ? dayjs(evt.startDateTime) : evt.date ? dayjs(evt.date) : null;
-            const isEvtPast = evtDate && evtDate.isBefore(dayjs().startOf('day'));
-
-            return (
-              <div key={evt._id} style={{
-                display: 'flex', alignItems: 'flex-start', gap: '10px',
-                padding: '12px 16px', borderBottom: `1px solid ${colors.borderLight}`,
-                borderLeft: `3px solid ${evt.color || '#3498DB'}`,
-                opacity: isEvtPast ? 0.5 : 1,
-              }}>
-                <div style={{ flex: 1 }}>
-                  {timeStr && <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: '500', marginBottom: '2px' }}>{timeStr}</div>}
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: evt.textColor || colors.textBody }}>{evt.title}</div>
-                  {evt.location && (
-                    <div onClick={() => window.open(evt.locationLat ? `https://www.google.com/maps?q=${evt.locationLat},${evt.locationLng}` : `https://www.google.com/maps/search/${encodeURIComponent(evt.location)}`, '_blank')}
-                      style={{ fontSize: '12px', color: colors.textLink, marginTop: '2px', cursor: 'pointer', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <FiMapPin size={11} /> {evt.location}
-                    </div>
-                  )}
-                  {(evt.description || evt.notes) && (
-                    <div style={{ fontSize: '12px', color: colors.textSubtle, marginTop: '3px' }}>{evt.description || evt.notes}</div>
-                  )}
-                </div>
-                <div className="flex gap-1.5" style={{ flexShrink: 0, marginTop: '2px' }}>
-                  {onViewEvent && (
-                    <button onClick={() => onViewEvent(evt)}
-                      style={standaloneBtnStyle}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverGreen; e.currentTarget.style.borderColor = colors.successText; e.currentTarget.style.color = colors.successText; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
-                      <FiEye size={11} /> View
-                    </button>
-                  )}
-                  {!isEvtPast && onEditStandaloneEvent && (
-                    <button onClick={() => onEditStandaloneEvent(evt)}
-                      style={standaloneBtnStyle}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverBlue; e.currentTarget.style.borderColor = colors.textLink; e.currentTarget.style.color = colors.textLink; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
-                      <FiEdit2 size={11} /> Edit
-                    </button>
-                  )}
-                  {!isEvtPast && onDeleteEvent && (
-                    <button onClick={() => { onDeleteEvent(evt._id); }}
-                      style={standaloneBtnStyle}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = colors.surfaceHoverRed; e.currentTarget.style.borderColor = colors.dangerBg; e.currentTarget.style.color = colors.dangerBg; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = colors.surface; e.currentTarget.style.borderColor = colors.borderInput; e.currentTarget.style.color = colors.textMuted; }}>
-                      <FiTrash2 size={11} /> Remove
-                    </button>
-                  )}
                 </div>
               </div>
             );

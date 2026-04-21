@@ -7,71 +7,140 @@
     android:background="@color/pageBg"
     android:padding="@dimen/spacing_sm">
 
-    <!-- List toolbar: By Date / By Schedule toggle + Set Default -->
+    <!-- List toolbar: 2 rows for responsiveness (mirrors calendar page) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:paddingVertical="@dimen/spacing_sm"
         android:paddingHorizontal="@dimen/spacing_sm">
 
-        <!-- Mode toggle: By Date / By Schedule -->
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/listModeToggle"
-            android:layout_width="wrap_content"
+        <!-- Row 1: Mode toggle + Set Default -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/listModeToggle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnByDate"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:text="@string/bs_by_date"
+                    android:textSize="@dimen/text_sm"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBySchedule"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:text="@string/bs_by_schedule"
+                    android:textSize="@dimen/text_sm"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnByDate"
-                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/btnListSetDefault"
+                style="@style/ZillitToolbarChip"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="@string/bs_by_date"
-                android:textSize="@dimen/text_sm" />
+                android:layout_height="wrap_content"
+                android:text="@string/bs_set_default"
+                app:icon="@drawable/ic_grid_2x2"
+                android:layout_marginStart="@dimen/spacing_sm" />
+        </LinearLayout>
+
+        <!-- Row 2: Search (grows) + Filter button (opens bottom-sheet) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/spacing_sm">
+
+            <EditText
+                android:id="@+id/etListSearch"
+                style="@style/ZillitInput"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/input_height"
+                android:layout_weight="1"
+                android:hint="@string/bs_search_hint"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBySchedule"
-                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/btnOpenFilters"
+                style="@style/ZillitToolbarChip"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="@string/bs_by_schedule"
-                android:textSize="@dimen/text_sm" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+                android:layout_height="wrap_content"
+                android:text="@string/bs_filter"
+                app:icon="@drawable/ic_filter"
+                android:layout_marginStart="@dimen/spacing_sm" />
 
-        <!-- Set as Default -->
-        <Button
-            android:id="@+id/btnListSetDefault"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
+            <!-- Active-filter count badge — visible when >=1 filter is applied. -->
+            <TextView
+                android:id="@+id/tvFilterBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="20dp"
+                android:minHeight="20dp"
+                android:gravity="center"
+                android:textColor="@color/surface"
+                android:textSize="@dimen/text_xs"
+                android:textStyle="bold"
+                android:background="@drawable/bg_badge_accent"
+                android:paddingHorizontal="@dimen/spacing_xs"
+                android:layout_marginStart="@dimen/spacing_xs"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Row 3: Select + Delete Selected -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/bs_set_default"
-            android:layout_marginStart="@dimen/spacing_sm" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/spacing_sm">
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
-        <!-- Select mode toggle -->
-        <Button
-            android:id="@+id/btnSelect"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bs_select" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSelect"
+                style="@style/ZillitToolbarChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bs_select" />
 
-        <!-- Delete Selected (hidden by default) -->
-        <Button
-            android:id="@+id/btnDeleteSelected"
-            style="@style/ZillitButton.Danger"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bs_delete_selected"
-            android:visibility="gone"
-            android:layout_marginStart="@dimen/spacing_sm" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteSelected"
+                style="@style/ZillitToolbarChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bs_delete_selected"
+                android:textColor="@color/dangerBg"
+                app:strokeColor="@color/dangerBg"
+                android:visibility="gone"
+                android:layout_marginStart="@dimen/spacing_xs" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Schedule list RecyclerView -->

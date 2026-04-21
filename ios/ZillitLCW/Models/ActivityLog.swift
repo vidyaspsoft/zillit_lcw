@@ -19,5 +19,12 @@ struct ActivityLog: Identifiable, Codable {
 
 struct PerformedBy: Codable {
     let userId: String
-    let name: String
+    // `name` is no longer returned by the API — resolved client-side via UserCache.
+    // Kept as an optional for compatibility with any locally-cached older payloads.
+    let name: String?
+
+    init(userId: String, name: String? = nil) {
+        self.userId = userId
+        self.name = name
+    }
 }

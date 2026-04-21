@@ -7,108 +7,160 @@
     android:background="@color/pageBg"
     android:padding="@dimen/spacing_sm">
 
-    <!-- Calendar toolbar: Month/Week/Day toggle + navigation + Today -->
+    <!-- Calendar toolbar: 2 rows for responsiveness (mirrors iOS) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:paddingVertical="@dimen/spacing_sm"
         android:paddingHorizontal="@dimen/spacing_sm">
 
-        <!-- Mode toggle: Month / Week / Day -->
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/modeToggle"
-            android:layout_width="wrap_content"
+        <!-- Row 1: Mode toggle + Set Default -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="true">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/modeToggle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_segmented_track"
+                android:padding="2dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMonth"
+                    style="@style/ZillitSegmentedButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bs_month" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnWeek"
+                    style="@style/ZillitSegmentedButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bs_week" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDay"
+                    style="@style/ZillitSegmentedButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bs_day" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMonth"
-                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/btnSetDefault"
+                style="@style/ZillitToolbarChip"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="@string/bs_month"
-                android:textSize="@dimen/text_sm" />
+                android:layout_height="wrap_content"
+                android:text="@string/bs_set_default"
+                app:icon="@drawable/ic_grid_2x2"
+                android:layout_marginStart="@dimen/spacing_sm" />
+        </LinearLayout>
+
+        <!-- Row 1.5: Inline Search + Filter button (shared state with List view) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/spacing_sm">
+
+            <EditText
+                android:id="@+id/etCalendarSearch"
+                style="@style/ZillitInput"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/input_height"
+                android:layout_weight="1"
+                android:hint="@string/bs_search_hint"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnWeek"
-                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/btnCalendarOpenFilters"
+                style="@style/ZillitToolbarChip"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bs_filter"
+                app:icon="@drawable/ic_filter"
+                android:layout_marginStart="@dimen/spacing_sm" />
+
+            <TextView
+                android:id="@+id/tvCalendarFilterBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="20dp"
+                android:minHeight="20dp"
+                android:gravity="center"
+                android:textColor="@color/surface"
+                android:textSize="@dimen/text_xs"
+                android:textStyle="bold"
+                android:background="@drawable/bg_badge_accent"
+                android:paddingHorizontal="@dimen/spacing_xs"
+                android:layout_marginStart="@dimen/spacing_xs"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Row 2: Prev | Title | Next | Today -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/spacing_sm">
+
+            <ImageButton
+                android:id="@+id/btnPrev"
+                android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:text="@string/bs_week"
-                android:textSize="@dimen/text_sm" />
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_chevron_left"
+                android:contentDescription="Previous"
+                app:tint="@color/textSecondary" />
+
+            <TextView
+                android:id="@+id/tvCalTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="APRIL 2026"
+                android:textSize="@dimen/text_md"
+                android:textColor="@color/textPrimary"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:letterSpacing="0.15"
+                android:textAllCaps="true"
+                android:gravity="center"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:paddingHorizontal="@dimen/spacing_xs" />
+
+            <ImageButton
+                android:id="@+id/btnNext"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_chevron_right"
+                android:contentDescription="Next"
+                app:tint="@color/textSecondary" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDay"
-                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/btnToday"
+                style="@style/ZillitToolbarChip"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="@string/bs_day"
-                android:textSize="@dimen/text_sm" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
-
-        <!-- Set as Default -->
-        <Button
-            android:id="@+id/btnSetDefault"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bs_set_default"
-            android:layout_marginStart="@dimen/spacing_sm" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-
-        <!-- Navigation: < Title > -->
-        <ImageButton
-            android:id="@+id/btnPrev"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_button_secondary"
-            android:src="@android:drawable/ic_media_previous"
-            android:contentDescription="Previous"
-            app:tint="@color/textSecondary" />
-
-        <TextView
-            android:id="@+id/tvCalTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="APRIL 2026"
-            android:textSize="@dimen/text_lg"
-            android:textColor="@color/textPrimary"
-            android:fontFamily="serif"
-            android:textStyle="bold"
-            android:letterSpacing="0.15"
-            android:textAllCaps="true"
-            android:gravity="center"
-            android:minWidth="200dp"
-            android:paddingHorizontal="@dimen/spacing_md" />
-
-        <ImageButton
-            android:id="@+id/btnNext"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_button_secondary"
-            android:src="@android:drawable/ic_media_next"
-            android:contentDescription="Next"
-            app:tint="@color/textSecondary" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-
-        <!-- Today -->
-        <Button
-            android:id="@+id/btnToday"
-            style="@style/ZillitButton.Toolbar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/bs_today" />
+                android:layout_height="wrap_content"
+                android:text="@string/bs_today"
+                android:layout_marginStart="@dimen/spacing_xs" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Calendar grid container -->

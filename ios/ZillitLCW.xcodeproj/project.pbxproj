@@ -20,6 +20,7 @@
 		CCB53A9388697F080BE0E171 /* BoxScheduleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FD05E3A3DA5BDF51A26D5D /* BoxScheduleViewModel.swift */; };
 		B1E0766323A7E7727F28C7EC /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B843FEE8FD49AEBBE1677750 /* CalendarView.swift */; };
 		B43DE31246EECF1045CD591B /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0B537646E0F84B5A6386F7 /* DayDetailView.swift */; };
+		A1B2C3D4E5F607182935AABB /* ViewEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F40516273849AABBCC /* ViewEventView.swift */; };
 		6B7F793482688CB7182AC2FD /* ConflictView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99CC60595BD38CA7F40AED1E /* ConflictView.swift */; };
 		15811637AA3A5ECF1342ACCB /* CreateEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1F3D391782B82AA9E79000 /* CreateEventView.swift */; };
 		582A97A09BB413256FC7D903 /* CreateScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1015084A6D68A99C1A7099ED /* CreateScheduleView.swift */; };
@@ -55,6 +56,7 @@
 		79FD05E3A3DA5BDF51A26D5D /* BoxScheduleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxScheduleViewModel.swift; sourceTree = "<group>"; };
 		B843FEE8FD49AEBBE1677750 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FE0B537646E0F84B5A6386F7 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
+		C1D2E3F40516273849AABBCC /* ViewEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewEventView.swift; sourceTree = "<group>"; };
 		99CC60595BD38CA7F40AED1E /* ConflictView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictView.swift; sourceTree = "<group>"; };
 		4F1F3D391782B82AA9E79000 /* CreateEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateEventView.swift; sourceTree = "<group>"; };
 		1015084A6D68A99C1A7099ED /* CreateScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateScheduleView.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 			children = (
 				B843FEE8FD49AEBBE1677750,
 				FE0B537646E0F84B5A6386F7,
+				C1D2E3F40516273849AABBCC,
 			);
 			path = Calendar;
 			sourceTree = "<group>";
@@ -349,6 +352,7 @@
 				CCB53A9388697F080BE0E171,
 				B1E0766323A7E7727F28C7EC,
 				B43DE31246EECF1045CD591B,
+				A1B2C3D4E5F607182935AABB,
 				6B7F793482688CB7182AC2FD,
 				15811637AA3A5ECF1342ACCB,
 				582A97A09BB413256FC7D903,

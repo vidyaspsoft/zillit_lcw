@@ -46,6 +46,7 @@
     <color name="dangerBg">#E74C3C</color>
     <color name="dangerText">#FFFFFF</color>
     <color name="successText">#27AE60</color>
+    <color name="successBg">#E8F8EF</color>
 
     <!-- Calendar -->
     <color name="calTodayBg">#1A1A1A</color>

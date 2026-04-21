@@ -622,12 +622,17 @@ struct CreateScheduleView: View {
         isSubmitting = true
 
         if isSingleDayEdit {
-            // Feature 2: Single day edit with Replace/Extend/Overlap
-            // TODO: Full single-day edit logic (remove date, create new, extend)
-            // For now, create a new day on that date with the selected action
-            viewModel.createDay(
-                title: "", typeId: selectedTypeId, dateRangeType: "by_dates",
-                calendarDays: calendarDays, conflictAction: singleDayConflictAction,
+            // Atomic single-day edit — one PUT /days/:id/single-date call.
+            guard let day = editingDay, let sd = singleDate else {
+                isSubmitting = false
+                return
+            }
+            viewModel.executeSingleDayEdit(
+                oldDayId: day.id,
+                singleDate: sd,
+                originalTypeId: day.typeId,
+                newTypeId: selectedTypeId,
+                action: singleDayConflictAction,
                 onConflict: { isSubmitting = false; showConflict = true },
                 onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
             )
@@ -635,13 +640,23 @@ struct CreateScheduleView: View {
             guard !calendarDays.isEmpty else { validationError = "cs_error_select_dates".localized; isSubmitting = false; return }
             let drt: String = dateTab == 1 ? "by_dates" : dateTab == 2 ? "day_wise" : "by_days"
 
-            // Feature 3: 409 conflict → show ConflictView
-            viewModel.createDay(
-                title: "", typeId: selectedTypeId, dateRangeType: drt,
-                calendarDays: calendarDays, conflictAction: "",
-                onConflict: { isSubmitting = false; showConflict = true },
-                onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
-            )
+            if isEditing, let day = editingDay {
+                // Full-schedule edit → PUT /days/:id
+                viewModel.updateDay(
+                    id: day.id, typeId: selectedTypeId, dateRangeType: drt,
+                    calendarDays: calendarDays, title: "", conflictAction: "",
+                    onConflict: { isSubmitting = false; showConflict = true },
+                    onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
+                )
+            } else {
+                // Feature 3: 409 conflict → show ConflictView
+                viewModel.createDay(
+                    title: "", typeId: selectedTypeId, dateRangeType: drt,
+                    calendarDays: calendarDays, conflictAction: "",
+                    onConflict: { isSubmitting = false; showConflict = true },
+                    onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
+                )
+            }
         }
     }
 
@@ -665,11 +680,21 @@ struct CreateScheduleView: View {
     private func retryWithConflictAction(_ action: String) {
         isSubmitting = true
         let drt: String = dateTab == 1 ? "by_dates" : dateTab == 2 ? "day_wise" : "by_days"
-        viewModel.createDay(
-            title: "", typeId: selectedTypeId, dateRangeType: drt,
-            calendarDays: calendarDays, conflictAction: action,
-            onConflict: { isSubmitting = false },
-            onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
-        )
+        if isEditing, let day = editingDay {
+            // Full-schedule edit retry → PUT /days/:id
+            viewModel.updateDay(
+                id: day.id, typeId: selectedTypeId, dateRangeType: drt,
+                calendarDays: calendarDays, title: "", conflictAction: action,
+                onConflict: { isSubmitting = false },
+                onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
+            )
+        } else {
+            viewModel.createDay(
+                title: "", typeId: selectedTypeId, dateRangeType: drt,
+                calendarDays: calendarDays, conflictAction: action,
+                onConflict: { isSubmitting = false },
+                onSuccess: { isSubmitting = false; presentationMode.wrappedValue.dismiss() }
+            )
+        }
     }
 }

@@ -1,37 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Type Manager dialog — matches web's ScheduleTypeManager.
-     Scrollable list of types, add custom type section, done button. -->
+<!-- Schedule Types full-screen page (mirrors iOS TypeManagerView).
+     Back arrow + centered title, scrollable list, pinned Add Custom Type footer. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/surface"
-    android:maxHeight="600dp">
+    android:background="@color/pageBg">
 
-    <!-- Header -->
+    <!-- Top bar: back arrow + centered title -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@color/drawerHeaderBg"
-        android:paddingHorizontal="@dimen/spacing_lg"
-        android:paddingVertical="@dimen/spacing_base">
+        android:background="@color/surface"
+        android:paddingHorizontal="@dimen/spacing_sm">
+
+        <ImageButton
+            android:id="@+id/btnCloseTypes"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_chevron_left"
+            android:contentDescription="@string/tm_done"
+            app:tint="@color/textPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/tm_title"
-            style="@style/ZillitTitle" />
+            android:textSize="@dimen/text_md"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:gravity="center" />
 
-        <ImageButton
-            android:id="@+id/btnCloseTypes"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:contentDescription="@string/tm_done" />
+        <!-- Spacer to balance back arrow so the title is truly centered -->
+        <Space android:layout_width="40dp" android:layout_height="40dp" />
     </LinearLayout>
 
     <View style="@style/ZillitDivider" />
@@ -42,24 +48,25 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingVertical="@dimen/spacing_sm" />
+        android:background="@color/pageBg"
+        android:clipToPadding="false" />
 
     <View style="@style/ZillitDivider" />
 
-    <!-- Add Custom Type section (pinned at bottom) -->
+    <!-- Add Custom Type footer (pinned at bottom, iOS parity) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/spacing_base"
-        android:background="@color/surfaceAlt">
+        android:background="@color/surface">
 
         <TextView
             style="@style/ZillitLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tm_add_custom" />
+            android:text="@string/tm_add_custom"
+            android:layout_marginBottom="@dimen/spacing_sm" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -70,8 +77,8 @@
             <!-- Color picker circle -->
             <View
                 android:id="@+id/newTypeColor"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:background="@drawable/bg_today_circle"
                 android:backgroundTint="@color/typePrep"
                 android:layout_marginEnd="@dimen/spacing_sm" />
@@ -87,13 +94,18 @@
                 android:inputType="text"
                 android:layout_marginEnd="@dimen/spacing_sm" />
 
-            <!-- Add button -->
-            <Button
+            <!-- + Add button (outlined, primary accent — matches iOS) -->
+            <TextView
                 android:id="@+id/btnAddType"
-                style="@style/ZillitButton.Primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/tm_add" />
+                android:text="+ Add"
+                android:textSize="@dimen/text_body"
+                android:textColor="@color/primaryAccent"
+                android:textStyle="bold"
+                android:paddingHorizontal="@dimen/spacing_md"
+                android:paddingVertical="@dimen/spacing_sm"
+                android:background="@drawable/bg_button_primary_soft" />
         </LinearLayout>
 
         <!-- Error message -->
@@ -105,22 +117,12 @@
             android:textColor="@color/dangerBg"
             android:visibility="gone"
             android:layout_marginTop="@dimen/spacing_xs" />
-    </LinearLayout>
 
-    <View style="@style/ZillitDivider" />
-
-    <!-- Done button -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:padding="@dimen/spacing_base">
-
-        <Button
+        <!-- Hidden legacy Done button kept so ViewBinding compiles -->
+        <TextView
             android:id="@+id/btnDone"
-            style="@style/ZillitButton.Primary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tm_done" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>
