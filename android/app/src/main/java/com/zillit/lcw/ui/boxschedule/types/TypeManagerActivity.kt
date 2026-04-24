@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleType
-import com.zillit.lcw.databinding.DialogTypeManagerBinding
+import com.zillit.lcw.databinding.NewBoxDialogTypeManagerBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.util.toColorInt
 import com.skydoves.colorpickerview.ColorPickerDialog
@@ -31,7 +31,7 @@ import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
  */
 class TypeManagerActivity : AppCompatActivity() {
 
-    private lateinit var binding: DialogTypeManagerBinding
+    private lateinit var binding: NewBoxDialogTypeManagerBinding
     private val viewModel: BoxScheduleViewModel by viewModels()
     private lateinit var typeAdapter: TypeAdapter
     private var selectedColor = "#F39C12"
@@ -47,7 +47,7 @@ class TypeManagerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DialogTypeManagerBinding.inflate(layoutInflater)
+        binding = NewBoxDialogTypeManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setupTypesList()

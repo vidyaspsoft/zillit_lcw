@@ -7,7 +7,7 @@ import Foundation
 class APIClient {
     static let shared = APIClient()
 
-    let baseURL = "http://localhost:5003/api/v2/box-schedule"
+    let baseURL = APIConstants.boxScheduleBaseURL
 
     private let session: URLSession
     private let decoder: JSONDecoder
@@ -46,19 +46,11 @@ class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Inject moduledata auth header
-        let auth = AuthManager.shared
-        if !auth.userId.isEmpty {
-            if let moduleData = EncryptionUtil.buildModuleDataHeader(
-                userId: auth.userId,
-                projectId: auth.projectId,
-                deviceId: auth.deviceId
-            ) {
-                request.setValue(moduleData, forHTTPHeaderField: "moduledata")
-                log("🔐 moduledata header injected (\(moduleData.count) chars)")
-            }
-        }
+        request.setValue(APIConstants.accept, forHTTPHeaderField: "Accept")
+        request.setValue(APIConstants.acceptCharset, forHTTPHeaderField: "Accept-Charset")
+        request.setValue(APIConstants.timezone, forHTTPHeaderField: "Timezone")
+        request.setValue(APIConstants.bodyhash, forHTTPHeaderField: "bodyhash")
+        request.setValue(APIConstants.moduledata, forHTTPHeaderField: "moduledata")
 
         // Set body
         if let body = body {

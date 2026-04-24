@@ -205,7 +205,7 @@
                 android:layout_weight="1"
                 android:visibility="gone">
 
-                <include layout="@layout/item_day_focus" />
+                <include layout="@layout/new_box_item_day_focus" />
             </ScrollView>
         </LinearLayout>
     </androidx.cardview.widget.CardView>

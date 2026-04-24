@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.ItemCalendarPickerCellBinding
+import com.zillit.lcw.databinding.NewBoxItemCalendarPickerCellBinding
 
 /**
  * Month-grid date picker adapter — mirrors iOS CreateScheduleView calendar tab.
@@ -35,7 +35,7 @@ class CalendarPickerAdapter(
         notifyDataSetChanged()
     }
 
-    inner class VH(val binding: ItemCalendarPickerCellBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class VH(val binding: NewBoxItemCalendarPickerCellBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(cell: Cell) {
             val ctx = binding.root.context
             binding.tvDay.text = cell.dayNumber.toString()
@@ -75,7 +75,7 @@ class CalendarPickerAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val binding = ItemCalendarPickerCellBinding.inflate(
+        val binding = NewBoxItemCalendarPickerCellBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return VH(binding)

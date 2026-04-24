@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleEvent
-import com.zillit.lcw.databinding.BottomsheetViewEventBinding
+import com.zillit.lcw.databinding.NewBoxBottomsheetViewEventBinding
 import com.zillit.lcw.util.DateUtils
 import com.zillit.lcw.util.toColorInt
 
@@ -21,7 +21,7 @@ import com.zillit.lcw.util.toColorInt
  */
 class ViewEventBottomSheet : BottomSheetDialogFragment() {
 
-    private var _binding: BottomsheetViewEventBinding? = null
+    private var _binding: NewBoxBottomsheetViewEventBinding? = null
     private val binding get() = _binding!!
 
     companion object {
@@ -37,7 +37,7 @@ class ViewEventBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = BottomsheetViewEventBinding.inflate(inflater, container, false)
+        _binding = NewBoxBottomsheetViewEventBinding.inflate(inflater, container, false)
         return binding.root
     }
 

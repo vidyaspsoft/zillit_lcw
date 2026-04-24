@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.ItemCalendarCellBinding
+import com.zillit.lcw.databinding.NewBoxItemCalendarCellBinding
 import com.zillit.lcw.util.toColorInt
 import com.zillit.lcw.util.withAlpha
 
@@ -56,7 +56,7 @@ class CalendarAdapter(
     private var cachedStrokePx: Int = 0
 
     inner class CellViewHolder(
-        private val binding: ItemCalendarCellBinding
+        private val binding: NewBoxItemCalendarCellBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(cell: CalendarCell) {
@@ -243,7 +243,7 @@ class CalendarAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CellViewHolder {
-        val binding = ItemCalendarCellBinding.inflate(
+        val binding = NewBoxItemCalendarCellBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return CellViewHolder(binding)

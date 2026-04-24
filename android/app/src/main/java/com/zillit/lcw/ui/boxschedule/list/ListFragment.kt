@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleDay
-import com.zillit.lcw.databinding.FragmentListBinding
+import com.zillit.lcw.databinding.NewBoxFragmentListBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.ui.boxschedule.detail.DayDetailActivity
 import com.zillit.lcw.ui.common.SetDefaultPopup
@@ -28,7 +28,7 @@ import com.zillit.lcw.util.showToast
  */
 class ListFragment : Fragment(), ListFiltersBottomSheet.Listener {
 
-    private var _binding: FragmentListBinding? = null
+    private var _binding: NewBoxFragmentListBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: BoxScheduleViewModel
@@ -54,7 +54,7 @@ class ListFragment : Fragment(), ListFiltersBottomSheet.Listener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentListBinding.inflate(inflater, container, false)
+        _binding = NewBoxFragmentListBinding.inflate(inflater, container, false)
         return binding.root
     }
 

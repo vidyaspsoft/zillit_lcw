@@ -14,7 +14,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.DialogShareBinding
+import com.zillit.lcw.databinding.NewBoxDialogShareBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.util.DateUtils
 import com.zillit.lcw.util.showToast
@@ -26,7 +26,7 @@ import com.zillit.lcw.util.showToast
  */
 class ShareDialog : DialogFragment() {
 
-    private var _binding: DialogShareBinding? = null
+    private var _binding: NewBoxDialogShareBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: BoxScheduleViewModel
@@ -37,7 +37,7 @@ class ShareDialog : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = DialogShareBinding.inflate(inflater, container, false)
+        _binding = NewBoxDialogShareBinding.inflate(inflater, container, false)
         return binding.root
     }
 

@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.BottomsheetDayDetailBinding
+import com.zillit.lcw.databinding.NewBoxBottomsheetDayDetailBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.ui.boxschedule.create.CreateEventActivity
 import com.zillit.lcw.ui.boxschedule.create.CreateScheduleActivity
@@ -28,7 +28,7 @@ import com.zillit.lcw.util.toColorInt
  */
 class DayDetailBottomSheet : BottomSheetDialogFragment() {
 
-    private var _binding: BottomsheetDayDetailBinding? = null
+    private var _binding: NewBoxBottomsheetDayDetailBinding? = null
     private val binding get() = _binding!!
 
     private var dayMs: Long = 0L
@@ -50,7 +50,7 @@ class DayDetailBottomSheet : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = BottomsheetDayDetailBinding.inflate(inflater, container, false)
+        _binding = NewBoxBottomsheetDayDetailBinding.inflate(inflater, container, false)
         return binding.root
     }
 

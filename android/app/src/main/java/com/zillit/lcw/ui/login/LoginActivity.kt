@@ -19,7 +19,7 @@ import com.zillit.lcw.data.api.KtorClient
 import com.zillit.lcw.data.model.ApiListResponse
 import com.zillit.lcw.data.model.ProjectItem
 import com.zillit.lcw.data.model.UserItem
-import com.zillit.lcw.databinding.ActivityLoginBinding
+import com.zillit.lcw.databinding.NewBoxActivityLoginBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleActivity
 import com.zillit.lcw.ui.common.ThemeManager
 import io.ktor.client.HttpClient
@@ -44,7 +44,7 @@ import kotlinx.serialization.json.Json
  */
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityLoginBinding
+    private lateinit var binding: NewBoxActivityLoginBinding
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     // Auth base URL (NOT box-schedule)
@@ -95,7 +95,7 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        binding = ActivityLoginBinding.inflate(layoutInflater)
+        binding = NewBoxActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)

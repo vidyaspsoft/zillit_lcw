@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.SheetListFiltersBinding
+import com.zillit.lcw.databinding.NewBoxSheetListFiltersBinding
 
 /**
  * ListFiltersBottomSheet — consolidated filter UI (type + content kind).
@@ -38,7 +38,7 @@ class ListFiltersBottomSheet : BottomSheetDialogFragment() {
         fun onApply(filters: Filters)
     }
 
-    private var _binding: SheetListFiltersBinding? = null
+    private var _binding: NewBoxSheetListFiltersBinding? = null
     private val binding get() = _binding!!
 
     private var draft = Filters()
@@ -47,7 +47,7 @@ class ListFiltersBottomSheet : BottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        _binding = SheetListFiltersBinding.inflate(inflater, container, false)
+        _binding = NewBoxSheetListFiltersBinding.inflate(inflater, container, false)
         return binding.root
     }
 

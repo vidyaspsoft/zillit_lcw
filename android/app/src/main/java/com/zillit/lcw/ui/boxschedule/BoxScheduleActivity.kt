@@ -14,7 +14,7 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.ActivityBoxScheduleBinding
+import com.zillit.lcw.databinding.NewBoxActivityBoxScheduleBinding
 import com.zillit.lcw.ui.boxschedule.calendar.CalendarFragment
 import com.zillit.lcw.ui.boxschedule.create.CreateEventActivity
 import com.zillit.lcw.ui.boxschedule.create.CreateScheduleActivity
@@ -30,7 +30,7 @@ import com.zillit.lcw.util.toColorInt
 
 class BoxScheduleActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityBoxScheduleBinding
+    private lateinit var binding: NewBoxActivityBoxScheduleBinding
     val viewModel: BoxScheduleViewModel by viewModels()
     private var activeView = "calendar"
 
@@ -41,7 +41,7 @@ class BoxScheduleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityBoxScheduleBinding.inflate(layoutInflater)
+        binding = NewBoxActivityBoxScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setupHeader()

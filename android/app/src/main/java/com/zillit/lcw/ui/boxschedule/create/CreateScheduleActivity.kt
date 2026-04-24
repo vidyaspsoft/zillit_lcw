@@ -20,7 +20,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.tabs.TabLayout
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleType
-import com.zillit.lcw.databinding.ActivityCreateScheduleBinding
+import com.zillit.lcw.databinding.NewBoxActivityCreateScheduleBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.ui.boxschedule.types.TypeManagerActivity
 import com.zillit.lcw.util.DateUtils
@@ -39,7 +39,7 @@ import java.util.*
  */
 class CreateScheduleActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityCreateScheduleBinding
+    private lateinit var binding: NewBoxActivityCreateScheduleBinding
     private val viewModel: BoxScheduleViewModel by viewModels()
 
     private var selectedTypeId = ""
@@ -120,7 +120,7 @@ class CreateScheduleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCreateScheduleBinding.inflate(layoutInflater)
+        binding = NewBoxActivityCreateScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         readIntentExtras()

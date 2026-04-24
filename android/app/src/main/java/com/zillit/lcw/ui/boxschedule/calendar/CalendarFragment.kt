@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleDay
 import com.zillit.lcw.data.model.ScheduleEvent
-import com.zillit.lcw.databinding.FragmentCalendarBinding
+import com.zillit.lcw.databinding.NewBoxFragmentCalendarBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.ui.boxschedule.create.CreateEventActivity
 import com.zillit.lcw.ui.boxschedule.create.CreateScheduleActivity
@@ -39,7 +39,7 @@ import java.util.*
 class CalendarFragment : Fragment(),
     com.zillit.lcw.ui.boxschedule.list.ListFiltersBottomSheet.Listener {
 
-    private var _binding: FragmentCalendarBinding? = null
+    private var _binding: NewBoxFragmentCalendarBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: BoxScheduleViewModel
@@ -53,7 +53,7 @@ class CalendarFragment : Fragment(),
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentCalendarBinding.inflate(inflater, container, false)
+        _binding = NewBoxFragmentCalendarBinding.inflate(inflater, container, false)
         return binding.root
     }
 

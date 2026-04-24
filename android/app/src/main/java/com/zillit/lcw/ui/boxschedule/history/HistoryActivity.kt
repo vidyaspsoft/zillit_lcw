@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ActivityLog
-import com.zillit.lcw.databinding.ActivityHistoryBinding
-import com.zillit.lcw.databinding.ItemHistoryCardBinding
+import com.zillit.lcw.databinding.NewBoxActivityHistoryBinding
+import com.zillit.lcw.databinding.NewBoxItemHistoryCardBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.util.DateUtils
 import java.util.*
@@ -27,7 +27,7 @@ import java.util.*
  */
 class HistoryActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityHistoryBinding
+    private lateinit var binding: NewBoxActivityHistoryBinding
     private val viewModel: BoxScheduleViewModel by viewModels()
     private lateinit var historyAdapter: HistoryAdapter
     private var filterAction = "all"
@@ -36,7 +36,7 @@ class HistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityHistoryBinding.inflate(layoutInflater)
+        binding = NewBoxActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.btnHistoryBack.setOnClickListener { finish() }
@@ -130,7 +130,7 @@ class HistoryActivity : AppCompatActivity() {
         private var items = listOf<ActivityLog>()
         fun submitList(newItems: List<ActivityLog>) { items = newItems; notifyDataSetChanged() }
 
-        inner class HistoryViewHolder(private val binding: ItemHistoryCardBinding) : RecyclerView.ViewHolder(binding.root) {
+        inner class HistoryViewHolder(private val binding: NewBoxItemHistoryCardBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind(item: ActivityLog) {
                 val ctx = binding.root.context
                 val actionColor = when (item.action) {
@@ -188,7 +188,7 @@ class HistoryActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder =
-            HistoryViewHolder(ItemHistoryCardBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+            HistoryViewHolder(NewBoxItemHistoryCardBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
         override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) = holder.bind(items[position])
         override fun getItemCount(): Int = items.size

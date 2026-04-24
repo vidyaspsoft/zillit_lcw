@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { BOX_SCHEDULE_API_BASE_URL } from '../config/constants';
-import { buildModuleDataHeader } from '../utils/encryption';
+import { BOX_SCHEDULE_API_BASE_URL, BOX_SCHEDULE_HEADERS } from '../config/constants';
 
 const AUTH_STORAGE_KEY = 'zillit-auth';
 
@@ -11,22 +10,11 @@ const boxScheduleApi = axios.create({
 
 boxScheduleApi.interceptors.request.use(
   (config) => {
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const { user } = JSON.parse(stored);
-        if (user?.userId && user?.projectId && user?.deviceId) {
-          const encryptedHeader = buildModuleDataHeader(
-            user.userId,
-            user.projectId,
-            user.deviceId
-          );
-          config.headers['moduledata'] = encryptedHeader;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to build moduledata header:', err);
-    }
+    config.headers['Accept'] = BOX_SCHEDULE_HEADERS.Accept;
+    config.headers['Accept-Charset'] = BOX_SCHEDULE_HEADERS['Accept-Charset'];
+    config.headers['Timezone'] = BOX_SCHEDULE_HEADERS.Timezone;
+    config.headers['bodyhash'] = BOX_SCHEDULE_HEADERS.bodyhash;
+    config.headers['moduledata'] = BOX_SCHEDULE_HEADERS.moduledata;
     return config;
   },
   (error) => Promise.reject(error)

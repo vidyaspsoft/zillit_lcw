@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.DialogConflictBinding
+import com.zillit.lcw.databinding.NewBoxDialogConflictBinding
 
 /**
  * ConflictDialog — Shows Replace/Extend/Overlap options when schedule dates conflict.
@@ -16,7 +16,7 @@ import com.zillit.lcw.databinding.DialogConflictBinding
  */
 class ConflictDialog : DialogFragment() {
 
-    private var _binding: DialogConflictBinding? = null
+    private var _binding: NewBoxDialogConflictBinding? = null
     private val binding get() = _binding!!
 
     private var conflictCount: Int = 0
@@ -43,7 +43,7 @@ class ConflictDialog : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = DialogConflictBinding.inflate(inflater, container, false)
+        _binding = NewBoxDialogConflictBinding.inflate(inflater, container, false)
         return binding.root
     }
 

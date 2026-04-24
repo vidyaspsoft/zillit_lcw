@@ -11,7 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.zillit.lcw.R
-import com.zillit.lcw.databinding.ActivityCreateEventBinding
+import com.zillit.lcw.databinding.NewBoxActivityCreateEventBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.util.DateUtils
 import com.zillit.lcw.util.showToast
@@ -27,7 +27,7 @@ import java.util.*
  */
 class CreateEventActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityCreateEventBinding
+    private lateinit var binding: NewBoxActivityCreateEventBinding
     private val viewModel: BoxScheduleViewModel by viewModels()
 
     private var activeTab = "event" // "event" or "note"
@@ -67,7 +67,7 @@ class CreateEventActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCreateEventBinding.inflate(layoutInflater)
+        binding = NewBoxActivityCreateEventBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         // Edit mode — decode the serialised ScheduleEvent and force the tab to match its type.

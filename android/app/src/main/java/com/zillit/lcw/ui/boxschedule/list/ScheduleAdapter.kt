@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleDay
 import com.zillit.lcw.data.model.ScheduleEvent
-import com.zillit.lcw.databinding.ItemListEventBinding
-import com.zillit.lcw.databinding.ItemScheduleDayBinding
+import com.zillit.lcw.databinding.NewBoxItemListEventBinding
+import com.zillit.lcw.databinding.NewBoxItemScheduleDayBinding
 import com.zillit.lcw.util.DateUtils
 import com.zillit.lcw.util.toColorInt
 
@@ -128,9 +128,9 @@ class ScheduleAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return if (viewType == TYPE_SCHEDULE) {
-            ScheduleViewHolder(ItemScheduleDayBinding.inflate(inflater, parent, false))
+            ScheduleViewHolder(NewBoxItemScheduleDayBinding.inflate(inflater, parent, false))
         } else {
-            EventViewHolder(ItemListEventBinding.inflate(inflater, parent, false))
+            EventViewHolder(NewBoxItemListEventBinding.inflate(inflater, parent, false))
         }
     }
 
@@ -145,7 +145,7 @@ class ScheduleAdapter(
 
     // ═══════════════════════ SCHEDULE VIEW HOLDER ═══════════════════════
 
-    inner class ScheduleViewHolder(private val binding: ItemScheduleDayBinding)
+    inner class ScheduleViewHolder(private val binding: NewBoxItemScheduleDayBinding)
         : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(row: ScheduleRow) {
@@ -221,7 +221,7 @@ class ScheduleAdapter(
 
     // ═══════════════════════ EVENT / NOTE VIEW HOLDER ═══════════════════════
 
-    inner class EventViewHolder(private val binding: ItemListEventBinding)
+    inner class EventViewHolder(private val binding: NewBoxItemListEventBinding)
         : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(event: ScheduleEvent, kind: String) {

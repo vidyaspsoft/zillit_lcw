@@ -18,7 +18,7 @@ import androidx.core.widget.TextViewCompat
 import com.zillit.lcw.R
 import com.zillit.lcw.data.model.ScheduleDay
 import com.zillit.lcw.data.model.ScheduleEvent
-import com.zillit.lcw.databinding.ActivityDayDetailBinding
+import com.zillit.lcw.databinding.NewBoxActivityDayDetailBinding
 import com.zillit.lcw.ui.boxschedule.BoxScheduleViewModel
 import com.zillit.lcw.ui.boxschedule.create.CreateEventActivity
 import com.zillit.lcw.ui.boxschedule.create.CreateScheduleActivity
@@ -32,7 +32,7 @@ import com.zillit.lcw.util.toColorInt
  */
 class DayDetailActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityDayDetailBinding
+    private lateinit var binding: NewBoxActivityDayDetailBinding
     private val viewModel: BoxScheduleViewModel by viewModels()
     private var dayMs: Long = 0L
 
@@ -47,7 +47,7 @@ class DayDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDayDetailBinding.inflate(layoutInflater)
+        binding = NewBoxActivityDayDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         dayMs = intent.getLongExtra(EXTRA_DAY_MS, System.currentTimeMillis())
