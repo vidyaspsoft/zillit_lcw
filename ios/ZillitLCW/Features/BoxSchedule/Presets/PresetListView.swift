@@ -10,6 +10,7 @@ struct PresetListView: View {
     @State private var search = ""
     @State private var membersOf: UserPreset?
     @State private var navToCreate = false
+    @State private var editingPreset: UserPreset? = nil
 
     var body: some View {
         ZStack {
@@ -35,6 +36,10 @@ struct PresetListView: View {
                                         .font(.caption).foregroundColor(.secondary)
                                 }
                                 Spacer()
+                                Button { editingPreset = p } label: {
+                                    Image(systemName: "pencil").foregroundColor(Color.primaryAccent)
+                                }
+                                .buttonStyle(.plain)
                                 Button { membersOf = p } label: {
                                     Image(systemName: "info.circle").foregroundColor(.secondary)
                                 }
@@ -46,8 +51,17 @@ struct PresetListView: View {
                 }
             }
 
-            // Hidden link to create screen
+            // Hidden links — separate ones for create and edit so each gets its own destination state.
             NavigationLink(destination: CreatePresetView(onSaved: { reload() }), isActive: $navToCreate) {
+                EmptyView()
+            }
+            NavigationLink(
+                destination: editingPreset.map { CreatePresetView(onSaved: { reload() }, editing: $0) },
+                isActive: Binding(
+                    get: { editingPreset != nil },
+                    set: { if !$0 { editingPreset = nil } }
+                )
+            ) {
                 EmptyView()
             }
         }

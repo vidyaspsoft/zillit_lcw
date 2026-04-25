@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Input, Button, Spin, Empty, Tooltip, Select, Divider, Tag } from 'antd';
-import { FiPlus, FiSearch, FiArrowLeft, FiStar, FiInfo } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiArrowLeft, FiStar, FiInfo, FiEdit2 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { useTheme } from '../../context/ThemeContext';
 import distributeService from '../../services/distributeService';
@@ -22,7 +22,8 @@ const PresetListModal = ({ open, onClose }) => {
   const [search, setSearch] = useState('');
   const [presetMembersOf, setPresetMembersOf] = useState(null);
 
-  // Form state
+  // Form state — `editingId` non-null means we're editing an existing preset.
+  const [editingId, setEditingId] = useState(null);
   const [presetName, setPresetName] = useState('');
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -33,10 +34,29 @@ const PresetListModal = ({ open, onClose }) => {
     if (!open) return;
     setView('list');
     setSearch('');
+    setEditingId(null);
     setPresetName('');
     setSelectedUserIds([]);
     loadPresets();
   }, [open]);
+
+  // Open the form pre-filled with an existing preset.
+  const openEdit = async (preset) => {
+    setEditingId(preset.id);
+    setPresetName(preset.name);
+    setSelectedUserIds(preset.members.map((m) => m.id));
+    setView('form');
+    await ensureUsersLoaded();
+  };
+
+  // Open the form for create.
+  const openCreate = () => {
+    setEditingId(null);
+    setPresetName('');
+    setSelectedUserIds([]);
+    setView('form');
+    ensureUsersLoaded();
+  };
 
   const loadPresets = async () => {
     setLoading(true);
@@ -79,12 +99,18 @@ const PresetListModal = ({ open, onClose }) => {
     }
     setSubmitting(true);
     try {
-      await distributeService.createUserPreset(presetName.trim(), selectedUserIds);
-      toast.success('Preset created');
+      if (editingId) {
+        await distributeService.updateUserPreset(editingId, presetName.trim(), selectedUserIds);
+        toast.success('Preset updated');
+      } else {
+        await distributeService.createUserPreset(presetName.trim(), selectedUserIds);
+        toast.success('Preset created');
+      }
       setView('list');
+      setEditingId(null);
       await loadPresets();
     } catch (e) {
-      toast.error(e?.response?.data?.message || 'Failed to create preset');
+      toast.error(e?.response?.data?.message || (editingId ? 'Failed to update preset' : 'Failed to create preset'));
     } finally {
       setSubmitting(false);
     }
@@ -104,10 +130,7 @@ const PresetListModal = ({ open, onClose }) => {
         <Button
           type="primary"
           icon={<FiPlus />}
-          onClick={() => {
-            setView('form');
-            ensureUsersLoaded();
-          }}
+          onClick={openCreate}
           style={{ background: ORANGE, borderColor: ORANGE, fontWeight: 600 }}
         >
           New Preset
@@ -136,6 +159,17 @@ const PresetListModal = ({ open, onClose }) => {
                   {p.memberCount} member{p.memberCount === 1 ? '' : 's'}
                 </div>
               </div>
+              <Tooltip title="Edit preset">
+                <button
+                  onClick={() => openEdit(p)}
+                  style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    padding: '6px', color: ORANGE,
+                  }}
+                >
+                  <FiEdit2 size={17} />
+                </button>
+              </Tooltip>
               <Tooltip title="View members">
                 <button
                   onClick={() => setPresetMembersOf(p)}
@@ -158,7 +192,9 @@ const PresetListModal = ({ open, onClose }) => {
     <div>
       <div className="flex items-center gap-2" style={{ marginBottom: '14px' }}>
         <Button icon={<FiArrowLeft />} onClick={() => setView('list')} type="text" />
-        <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textBody }}>New Preset</span>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textBody }}>
+          {editingId ? 'Edit Preset' : 'New Preset'}
+        </span>
       </div>
 
       <div style={{ marginBottom: '14px' }}>
@@ -259,7 +295,7 @@ const PresetListModal = ({ open, onClose }) => {
           onClick={handleSave}
           style={{ background: ORANGE, borderColor: ORANGE, color: '#fff', fontWeight: 600 }}
         >
-          Save Preset
+          {editingId ? 'Update Preset' : 'Save Preset'}
         </Button>
       </div>
     </div>
@@ -272,7 +308,7 @@ const PresetListModal = ({ open, onClose }) => {
         onCancel={onClose}
         footer={null}
         width={560}
-        title={<span style={{ fontWeight: 700, fontSize: '16px' }}>{view === 'list' ? 'Presets' : 'New Preset'}</span>}
+        title={<span style={{ fontWeight: 700, fontSize: '16px' }}>{view === 'list' ? 'Presets' : (editingId ? 'Edit Preset' : 'New Preset')}</span>}
         styles={{ body: { padding: '16px 20px' } }}
         destroyOnClose
       >

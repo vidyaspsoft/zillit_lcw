@@ -1,11 +1,13 @@
 import SwiftUI
 
 /// Two-field form: preset name + multi-select user list.
-/// On save, POSTs to /api/v2/user-preset and pops back to the list,
-/// invoking `onSaved` so the parent can refresh.
+/// Doubles as create + edit — pass `editing` to pre-fill and update instead
+/// of create (server uses POST /user-preset with a `preset_id` in the body
+/// for updates; same endpoint as create).
 struct CreatePresetView: View {
     @Environment(\.presentationMode) var presentationMode
     let onSaved: () -> Void
+    var editing: UserPreset? = nil
 
     @State private var presetName = ""
     @State private var users: [ProjectUser] = []
@@ -14,6 +16,8 @@ struct CreatePresetView: View {
     @State private var selectedIds: Set<String> = []
     @State private var saving = false
     @State private var errorMsg: String?
+
+    private var isEditing: Bool { editing != nil }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,7 +114,7 @@ struct CreatePresetView: View {
                     if saving {
                         ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
                     }
-                    Text(saving ? "Saving…" : "Save Preset")
+                    Text(saving ? "Saving…" : (isEditing ? "Update Preset" : "Save Preset"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white)
                 }
@@ -126,9 +130,15 @@ struct CreatePresetView: View {
             .overlay(Rectangle().frame(height: 1).foregroundColor(.appBorder), alignment: .top)
         }
         .background(Color.pageBg.ignoresSafeArea())
-        .navigationTitle("New Preset")
+        .navigationTitle(isEditing ? "Edit Preset" : "New Preset")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { loadUsers() }
+        .onAppear {
+            if let e = editing {
+                presetName = e.name
+                selectedIds = Set(e.members.map { $0.userId })
+            }
+            loadUsers()
+        }
         .alert(isPresented: Binding<Bool>(
             get: { errorMsg != nil },
             set: { if !$0 { errorMsg = nil } }
@@ -161,12 +171,15 @@ struct CreatePresetView: View {
 
     private func save() {
         saving = true
+        let name = presetName.trimmingCharacters(in: .whitespaces)
+        let ids = Array(selectedIds)
         Task {
             do {
-                try await DistributeAPI.shared.createUserPreset(
-                    name: presetName.trimmingCharacters(in: .whitespaces),
-                    userIds: Array(selectedIds)
-                )
+                if let e = editing {
+                    try await DistributeAPI.shared.updateUserPreset(id: e.id, name: name, userIds: ids)
+                } else {
+                    try await DistributeAPI.shared.createUserPreset(name: name, userIds: ids)
+                }
                 await MainActor.run {
                     saving = false
                     onSaved()

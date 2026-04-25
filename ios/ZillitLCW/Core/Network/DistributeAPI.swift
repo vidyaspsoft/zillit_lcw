@@ -40,10 +40,22 @@ final class DistributeAPI {
         try await post(url, body: body)
     }
 
+    /// POST /api/v2/user-preset (same endpoint as create) with `preset_id` in
+    /// the body to signal update.
+    func updateUserPreset(id: String, name: String, userIds: [String]) async throws {
+        let url = URL(string: APIConstants.userPresetURL)!
+        let body: [String: Any] = [
+            "preset_id": id,
+            "preset_name": name,
+            "user_ids": userIds
+        ]
+        try await post(url, body: body)
+    }
+
     // MARK: - Private
 
     private func get<T: Decodable>(_ url: URL) async throws -> T {
-        var req = makeRequest(url, method: "GET")
+        let req = makeRequest(url, method: "GET")
         let (data, response) = try await session.data(for: req)
         try ensureSuccess(response)
         return try decoder.decode(T.self, from: data)
