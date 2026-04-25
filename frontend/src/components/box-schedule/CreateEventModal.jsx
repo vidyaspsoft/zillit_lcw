@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Drawer, Input, Select, DatePicker, TimePicker, Checkbox, Button, Segmented, ColorPicker } from 'antd';
-import { FiInfo } from 'react-icons/fi';
+import { FiInfo, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import { useTheme } from '../../context/ThemeContext';
 import PlacePicker from '../location-tool/PlacePicker';
+import SelectInviteesModal from './SelectInviteesModal';
 
 const { TextArea } = Input;
 
@@ -51,13 +52,24 @@ const TIMEZONE_OPTIONS = [
   'UTC',
 ].map((tz) => ({ value: tz, label: tz.replace(/_/g, ' ') }));
 
-const DISTRIBUTE_OPTIONS = [
-  { value: '', label: 'Select' },
-  { value: 'self', label: 'Only Me' },
-  { value: 'users', label: 'Specific Users' },
-  { value: 'departments', label: 'Specific Departments' },
-  { value: 'all_departments', label: 'All Departments' },
-];
+// Derive a human-readable summary from an event's distribute fields (used on edit-prefill).
+function buildSummaryFromEvent(ev) {
+  if (!ev) return '';
+  switch (ev.distributeTo) {
+    case 'self': return 'Only Me';
+    case 'all_departments': return 'All Departments';
+    case 'departments': {
+      const n = (ev.distributeDepartmentIds || []).length;
+      return n ? `Selected Departments: ${n}` : 'Selected Departments';
+    }
+    case 'users': {
+      const n = (ev.distributeUserIds || []).length;
+      return n ? `${n} user${n === 1 ? '' : 's'} selected — tap to edit` : 'Users';
+    }
+    case 'presets': return 'Preset';
+    default: return '';
+  }
+}
 
 const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, scheduleDays = [], defaultTab = null, editingEvent = null }) => {
   const { colors } = useTheme();
@@ -115,6 +127,11 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
   const [callType, setCallType] = useState(editingEvent?.callType || '');
   const [textColor, setTextColor] = useState(editingEvent?.textColor || '');
   const [distributeTo, setDistributeTo] = useState(editingEvent?.distributeTo || '');
+  const [distributeUserIds, setDistributeUserIds] = useState(editingEvent?.distributeUserIds || []);
+  const [distributeDepartmentIds, setDistributeDepartmentIds] = useState(editingEvent?.distributeDepartmentIds || []);
+  const [userPresetId, setUserPresetId] = useState(editingEvent?.userPresetId || null);
+  const [distributeSummary, setDistributeSummary] = useState(buildSummaryFromEvent(editingEvent));
+  const [showInviteesModal, setShowInviteesModal] = useState(false);
   const [organizerExcluded, setOrganizerExcluded] = useState(editingEvent?.organizerExcluded || false);
 
   // ── Note fields (pre-fill from editingEvent) ──
@@ -146,6 +163,10 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
     setCallType(editingEvent.callType || '');
     setTextColor(editingEvent.textColor || '');
     setDistributeTo(editingEvent.distributeTo || '');
+    setDistributeUserIds(editingEvent.distributeUserIds || []);
+    setDistributeDepartmentIds(editingEvent.distributeDepartmentIds || []);
+    setUserPresetId(editingEvent.userPresetId || null);
+    setDistributeSummary(buildSummaryFromEvent(editingEvent));
     setOrganizerExcluded(!!editingEvent.organizerExcluded);
     setNoteTitle(editingEvent.title || '');
     setNoteText(editingEvent.notes || '');
@@ -187,21 +208,37 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
     setSubmitting(true);
     try {
       if (activeTab === 'Event') {
-        const startDT = fullDay ? startDate.startOf('day').toISOString()
-          : startTime ? startDate.hour(startTime.hour()).minute(startTime.minute()).toISOString()
-          : startDate.startOf('day').toISOString();
-        const endDT = fullDay ? endDate.endOf('day').toISOString()
-          : endTime ? endDate.hour(endTime.hour()).minute(endTime.minute()).toISOString()
-          : startDT;
+        // Spec § 4 — epoch ms for date/time fields, 0 (not null) for repeatEndDate when unset.
+        const startDT = fullDay
+          ? startDate.startOf('day').valueOf()
+          : startTime
+            ? startDate.hour(startTime.hour()).minute(startTime.minute()).valueOf()
+            : startDate.startOf('day').valueOf();
+        const endDT = fullDay
+          ? endDate.endOf('day').valueOf()
+          : endTime
+            ? endDate.hour(endTime.hour()).minute(endTime.minute()).valueOf()
+            : startDT;
 
         await onSubmit({
           scheduleDayId: resolvedDayId, date: Number(resolvedDate), eventType: 'event',
-          title: title.trim(), description, startDateTime: startDT, endDateTime: endDT,
-          fullDay, location, locationLat, locationLng, reminder, repeatStatus, color,
-          repeatEndDate,
+          title: title.trim(), color,
+          description,
+          startDateTime: startDT, endDateTime: endDT,
+          fullDay,
+          location, locationLat, locationLng,
+          reminder,
+          repeatStatus,
+          repeatEndDate: repeatEndDate ? dayjs(repeatEndDate).valueOf() : 0,
           timezone,
-          callType, textColor,
-          distributeTo, organizerExcluded, advancedEnabled,
+          callType,
+          textColor,
+          distributeTo,
+          distributeUserIds: distributeTo === 'users' ? distributeUserIds : [],
+          distributeDepartmentIds: distributeTo === 'departments' ? distributeDepartmentIds : [],
+          userPresetId: distributeTo === 'presets' ? userPresetId : null,
+          organizerExcluded,
+          advancedEnabled,
         });
       } else {
         await onSubmit({
@@ -370,10 +407,31 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
               <PlacePicker onPlaceSelect={handlePlaceSelect} initialLat={locationLat} initialLng={locationLng} initialSearch={location} />
             </div>
 
-            {/* Distribute To */}
+            {/* Distribute To — tap-to-open picker */}
             <div style={{ marginBottom: '6px' }}>
               <label style={labelStyle}>Distribute To</label>
-              <Select value={distributeTo} onChange={setDistributeTo} options={DISTRIBUTE_OPTIONS} style={{ width: '100%' }} size="large" />
+              <button
+                type="button"
+                onClick={() => setShowInviteesModal(true)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  background: colors.surface,
+                  border: `1px solid ${colors.borderInput}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  minHeight: '40px',
+                  color: distributeSummary ? colors.textBody : colors.textSubtle,
+                  fontSize: '14px',
+                  textAlign: 'left',
+                }}
+              >
+                <span>{distributeSummary || 'Select'}</span>
+                <FiChevronRight color={colors.textSubtle} />
+              </button>
               <p style={{ fontSize: '11px', color: colors.textSubtle, margin: '4px 0 0', fontStyle: 'italic' }}>
                 Select the department which you want to send the notification
               </p>
@@ -432,6 +490,22 @@ const CreateEventModal = ({ open, onClose, onSubmit, scheduleDayId, date, schedu
           </div>
         )}
       </div>
+
+      <SelectInviteesModal
+        open={showInviteesModal}
+        onClose={() => setShowInviteesModal(false)}
+        onConfirm={({ distributeTo: mode, distributeUserIds: uids, distributeDepartmentIds: dids, userPresetId: pid, summary }) => {
+          setDistributeTo(mode);
+          setDistributeUserIds(uids);
+          setDistributeDepartmentIds(dids);
+          setUserPresetId(pid);
+          setDistributeSummary(summary);
+        }}
+        initialMode={distributeTo}
+        initialUserIds={distributeUserIds}
+        initialDepartmentIds={distributeDepartmentIds}
+        initialPresetId={userPresetId}
+      />
     </Drawer>
   );
 };

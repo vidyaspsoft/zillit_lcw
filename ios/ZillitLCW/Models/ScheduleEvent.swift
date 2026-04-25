@@ -22,6 +22,11 @@ struct ScheduleEvent: Identifiable, Codable {
     var callType: String?
     var textColor: String?
     var notes: String?
+    var distributeTo: String?
+    var distributeUserIds: [String]?
+    var distributeDepartmentIds: [String]?
+    var userPresetId: String?
+    var organizerExcluded: Bool?
     let deleted: Int64
     let createdAt: Int64
     let updatedAt: Int64
@@ -32,6 +37,8 @@ struct ScheduleEvent: Identifiable, Codable {
         case description, startDateTime, endDateTime, fullDay
         case location, locationLat, locationLng
         case reminder, repeatStatus, repeatEndDate, timezone, callType, textColor
-        case notes, deleted, createdAt, updatedAt
+        case notes
+        case distributeTo, distributeUserIds, distributeDepartmentIds, userPresetId, organizerExcluded
+        case deleted, createdAt, updatedAt
     }
 }

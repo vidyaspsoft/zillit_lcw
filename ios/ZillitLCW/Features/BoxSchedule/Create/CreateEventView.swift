@@ -27,6 +27,9 @@ struct CreateEventView: View {
     @State private var timezone = TimeZone.current.identifier
     @State private var callType = ""
     @State private var location = ""
+    @State private var locationLat: Double? = nil
+    @State private var locationLng: Double? = nil
+    @State private var textColor: String = ""
     @State private var noteTitle = ""
     @State private var noteText = ""
     @State private var selectedColor = "#3498DB"
@@ -34,7 +37,13 @@ struct CreateEventView: View {
     @State private var eventColor = "#3498DB"
     @State private var repeatEndDate: Date? = nil
     @State private var organizerExcluded = false
-    @State private var distributeTo: String = ""  // "", "self", "users", "departments", "all_departments"
+
+    // Distribute-To state (single-mode at a time per spec § 3.3)
+    @State private var distributeSelection: DistributeSelection = .empty
+
+    // Picker presentation
+    @State private var showMapPicker = false
+    @State private var showInviteesPicker = false
 
     // Web-parity color presets (CreateEventModal.jsx COLOR_PRESETS)
     private let noteColorPresets: [(hex: String, label: String)] = [
@@ -123,6 +132,30 @@ struct CreateEventView: View {
                     dismissButton: .default(Text("bs_ok".localized))
                 )
             }
+            .fullScreenCover(isPresented: $showMapPicker) {
+                MapPickerView(
+                    initial: locationLat.flatMap { lat in
+                        locationLng.map { lng in PickedLocation(address: location, lat: lat, lng: lng) }
+                    },
+                    onConfirm: { picked in
+                        location = picked.address
+                        locationLat = picked.lat
+                        locationLng = picked.lng
+                        showMapPicker = false
+                    },
+                    onCancel: { showMapPicker = false }
+                )
+            }
+            .fullScreenCover(isPresented: $showInviteesPicker) {
+                SelectInviteesView(
+                    initial: distributeSelection,
+                    onConfirm: { sel in
+                        distributeSelection = sel
+                        showInviteesPicker = false
+                    },
+                    onCancel: { showInviteesPicker = false }
+                )
+            }
     }
 
     // MARK: - Edit mode helpers
@@ -158,6 +191,16 @@ struct CreateEventView: View {
         }
         isFullDay = e.fullDay
         location = e.location ?? ""
+        locationLat = e.locationLat
+        locationLng = e.locationLng
+        textColor = e.textColor ?? ""
+        distributeSelection = DistributeSelection(
+            distributeTo: e.distributeTo ?? "",
+            userIds: e.distributeUserIds ?? [],
+            departmentIds: e.distributeDepartmentIds ?? [],
+            presetId: e.userPresetId
+        )
+        organizerExcluded = e.organizerExcluded ?? false
         reminder = e.reminder.isEmpty ? "none" : e.reminder
         repeatMode = e.repeatStatus.isEmpty ? "none" : e.repeatStatus
         if let r = e.repeatEndDate, r > 0 { repeatEndDate = DateUtils.fromEpoch(r) }
@@ -188,30 +231,41 @@ struct CreateEventView: View {
             return
         }
 
+        // Spec § 4 — always include every key with explicit empty/null/zero values
+        // so the server doesn't need to special-case missing keys.
+        let startMs: Int64 = isFullDay
+            ? DateUtils.toEpoch(startDate)
+            : combinedEpoch(date: startDate, time: startTime)
+        let endMs: Int64 = isFullDay
+            ? DateUtils.toEpoch(endDate)
+            : combinedEpoch(date: endDate, time: endTime)
+
         var data: [String: Any] = [
+            "scheduleDayId": linkedScheduleDayId as Any? ?? NSNull(),
+            "date": linkedDate ?? DateUtils.toEpoch(startDate),
             "eventType": "event",
             "title": title,
+            "color": eventColor,
             "description": description,
-            "startDate": DateUtils.toEpoch(startDate),
-            "endDate": DateUtils.toEpoch(endDate),
+            "startDateTime": startMs,
+            "endDateTime": endMs,
             "fullDay": isFullDay,
-            "repeatStatus": repeatMode,                       // web parity key
+            "location": location,
+            "locationLat": locationLat as Any? ?? NSNull(),
+            "locationLng": locationLng as Any? ?? NSNull(),
             "reminder": reminder,
+            "repeatStatus": repeatMode,
+            "repeatEndDate": repeatEndDate.map { DateUtils.toEpoch($0) } ?? 0,
             "timezone": timezone,
             "callType": callType,
-            "location": location,
-            "color": eventColor,                              // web parity
-            "distributeTo": distributeTo,                      // web parity
-            "organizerExcluded": organizerExcluded,            // web parity
-            "advancedEnabled": true,                           // web parity
-            "date": linkedDate ?? DateUtils.toEpoch(startDate)
+            "textColor": textColor,
+            "distributeTo": distributeSelection.distributeTo,
+            "distributeUserIds": distributeSelection.distributeTo == "users" ? distributeSelection.userIds : [],
+            "distributeDepartmentIds": distributeSelection.distributeTo == "departments" ? distributeSelection.departmentIds : [],
+            "userPresetId": (distributeSelection.distributeTo == "presets" ? distributeSelection.presetId : nil) as Any? ?? NSNull(),
+            "organizerExcluded": organizerExcluded,
+            "advancedEnabled": true
         ]
-        if let id = linkedScheduleDayId { data["scheduleDayId"] = id }
-        if let red = repeatEndDate { data["repeatEndDate"] = DateUtils.toEpoch(red) }
-        if !isFullDay {
-            data["startTime"] = DateUtils.toEpoch(startTime)
-            data["endTime"] = DateUtils.toEpoch(endTime)
-        }
 
         if let existing = editingEvent {
             viewModel.updateEvent(id: existing.id, data: data)
@@ -219,6 +273,17 @@ struct CreateEventView: View {
             viewModel.createEvent(data: data)
         }
         presentationMode.wrappedValue.dismiss()
+    }
+
+    /// Merge a date (Y-M-D) with a time (h:m) into a single epoch ms value.
+    private func combinedEpoch(date: Date, time: Date) -> Int64 {
+        let cal = Calendar.current
+        var dc = cal.dateComponents([.year, .month, .day], from: date)
+        let tc = cal.dateComponents([.hour, .minute], from: time)
+        dc.hour = tc.hour
+        dc.minute = tc.minute
+        let merged = cal.date(from: dc) ?? date
+        return DateUtils.toEpoch(merged)
     }
 
     // MARK: - Save Note
@@ -422,22 +487,57 @@ struct CreateEventView: View {
                 .inputStyle()
             }
 
-            // Location
+            // Location — non-editable row, tap opens MapPickerView (spec § 2)
             formField(label: "ce_location".localized) {
-                TextField("ce_location_hint".localized, text: $location).inputStyle()
+                Button { showMapPicker = true } label: {
+                    HStack {
+                        Text(location.isEmpty ? "Search location on Google Maps…" : location)
+                            .font(.system(size: 14))
+                            .foregroundColor(location.isEmpty ? .textPlaceholder : .textBody)
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12)).foregroundColor(.textSubtle)
+                    }
+                    .inputStyle()
+                }
+                .buttonStyle(.plain)
+                if !location.isEmpty || locationLat != nil {
+                    HStack(spacing: 8) {
+                        Button("Change") { showMapPicker = true }
+                            .font(.system(size: 12, weight: .semibold))
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(Color.primaryAccent.opacity(0.15))
+                            .foregroundColor(Color.primaryAccent)
+                            .clipShape(Capsule())
+                        Button("Remove") {
+                            location = ""; locationLat = nil; locationLng = nil
+                        }
+                        .font(.system(size: 12, weight: .semibold))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(Color.surfaceAlt)
+                        .foregroundColor(Color.textBody)
+                        .clipShape(Capsule())
+                    }
+                    .padding(.top, 4)
+                }
             }
 
-            // Distribute To (web parity: functional picker)
+            // Distribute To — non-editable row, tap opens SelectInviteesView (spec § 3)
             formField(label: "ce_distribute_to".localized) {
-                Picker("", selection: $distributeTo) {
-                    Text("Select").tag("")
-                    Text("Only Me").tag("self")
-                    Text("Specific Users").tag("users")
-                    Text("Specific Departments").tag("departments")
-                    Text("All Departments").tag("all_departments")
+                Button { showInviteesPicker = true } label: {
+                    HStack {
+                        Text(distributeSelection.summary.isEmpty ? "Select" : distributeSelection.summary)
+                            .font(.system(size: 14))
+                            .foregroundColor(distributeSelection.summary.isEmpty ? .textPlaceholder : .textBody)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12)).foregroundColor(.textSubtle)
+                    }
+                    .inputStyle()
                 }
-                .pickerStyle(MenuPickerStyle())
-                .inputStyle()
+                .buttonStyle(.plain)
                 Text("ce_distribute_hint".localized)
                     .font(.system(size: 11))
                     .foregroundColor(.textSubtle)

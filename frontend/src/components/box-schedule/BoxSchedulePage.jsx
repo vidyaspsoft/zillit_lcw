@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Spin, Segmented, Modal, Input, Select, Popover, Badge } from 'antd';
-import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid, FiFilter } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiSettings, FiPrinter, FiCheckSquare, FiTrash2, FiX, FiCalendar, FiEdit2, FiClock, FiShare2, FiSearch, FiList, FiGrid, FiFilter, FiStar } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +17,7 @@ import ScheduleTypeManager from './ScheduleTypeManager';
 import CreateEventModal from './CreateEventModal';
 import PrintableSchedule from './PrintableSchedule';
 import ActivityLogDrawer from './ActivityLogDrawer';
+import PresetListModal from './PresetListModal';
 import ViewEventDrawer from './ViewEventDrawer';
 import ShareScheduleModal from './ShareScheduleModal';
 import './boxSchedulePrint.css';
@@ -86,6 +87,7 @@ const BoxSchedulePage = () => {
 
   // New feature drawers/modals
   const [showActivityLog, setShowActivityLog] = useState(false);
+  const [showPresetList, setShowPresetList] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [currentRevision, setCurrentRevision] = useState(null);
 
@@ -327,6 +329,8 @@ const BoxSchedulePage = () => {
                 style={toolbarBtnStyle}>Share</Button>
               <Button icon={<FiSettings size={13} />} onClick={() => setShowTypeManager(true)} size="middle"
                 style={toolbarBtnStyle}>Edit Types</Button>
+              <Button icon={<FiStar size={13} />} onClick={() => setShowPresetList(true)} size="middle"
+                style={toolbarBtnStyle}>Presets</Button>
               <Button icon={<FiPrinter size={13} />} onClick={handlePrint} loading={isPrintMode && !isSelectMode} size="middle"
                 style={toolbarBtnStyle}>
                 {isPrintMode && !isSelectMode ? 'Preparing...' : 'Print'}
@@ -672,6 +676,8 @@ const BoxSchedulePage = () => {
 
       {/* Activity Log Drawer */}
       <ActivityLogDrawer open={showActivityLog} onClose={() => setShowActivityLog(false)} />
+
+      <PresetListModal open={showPresetList} onClose={() => setShowPresetList(false)} />
 
       {/* Revision History Drawer */}
 

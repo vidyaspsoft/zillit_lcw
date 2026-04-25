@@ -8,6 +8,8 @@ export const LOCATION_API_BASE_URL = `${LOCATION_BACKEND}/api/v2/location`;
 export const CASTING_API_BASE_URL = `${CASTING_BACKEND}/api/v2/casting`;
 export const WARDROBE_API_BASE_URL = `${WARDROBE_BACKEND}/api/v2/wardrobe`;
 export const BOX_SCHEDULE_API_BASE_URL = 'https://productionapi-dev.zillit.com/api/v2/box-schedule';
+export const PROJECT_API_BASE_URL = 'https://projectapi-dev.zillit.com/api/v2';
+export const USER_PRESET_API_URL = 'https://productionapi-dev.zillit.com/api/v2/user-preset';
 
 export const BOX_SCHEDULE_HEADERS = {
   Accept: 'application/json',

@@ -9,7 +9,13 @@
       "Bash(find /Users/vidyasagar/Downloads/zillit_lcw/frontend/src -name *api* -o -name *axios*)",
       "Bash(npm run:*)",
       "Bash(npx vite *)",
-      "Bash(pkill -f \"vite\")"
+      "Bash(pkill -f \"vite\")",
+      "Bash(grep -E \"\\\\.\\(jsx?|tsx?\\)$\")",
+      "Bash(xcodebuild -version)",
+      "Bash(xcodebuild -project ZillitLCW.xcodeproj -scheme ZillitLCW -destination 'generic/platform=iOS Simulator' -configuration Debug build)",
+      "Bash(grep -B1 -A1 \"fontWeight\\(.semibold\\)$\" /Users/vidyasagar/zillit_lcw/ios/ZillitLCW/Features/BoxSchedule/Distribute/SelectInviteesView.swift)",
+      "Bash(xcodebuild -project /Users/vidyasagar/zillit_lcw/ios/ZillitLCW.xcodeproj -scheme ZillitLCW -destination 'generic/platform=iOS Simulator' -configuration Debug build)",
+      "Bash(wait)"
     ]
   }
 }

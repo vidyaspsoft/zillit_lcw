@@ -19,6 +19,7 @@ struct BoxScheduleView: View {
     @State private var navToCreateEvent = false
     @State private var navToCreateNote = false
     @State private var navToDayDetail = false
+    @State private var navToPresets = false
     @State private var showViewDefaultPopover = false
 
     private let viewDefaultKey = "box-schedule-default-view"
@@ -124,6 +125,7 @@ struct BoxScheduleView: View {
             NavigationLink(destination: HistoryView(viewModel: viewModel), isActive: $navToHistory) { EmptyView() }
             NavigationLink(destination: ShareView(viewModel: viewModel), isActive: $navToShare) { EmptyView() }
             NavigationLink(destination: TypeManagerView(viewModel: viewModel), isActive: $navToTypeManager) { EmptyView() }
+            NavigationLink(destination: PresetListView(), isActive: $navToPresets) { EmptyView() }
             NavigationLink(destination: CreateScheduleView(viewModel: viewModel), isActive: $navToCreateSchedule) { EmptyView() }
             NavigationLink(destination: CreateEventView(viewModel: viewModel, mode: "event"), isActive: $navToCreateEvent) { EmptyView() }
             NavigationLink(destination: CreateEventView(viewModel: viewModel, mode: "note"), isActive: $navToCreateNote) { EmptyView() }
@@ -305,6 +307,9 @@ struct BoxScheduleView: View {
                         drawerDivider
                         drawerItem(icon: "slider.horizontal.3", label: "bs_edit_types".localized, color: .textSecondary) {
                             closeDrawerAnd { navToTypeManager = true }
+                        }
+                        drawerItem(icon: "star.fill", label: "Presets", color: .primaryAccent) {
+                            closeDrawerAnd { navToPresets = true }
                         }
                         drawerItem(icon: "clock.arrow.circlepath", label: "bs_history".localized, color: .textSecondary) {
                             closeDrawerAnd { navToHistory = true }

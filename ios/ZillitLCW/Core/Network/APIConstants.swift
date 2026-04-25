@@ -4,6 +4,8 @@ import Foundation
 /// `moduledata` and `bodyhash` are stored here so call sites never inline them.
 enum APIConstants {
     static let boxScheduleBaseURL = "https://productionapi-dev.zillit.com/api/v2/box-schedule"
+    static let projectBaseURL = "https://projectapi-dev.zillit.com/api/v2"
+    static let userPresetURL = "https://productionapi-dev.zillit.com/api/v2/user-preset"
 
     static let accept = "application/json"
     static let acceptCharset = "UTF-8"
