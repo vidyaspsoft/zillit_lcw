@@ -1,13 +1,18 @@
 import SwiftUI
+import UIKit
 
-/// ShareView — generate share link or copy schedule as text.
+/// ShareView — generate share link backed by a backend-rendered PDF.
+/// The "Open PDF" button hands off to UIActivityViewController so the user
+/// can preview, print (AirPrint), or share the file.
 struct ShareView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: BoxScheduleViewModel
     @State private var shareUrl = ""
+    @State private var attachment: Attachment?
     @State private var isGenerating = false
     @State private var isCopied = false
     @State private var isTextCopied = false
+    @State private var presentShareSheetURL: URL?
 
     // MARK: - Build plain text from schedule days
     private var scheduleAsText: String {
@@ -49,44 +54,69 @@ struct ShareView: View {
                     if shareUrl.isEmpty {
                         Button(action: {
                             isGenerating = true
-                            viewModel.generateShareLink { url in
+                            viewModel.generateShareLink { result in
                                 isGenerating = false
-                                if let url = url {
-                                    shareUrl = url
+                                if let result = result {
+                                    shareUrl = result.shareUrl
+                                    attachment = result.attachment
                                 }
                             }
                         }) {
                             HStack(spacing: 4) {
                                 if isGenerating { ProgressView().scaleEffect(0.8) }
                                 Image(systemName: "link")
-                                Text("share_generate".localized)
+                                Text(isGenerating ? "Generating PDF…" : "share_generate".localized)
                             }
                             .font(.system(size: 13, weight: .semibold))
                         }
                         .secondaryButtonStyle()
                         .disabled(isGenerating)
                     } else {
-                        HStack {
-                            Text(shareUrl)
-                                .font(.system(size: 12))
-                                .foregroundColor(.textBody)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                                .inputStyle()
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text(shareUrl)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.textBody)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .inputStyle()
 
-                            Button(action: {
-                                UIPasteboard.general.string = shareUrl
-                                isCopied = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
-                            }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                                    Text(isCopied ? "share_copied".localized : "share_copy".localized)
+                                Button(action: {
+                                    UIPasteboard.general.string = shareUrl
+                                    isCopied = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                                        Text(isCopied ? "share_copied".localized : "share_copy".localized)
+                                    }
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(isCopied ? .successText : .textSecondary)
                                 }
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(isCopied ? .successText : .textSecondary)
+                                .secondaryButtonStyle()
                             }
-                            .secondaryButtonStyle()
+
+                            if let att = attachment, let url = att.bestURL {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "doc.richtext")
+                                        .foregroundColor(.primaryAccent)
+                                        .font(.system(size: 22))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(att.name).font(.system(size: 12, weight: .semibold)).foregroundColor(.textBody).lineLimit(1)
+                                        let kb = (Int(att.fileSize) ?? 0) / 1024
+                                        Text("PDF · \(kb) KB").font(.caption).foregroundColor(.textMuted)
+                                    }
+                                    Spacer()
+                                    Button { presentShareSheetURL = url } label: {
+                                        Label("Open PDF", systemImage: "square.and.arrow.up")
+                                            .font(.system(size: 12, weight: .semibold))
+                                    }
+                                    .secondaryButtonStyle()
+                                }
+                                .padding(10)
+                                .background(Color.surface)
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.appBorder, lineWidth: 1))
+                            }
                         }
                     }
                 }
@@ -134,5 +164,23 @@ struct ShareView: View {
             .navigationTitle("share_title".localized)
             .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(false)
+        .sheet(isPresented: Binding(
+            get: { presentShareSheetURL != nil },
+            set: { if !$0 { presentShareSheetURL = nil } }
+        )) {
+            if let url = presentShareSheetURL {
+                ShareSheet(items: [url])
+            }
+        }
     }
+}
+
+/// Thin wrapper around UIActivityViewController so the user can preview /
+/// print (AirPrint) / share the rendered PDF.
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }

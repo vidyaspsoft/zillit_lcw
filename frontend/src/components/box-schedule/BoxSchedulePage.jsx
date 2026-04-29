@@ -270,35 +270,40 @@ const BoxSchedulePage = () => {
     return flatSchedule.filter((r) => selectedRowKeys.includes(`${r._id}-${r.singleDate}`));
   }, [flatSchedule, selectedRowKeys]);
 
+  // ── Print — backend-rendered PDF ──
+  // Hits POST /share/generate-link, which returns a presigned PDF URL. We open
+  // that URL in a new tab; the browser's PDF viewer triggers the print dialog.
+  const requestPdfAndPrint = useCallback(async ({ dayIds, orientation } = {}) => {
+    setIsPrintMode(true);
+    try {
+      const data = await boxScheduleService.generateShareLink({
+        dayIds,
+        orientation: orientation || (activeView === 'Calendar View' ? 'landscape' : 'portrait'),
+      });
+      const url = data?.data?.attachment?.mediaUrl;
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        toast.error('PDF generated but no download URL returned');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to generate PDF');
+    } finally {
+      setIsPrintMode(false);
+    }
+  }, [activeView]);
+
   const handlePrintSelected = useCallback(() => {
     if (selectedRowKeys.length === 0) return;
-    setIsPrintMode(true);
-  }, [selectedRowKeys]);
-
-  // ── Print ──
-  const injectPrintOrientation = useCallback((orientation) => {
-    const existing = document.getElementById('box-schedule-print-orientation');
-    if (existing) existing.remove();
-    const style = document.createElement('style');
-    style.id = 'box-schedule-print-orientation';
-    style.textContent = `@media print { @page { size: A4 ${orientation}; } }`;
-    document.head.appendChild(style);
-  }, []);
-
-  const cleanupPrintOrientation = useCallback(() => {
-    const existing = document.getElementById('box-schedule-print-orientation');
-    if (existing) existing.remove();
-  }, []);
+    const dayIds = selectedRows.map((r) => r._id);
+    requestPdfAndPrint({ dayIds });
+  }, [selectedRowKeys, selectedRows, requestPdfAndPrint]);
 
   const handlePrint = useCallback(() => {
-    injectPrintOrientation(activeView === 'Calendar View' ? 'landscape' : 'portrait');
-    if (activeView === 'List View') { setIsPrintMode(true); }
-    else { window.print(); cleanupPrintOrientation(); }
-  }, [activeView, injectPrintOrientation, cleanupPrintOrientation]);
+    requestPdfAndPrint({});
+  }, [requestPdfAndPrint]);
 
-  const handlePrintReady = useCallback(() => {
-    setTimeout(() => { window.print(); setIsPrintMode(false); cleanupPrintOrientation(); }, 200);
-  }, [cleanupPrintOrientation]);
+  const handlePrintReady = useCallback(() => { /* legacy no-op — kept for prop compatibility */ }, []);
 
   const printRows = isSelectMode && selectedRowKeys.length > 0 ? selectedRows : filteredSchedule;
 

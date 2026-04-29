@@ -200,12 +200,32 @@ class BoxScheduleAPI {
     struct ShareLinkData: Codable {
         let token: String
         let shareUrl: String
+        let attachment: Attachment?
     }
 
-    func generateShareLink() async throws -> ShareLinkData? {
+    /// POST /share/generate-link — backend renders a PDF, uploads to S3,
+    /// and returns the share token + an Attachment with presigned URLs.
+    ///
+    /// All body fields are optional. When `watermark` is provided, both `text`
+    /// and `image` may be set; the server overlays them on every page.
+    func generateShareLink(
+        dayIds: [String]? = nil,
+        from: Int64? = nil,
+        to: Int64? = nil,
+        orientation: String = "landscape",
+        title: String? = nil,
+        watermark: [String: Any]? = nil
+    ) async throws -> ShareLinkData? {
+        var body: [String: Any] = ["orientation": orientation]
+        if let ids = dayIds { body["dayIds"] = ids }
+        if let f = from { body["from"] = f }
+        if let t = to { body["to"] = t }
+        if let title = title { body["title"] = title }
+        if let wm = watermark { body["watermark"] = wm }
+
         let response: APIResponse<ShareLinkData> = try await client.request(
             path: "/share/generate-link", method: "POST",
-            body: [:]
+            body: body
         )
         return response.data
     }

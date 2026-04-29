@@ -352,11 +352,13 @@ class BoxScheduleViewModel: ObservableObject {
 
     // MARK: - Share
 
-    func generateShareLink(completion: @escaping (String?) -> Void) {
+    /// Generate a share link + PDF. Returns the attachment so the view can
+    /// open the PDF directly via `UIActivityViewController` / `QuickLook`.
+    func generateShareLink(completion: @escaping (BoxScheduleAPI.ShareLinkData?) -> Void) {
         Task { @MainActor in
             do {
                 let result = try await api.generateShareLink()
-                completion(result?.shareUrl)
+                completion(result)
             } catch {
                 self.errorMessage = error.localizedDescription
                 completion(nil)

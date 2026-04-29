@@ -19,6 +19,7 @@
 		A1A1A2A2B3B3B4B4C5C5C604 /* SelectInviteesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D2D2E3E3E4E4F5F5F604 /* SelectInviteesView.swift */; };
 		A1A1A2A2B3B3B4B4C5C5C605 /* PresetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D2D2E3E3E4E4F5F5F605 /* PresetListView.swift */; };
 		A1A1A2A2B3B3B4B4C5C5C606 /* CreatePresetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D2D2E3E3E4E4F5F5F606 /* CreatePresetView.swift */; };
+		A1A1A2A2B3B3B4B4C5C5C607 /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D2D2E3E3E4E4F5F5F607 /* Attachment.swift */; };
 		E13A502C0B6D411138FF71D8 /* APIResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336339ABC86F4D8BA68773A9 /* APIResponse.swift */; };
 		D3618334A32061F2FA4E6845 /* BoxScheduleAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 978705BED7AA507D72944140 /* BoxScheduleAPI.swift */; };
 		33369890A6912F6A44241317 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A9C9CE13BA8500542987B8 /* AppColors.swift */; };
@@ -62,6 +63,7 @@
 		D1D1D2D2E3E3E4E4F5F5F604 /* SelectInviteesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectInviteesView.swift; sourceTree = "<group>"; };
 		D1D1D2D2E3E3E4E4F5F5F605 /* PresetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetListView.swift; sourceTree = "<group>"; };
 		D1D1D2D2E3E3E4E4F5F5F606 /* CreatePresetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePresetView.swift; sourceTree = "<group>"; };
+		D1D1D2D2E3E3E4E4F5F5F607 /* Attachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attachment.swift; sourceTree = "<group>"; };
 		336339ABC86F4D8BA68773A9 /* APIResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponse.swift; sourceTree = "<group>"; };
 		978705BED7AA507D72944140 /* BoxScheduleAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxScheduleAPI.swift; sourceTree = "<group>"; };
 		58A9C9CE13BA8500542987B8 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
@@ -288,6 +290,7 @@
 				58E20FB2323E2690819DFF89,
 				4A87D98B6B1B12565C69D7CE,
 				D1D1D2D2E3E3E4E4F5F5F602,
+				D1D1D2D2E3E3E4E4F5F5F607,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -388,6 +391,7 @@
 				A1A1A2A2B3B3B4B4C5C5C604,
 				A1A1A2A2B3B3B4B4C5C5C605,
 				A1A1A2A2B3B3B4B4C5C5C606,
+				A1A1A2A2B3B3B4B4C5C5C607,
 				E13A502C0B6D411138FF71D8,
 				D3618334A32061F2FA4E6845,
 				33369890A6912F6A44241317,

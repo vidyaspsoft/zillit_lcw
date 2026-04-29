@@ -123,8 +123,18 @@ const boxScheduleService = {
 
   // ── Share ──
 
-  generateShareLink: async () => {
-    const response = await boxScheduleApi.post('/share/generate-link', {});
+  /**
+   * Generate a share link backed by a backend-rendered PDF.
+   * @param {Object} [opts]
+   *   - dayIds?: string[]            narrow to specific schedule-day ids
+   *   - from?: number                epoch ms window start
+   *   - to?: number                  epoch ms window end
+   *   - orientation?: "landscape"|"portrait"
+   *   - title?: string               header title
+   *   - watermark?: { text?, image?, opacity?, fontSize?, position? }
+   */
+  generateShareLink: async (opts = {}) => {
+    const response = await boxScheduleApi.post('/share/generate-link', opts);
     return response.data;
   },
 };

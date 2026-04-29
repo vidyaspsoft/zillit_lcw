@@ -6,6 +6,8 @@ const BoxScheduleRevision = require("../models/boxSchedule/BoxScheduleRevision")
 const BoxScheduleShare = require("../models/boxSchedule/BoxScheduleShare");
 const { sendSuccessV2: sendSuccess, sendErrorV2: sendError, isValidObjectId } = require("../utils/helpers");
 const { v4: uuidv4 } = require("uuid");
+const { generateSchedulePdf } = require("../services/boxSchedulePdf");
+const { uploadBuffer, presignGet } = require("../utils/s3Upload");
 
 // ── Helper: Convert any date-like input (number, ISO string, Date) to epoch ms ──
 const toEpoch = (v) => {
@@ -1137,20 +1139,99 @@ const duplicateDay = async (req, res) => {
 
 // ═══════════════════════ SHARE ═══════════════════════
 
+/**
+ * Decorate an attachment sub-doc with presigned URLs so clients can download
+ * directly without a second round-trip. URLs expire in 1 hour by default.
+ */
+const withPresignedUrls = async (attachment) => {
+  if (!attachment) return null;
+  const a = attachment.toObject ? attachment.toObject() : { ...attachment };
+  a.mediaUrl = await presignGet(a.media);
+  a.thumbnailUrl = a.thumbnail ? await presignGet(a.thumbnail) : "";
+  // Stub fields the client populates locally after download.
+  a.localFilePath = "";
+  a.localThumbnailPath = "";
+  return a;
+};
+
+/**
+ * Generate (or regenerate) a share link backed by a freshly-rendered PDF.
+ *
+ * Body (all optional):
+ *   from, to            — epoch ms window for which days to include
+ *   dayIds              — string[] of specific schedule-day ids
+ *   orientation         — "landscape" (default) | "portrait"
+ *   format              — "list" (default) | "calendar"
+ *   title               — header text on the PDF
+ *   watermark           — { text?, image?, opacity?, fontSize?, position? }
+ *
+ * Response:
+ *   { token, shareUrl, attachment: { ...full attachment model + mediaUrl + thumbnailUrl } }
+ */
 const generateShareLink = async (req, res) => {
   try {
     const projectId = req.moduleData.project_id;
     const userId = req.moduleData.user_id;
+    const { from, to, dayIds, orientation, format, title, watermark } = req.body || {};
 
-    const token = uuidv4();
-    const share = await BoxScheduleShare.create({
-      projectId, token,
-      createdBy: { userId },
+    // 1. Render the PDF.
+    const { pdfBuffer, thumbnailBuffer, width, height } = await generateSchedulePdf({
+      projectId,
+      scope: { from, to, dayIds },
+      orientation: orientation || "landscape",
+      title: title || "Production Schedule",
+      watermark, // optional — {text, image, opacity, fontSize, position}
+      // `format` reserved for future calendar-grid layout
     });
 
-    await logActivity(projectId, "shared", "schedule_day", "", "Schedule", "Generated share link", { userId });
+    // 2. Upload to S3 (or local fallback when USE_S3=false).
+    const ts = Date.now();
+    const fileName = `Zillit_${ts}.pdf`;
+    const thumbName = `Zillit_${ts}.jpg`;
+    const mediaKey = `box-schedule/file/${projectId}/${fileName}`;
+    const thumbKey = `box-schedule/thumbnail/${projectId}/${thumbName}`;
 
-    return sendSuccess(res, { token, shareUrl: `/shared/box-schedule/${token}` }, "share_link_generated");
+    const [mediaUp, thumbUp] = await Promise.all([
+      uploadBuffer(pdfBuffer, mediaKey, "application/pdf"),
+      uploadBuffer(thumbnailBuffer, thumbKey, "image/jpeg"),
+    ]);
+
+    // 3. Persist share row with attachment.
+    const token = uuidv4();
+    const share = await BoxScheduleShare.create({
+      projectId,
+      token,
+      createdBy: { userId },
+      pdfGeneratedAt: ts,
+      attachment: {
+        bucket: mediaUp.bucket,
+        region: mediaUp.region || process.env.S3_REGION || "ap-south-1",
+        content_type: "document",
+        content_subtype: "pdf",
+        media: mediaKey,
+        thumbnail: thumbKey,
+        name: fileName,
+        file_size: String(mediaUp.size),
+        width,
+        height,
+        duration: 0,
+      },
+    });
+
+    // 4. History entry — same wording for both Print and Share-link triggers.
+    await logActivity(
+      projectId, "shared", "schedule_day", String(share._id),
+      "Schedule", `Generated PDF (${fileName})`, { userId }
+    );
+
+    // 5. Decorate attachment with presigned URLs and respond.
+    const attachment = await withPresignedUrls(share.attachment);
+
+    return sendSuccess(res, {
+      token,
+      shareUrl: `/shared/box-schedule/${token}`,
+      attachment,
+    }, "share_link_generated");
   } catch (error) {
     console.error("generateShareLink error:", error);
     return sendError(res, 500, "Failed to generate share link");

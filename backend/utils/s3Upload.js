@@ -10,23 +10,81 @@
 
 const path = require("path");
 const fs = require("fs");
-
-// ─── S3 Upload (ready for integration) ───
-// Uncomment and install @aws-sdk/client-s3 when ready
-//
-// const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-//
-// const s3Client = new S3Client({
-//   region: process.env.S3_REGION || "ap-south-1",
-//   credentials: {
-//     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-//   },
-// });
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const USE_S3 = process.env.USE_S3 === "true";
 const S3_BUCKET = process.env.S3_BUCKET || "zillit-bucket-mumbai";
 const S3_REGION = process.env.S3_REGION || "ap-south-1";
+
+// Lazy client — only constructed when an upload/presign is requested,
+// so dev environments without AWS creds still boot.
+let _client = null;
+function s3() {
+  if (!_client) {
+    _client = new S3Client({
+      region: S3_REGION,
+      credentials: process.env.AWS_ACCESS_KEY_ID
+        ? {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          }
+        : undefined, // fall back to default chain (IAM role, etc.)
+    });
+  }
+  return _client;
+}
+
+/**
+ * Upload an in-memory Buffer to S3.
+ *
+ * When `USE_S3 !== "true"`, falls back to writing under `uploads/<key>`
+ * so local development still works end-to-end (PDF served via /uploads).
+ *
+ * @param {Buffer} buffer
+ * @param {string} key                — S3 object key (path inside the bucket)
+ * @param {string} contentType        — MIME type (e.g. "application/pdf")
+ * @returns {Promise<{ key: string, bucket: string, region: string, size: number }>}
+ */
+async function uploadBuffer(buffer, key, contentType) {
+  if (USE_S3) {
+    await s3().send(new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }));
+    return { key, bucket: S3_BUCKET, region: S3_REGION, size: buffer.length };
+  }
+
+  // Local fallback — write under uploads/ keeping the key as the relative path.
+  const localPath = path.join(__dirname, "..", "uploads", key);
+  fs.mkdirSync(path.dirname(localPath), { recursive: true });
+  fs.writeFileSync(localPath, buffer);
+  return { key, bucket: "", region: "", size: buffer.length };
+}
+
+/**
+ * Generate a presigned URL for reading an S3 object.
+ *
+ * For local fallback, returns `/uploads/<key>` (served by Express static).
+ *
+ * @param {string} key
+ * @param {number} [ttlSeconds] — default 3600 (1 hour)
+ * @returns {Promise<string>}
+ */
+async function presignGet(key, ttlSeconds = 3600) {
+  if (!key) return "";
+  if (USE_S3) {
+    return getSignedUrl(
+      s3(),
+      new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
+      { expiresIn: ttlSeconds }
+    );
+  }
+  // Local fallback — mounted at /uploads in server.js.
+  return `/uploads/${key}`;
+}
 
 /**
  * Upload file to S3 bucket.
@@ -161,6 +219,8 @@ async function buildAttachmentFromDownload(downloadedFile, projectId, toolFolder
 
 module.exports = {
   uploadToS3,
+  uploadBuffer,
+  presignGet,
   buildAttachment,
   buildAttachmentFromDownload,
   USE_S3,

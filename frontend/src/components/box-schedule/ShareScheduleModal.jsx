@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Modal, Button, Input } from 'antd';
-import { FiLink, FiCopy, FiCheck, FiMail } from 'react-icons/fi';
+import { FiLink, FiCopy, FiCheck, FiMail, FiDownload, FiFileText } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import { useTheme } from '../../context/ThemeContext';
@@ -9,6 +9,7 @@ import boxScheduleService from '../../services/boxScheduleService';
 const ShareScheduleModal = ({ open, onClose, scheduleDays = [], scheduleTypes = [] }) => {
   const { colors } = useTheme();
   const [shareUrl, setShareUrl] = useState('');
+  const [attachment, setAttachment] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [textCopied, setTextCopied] = useState(false);
@@ -20,10 +21,15 @@ const ShareScheduleModal = ({ open, onClose, scheduleDays = [], scheduleTypes = 
       const result = data.data || {};
       const fullUrl = `${window.location.origin}${result.shareUrl}`;
       setShareUrl(fullUrl);
+      setAttachment(result.attachment || null);
     } catch (err) {
       toast.error('Failed to generate link');
     } finally { setGenerating(false); }
   }, []);
+
+  const openPdf = () => {
+    if (attachment?.mediaUrl) window.open(attachment.mediaUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const handleCopyLink = () => {
     if (!shareUrl) return;
@@ -85,17 +91,36 @@ const ShareScheduleModal = ({ open, onClose, scheduleDays = [], scheduleTypes = 
           </p>
 
           {shareUrl ? (
-            <div className="flex gap-2">
-              <Input value={shareUrl} readOnly style={{ flex: 1, borderRadius: '6px', fontSize: '12px' }} />
-              <Button icon={copied ? <FiCheck size={13} /> : <FiCopy size={13} />} onClick={handleCopyLink}
-                style={{ borderRadius: '6px', borderColor: copied ? colors.successText : colors.borderButton, color: copied ? colors.successText : colors.textSecondary }}>
-                {copied ? 'Copied' : 'Copy'}
-              </Button>
-            </div>
+            <>
+              <div className="flex gap-2">
+                <Input value={shareUrl} readOnly style={{ flex: 1, borderRadius: '6px', fontSize: '12px' }} />
+                <Button icon={copied ? <FiCheck size={13} /> : <FiCopy size={13} />} onClick={handleCopyLink}
+                  style={{ borderRadius: '6px', borderColor: copied ? colors.successText : colors.borderButton, color: copied ? colors.successText : colors.textSecondary }}>
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              {attachment?.mediaUrl && (
+                <div className="flex items-center gap-2" style={{ marginTop: '10px', padding: '10px 12px', background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: '6px' }}>
+                  <FiFileText size={20} color={colors.solidDark} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: colors.textBody, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {attachment.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: colors.textMuted }}>
+                      PDF · {Math.round(Number(attachment.file_size || 0) / 1024)} KB
+                    </div>
+                  </div>
+                  <Button size="small" icon={<FiDownload size={12} />} onClick={openPdf}
+                    style={{ borderRadius: '6px', borderColor: colors.solidDark, color: colors.solidDark, fontWeight: 600 }}>
+                    Open PDF
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <Button icon={<FiLink size={13} />} onClick={handleGenerateLink} loading={generating}
               style={{ borderRadius: '6px', borderColor: colors.solidDark, color: colors.solidDark, fontWeight: '600' }}>
-              Generate Link
+              {generating ? 'Generating PDF…' : 'Generate Link'}
             </Button>
           )}
         </div>
